@@ -1,7 +1,7 @@
 #include <arespch.h>
-#include "Ares/Core/Application.h"
+#include "Engine/Core/Application.h"
 
-#include "Ares/Core/Timestep.h"
+#include "Engine/Core/Timestep.h"
 
 #include <GLFW/glfw3.h>
 

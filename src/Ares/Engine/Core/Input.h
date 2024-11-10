@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Ares/Core/Core.h"
-#include "Ares/Core/KeyCodes.h"
-#include "Ares/Core/MouseCodes.h"
+#include "Engine/Core/Core.h"
+#include "Engine/Core/KeyCodes.h"
+#include "Engine/Core/MouseCodes.h"
 
 namespace Ares {
 

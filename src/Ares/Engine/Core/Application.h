@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Ares/Core/Core.h"
+#include "Engine/Core/Core.h"
 
-#include "Ares/Core/Window.h"
+#include "Engine/Core/Window.h"
 
 int main(int argc, char** argv);
 
