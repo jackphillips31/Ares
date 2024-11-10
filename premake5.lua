@@ -19,27 +19,27 @@ workspace "Ares"
 	group ""
 
 	project "Ares"
-		location "Ares"
+		location "src/Ares"
 		kind "StaticLib"
 		language "C++"
 		cppdialect "C++20"
 		staticruntime "on"
 
 		targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-		objdir ("%{wks.location}/%{prj.name}/bin/")
+		objdir ("%{wks.location}/src/bin/%{prj.name}/")
 
 		pchheader "arespch.h"
-		pchsource "%{prj.name}/src/arespch.cpp"
+		pchsource "src/%{prj.name}/arespch.cpp"
 
 		files
 		{
-			"%{prj.name}/src/**.h",
-			"%{prj.name}/src/**.cpp"
+			"src/%{prj.name}/**.h",
+			"src/%{prj.name}/**.cpp"
 		}
 
 		includedirs
 		{
-			"%{prj.name}/src"
+			"src/%{prj.name}"
 		}
 
 		links
@@ -51,44 +51,44 @@ workspace "Ares"
 
 			defines
 			{
-				"ARES_PLATFORM_WINDOWS",
-				"ARES_BUILD_DLL"
+				"AR_PLATFORM_WINDOWS",
+				"AR_BUILD_DLL"
 			}
 
 		filter "configurations:Debug"
-			defines "ARES_DEBUG"
+			defines "AR_DEBUG"
 			runtime "Debug"
 			symbols "on"
 
 		filter "configurations:Release"
-			defines "ARES_RELEASE"
+			defines "AR_RELEASE"
 			runtime "Release"
 			optimize "on"
 
 		filter "configurations:Dist"
-			defines "ARES_DIST"
+			defines "AR_DIST"
 			runtime "Release"
 			optimize "on"
 
 	project "Sandbox"
-		location "Sandbox"
+		location "src/Sandbox"
 		kind "ConsoleApp"
 		language "C++"
 		cppdialect "C++20"
 		staticruntime "on"
 
 		targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-		objdir ("%{wks.location}/%{prj.name}/bin/")
+		objdir ("%{wks.location}/src/bin/%{prj.name}/")
 
 		files
 		{
-			"%{prj.name}/src/**.h",
-			"%{prj.name}/src/**.cpp"
+			"src/%{prj.name}/**.h",
+			"src/%{prj.name}/**.cpp"
 		}
 
 		includedirs
 		{
-			"Ares/src"
+			"src/Ares"
 		}
 
 		links
@@ -101,20 +101,20 @@ workspace "Ares"
 
 			defines
 			{
-				"ARES_PLATFORM_WINDOWS"
+				"AR_PLATFORM_WINDOWS"
 			}
 
 		filter "configurations:Debug"
-			defines "ARES_DEBUG"
+			defines "AR_DEBUG"
 			runtime "Debug"
 			symbols "on"
 
 		filter "configurations:Release"
-			defines "ARES_RELEASE"
+			defines "AR_RELEASE"
 			runtime "Release"
 			optimize "on"
 
 		filter "configurations:Dist"
-			defines "ARES_DIST"
+			defines "AR_DIST"
 			runtime "Release"
 			optimize "on"
