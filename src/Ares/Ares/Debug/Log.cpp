@@ -1,5 +1,5 @@
 #include <arespch.h>
-#include "Ares/Core/Log.h"
+#include "Ares/Debug/Log.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
