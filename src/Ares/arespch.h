@@ -13,6 +13,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#ifdef ARES_PLATFORM_WINDOWS
+#ifdef AR_PLATFORM_WINDOWS
 #include <Windows.h>
 #endif

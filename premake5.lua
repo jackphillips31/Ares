@@ -14,8 +14,10 @@ workspace "Ares"
 
 	-- Include directories relative to root folder (solution directory)
 	IncludeDir = {}
+	IncludeDir["GLFW"] = "src/Vendor/GLFW/include"
 
 	group "Dependencies"
+		include "src/Vendor/GLFW"
 	group ""
 
 	project "Ares"
@@ -39,11 +41,13 @@ workspace "Ares"
 
 		includedirs
 		{
-			"src/%{prj.name}"
+			"src/%{prj.name}",
+			"%{IncludeDir.GLFW}"
 		}
 
 		links
 		{
+			"GLFW"
 		}
 
 		filter "system:windows"
