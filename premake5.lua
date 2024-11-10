@@ -14,10 +14,12 @@ workspace "Ares"
 
 	-- Include directories relative to root folder (solution directory)
 	IncludeDir = {}
+	IncludeDir["spdlog"] = "src/Vendor/spdlog/include"
 	IncludeDir["GLFW"] = "src/Vendor/GLFW/include"
 
 	group "Dependencies"
 		include "src/Vendor/GLFW"
+		include "src/Vendor/spdlog"
 	group ""
 
 	project "Ares"
@@ -42,12 +44,14 @@ workspace "Ares"
 		includedirs
 		{
 			"src/%{prj.name}",
+			"%{IncludeDir.spdlog}",
 			"%{IncludeDir.GLFW}"
 		}
 
 		links
 		{
-			"GLFW"
+			"GLFW",
+			"spdlog"
 		}
 
 		filter "system:windows"
@@ -92,7 +96,9 @@ workspace "Ares"
 
 		includedirs
 		{
-			"src/Ares"
+			"src/Ares",
+			"src/Vendor",
+			"%{IncludeDir.spdlog}"
 		}
 
 		links
