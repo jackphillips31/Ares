@@ -6,7 +6,7 @@ namespace Ares {
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
-		AR_CORE_ASSERT("GLFW Error ({}): {}", error, description);
+		//AR_CORE_ASSERT("GLFW Error ({}): {}", error, description);
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)

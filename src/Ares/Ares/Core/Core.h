@@ -43,14 +43,14 @@
 #endif
 // End of platform detection
 
-#ifdef ARES_DEBUG
+#ifdef AR_DEBUG
 #define AR_ENABLE_ASSERTS
 #define AR_PROFILE 0
 #endif
 
 #ifdef AR_ENABLE_ASSERTS
-	#define AR_ASSERT(x, ...) { if(!(x)) { ARES_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-	#define AR_CORE_ASSERT(x, ...) { if(!(x)) { ARES_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define AR_ASSERT(x, ...) { if(!(x)) { AR_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define AR_CORE_ASSERT(x, ...) { if(!(x)) { AR_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 #else
 	#define AR_ASSERT(x, ...)
 	#define AR_CORE_ASSERT(x, ...)
