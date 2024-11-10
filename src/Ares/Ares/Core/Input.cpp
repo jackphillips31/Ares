@@ -2,7 +2,7 @@
 #include "Ares/Core/Input.h"
 
 #ifdef AR_PLATFORM_WINDOWS
-
+#include "Platform/Windows/WindowsInput.h"
 #endif
 
 namespace Ares {
@@ -11,11 +11,12 @@ namespace Ares {
 
 	Scope<Input> Input::Create()
 	{
-#ifdef AR_PLATFORM_WINDOWS
-
-#else
+	#ifdef AR_PLATFORM_WINDOWS
+		return CreateScope<WindowsInput>();
+	#else
 		AR_CORE_ASSERT(false, "Unknown Platform!");
 		return nullptr;
-#endif
+	#endif
 	}
+
 }
