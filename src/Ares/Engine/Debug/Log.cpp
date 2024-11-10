@@ -1,7 +1,7 @@
 #include <arespch.h>
-#include "Engine/Debug/Log.h"
-
 #include <spdlog/sinks/stdout_color_sinks.h>
+
+#include "Engine/Debug/Log.h"
 
 namespace Ares {
 	Ref<spdlog::logger> Log::s_CoreLogger;

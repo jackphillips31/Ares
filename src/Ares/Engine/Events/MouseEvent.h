@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Events/Event.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Events/Event.h"
 
 namespace Ares {
 	

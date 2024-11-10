@@ -1,4 +1,5 @@
 #include <arespch.h>
+
 #include "Engine/Core/Input.h"
 
 #ifdef AR_PLATFORM_WINDOWS

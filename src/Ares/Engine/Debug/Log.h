@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
-
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 #include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ostr.h>
+
+#include "Engine/Core/Core.h"
 
 namespace Ares {
 

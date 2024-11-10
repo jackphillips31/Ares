@@ -1,5 +1,4 @@
 #pragma once
-#include <arespch.h>
 
 #include "Engine/Core/Core.h"
 

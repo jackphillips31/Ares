@@ -1,4 +1,5 @@
 #include <arespch.h>
+
 #include "Platform/Windows/WindowsWindow.h"
 
 namespace Ares {

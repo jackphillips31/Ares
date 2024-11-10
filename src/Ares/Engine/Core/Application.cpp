@@ -1,9 +1,9 @@
 #include <arespch.h>
+#include <GLFW/glfw3.h>
+
 #include "Engine/Core/Application.h"
 
 #include "Engine/Core/Timestep.h"
-
-#include <GLFW/glfw3.h>
 
 namespace Ares {
 

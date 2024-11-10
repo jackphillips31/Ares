@@ -1,7 +1,5 @@
 #pragma once
 
-#include <arespch.h>
-
 namespace Ares {
 
 	typedef enum class KeyCode : uint16_t
