@@ -6,7 +6,7 @@
 
 int main(int argc, char** argv)
 {
-	std::cout << "Hello World!" << std::endl;
+	Ares::Log::Init(spdlog::level::trace);
 
 	Ares::Application* app = Ares::CreateApplication();
 
