@@ -1,6 +1,8 @@
 #pragma once
 
-namespace Velvet {
+#include <arespch.h>
+
+namespace Ares {
 
 	typedef enum class KeyCode : uint16_t
 	{
@@ -145,127 +147,127 @@ namespace Velvet {
 
 }
 
-#define VL_KEY_SPACE           ::Velvet::Key::Space
-#define VL_KEY_APOSTROPHE      ::Velvet::Key::Apostrophe    /* ' */
-#define VL_KEY_COMMA           ::Velvet::Key::Comma         /* , */
-#define VL_KEY_MINUS           ::Velvet::Key::Minus         /* - */
-#define VL_KEY_PERIOD          ::Velvet::Key::Period        /* . */
-#define VL_KEY_SLASH           ::Velvet::Key::Slash         /* / */
-#define VL_KEY_0               ::Velvet::Key::D0
-#define VL_KEY_1               ::Velvet::Key::D1
-#define VL_KEY_2               ::Velvet::Key::D2
-#define VL_KEY_3               ::Velvet::Key::D3
-#define VL_KEY_4               ::Velvet::Key::D4
-#define VL_KEY_5               ::Velvet::Key::D5
-#define VL_KEY_6               ::Velvet::Key::D6
-#define VL_KEY_7               ::Velvet::Key::D7
-#define VL_KEY_8               ::Velvet::Key::D8
-#define VL_KEY_9               ::Velvet::Key::D9
-#define VL_KEY_SEMICOLON       ::Velvet::Key::Semicolon     /* ; */
-#define VL_KEY_EQUAL           ::Velvet::Key::Equal         /* = */
-#define VL_KEY_A               ::Velvet::Key::A
-#define VL_KEY_B               ::Velvet::Key::B
-#define VL_KEY_C               ::Velvet::Key::C
-#define VL_KEY_D               ::Velvet::Key::D
-#define VL_KEY_E               ::Velvet::Key::E
-#define VL_KEY_F               ::Velvet::Key::F
-#define VL_KEY_G               ::Velvet::Key::G
-#define VL_KEY_H               ::Velvet::Key::H
-#define VL_KEY_I               ::Velvet::Key::I
-#define VL_KEY_J               ::Velvet::Key::J
-#define VL_KEY_K               ::Velvet::Key::K
-#define VL_KEY_L               ::Velvet::Key::L
-#define VL_KEY_M               ::Velvet::Key::M
-#define VL_KEY_N               ::Velvet::Key::N
-#define VL_KEY_O               ::Velvet::Key::O
-#define VL_KEY_P               ::Velvet::Key::P
-#define VL_KEY_Q               ::Velvet::Key::Q
-#define VL_KEY_R               ::Velvet::Key::R
-#define VL_KEY_S               ::Velvet::Key::S
-#define VL_KEY_T               ::Velvet::Key::T
-#define VL_KEY_U               ::Velvet::Key::U
-#define VL_KEY_V               ::Velvet::Key::V
-#define VL_KEY_W               ::Velvet::Key::W
-#define VL_KEY_X               ::Velvet::Key::X
-#define VL_KEY_Y               ::Velvet::Key::Y
-#define VL_KEY_Z               ::Velvet::Key::Z
-#define VL_KEY_LEFT_BRACKET    ::Velvet::Key::LeftBracket   /* [ */
-#define VL_KEY_BACKSLASH       ::Velvet::Key::Backslash     /* \ */
-#define VL_KEY_RIGHT_BRACKET   ::Velvet::Key::RightBracket  /* ] */
-#define VL_KEY_GRAVE_ACCENT    ::Velvet::Key::GraveAccent   /* ` */
-#define VL_KEY_WORLD_1         ::Velvet::Key::World1        /* non-US #1 */
-#define VL_KEY_WORLD_2         ::Velvet::Key::World2        /* non-US #2 */
+#define VL_KEY_SPACE           ::Ares::Key::Space
+#define VL_KEY_APOSTROPHE      ::Ares::Key::Apostrophe    /* ' */
+#define VL_KEY_COMMA           ::Ares::Key::Comma         /* , */
+#define VL_KEY_MINUS           ::Ares::Key::Minus         /* - */
+#define VL_KEY_PERIOD          ::Ares::Key::Period        /* . */
+#define VL_KEY_SLASH           ::Ares::Key::Slash         /* / */
+#define VL_KEY_0               ::Ares::Key::D0
+#define VL_KEY_1               ::Ares::Key::D1
+#define VL_KEY_2               ::Ares::Key::D2
+#define VL_KEY_3               ::Ares::Key::D3
+#define VL_KEY_4               ::Ares::Key::D4
+#define VL_KEY_5               ::Ares::Key::D5
+#define VL_KEY_6               ::Ares::Key::D6
+#define VL_KEY_7               ::Ares::Key::D7
+#define VL_KEY_8               ::Ares::Key::D8
+#define VL_KEY_9               ::Ares::Key::D9
+#define VL_KEY_SEMICOLON       ::Ares::Key::Semicolon     /* ; */
+#define VL_KEY_EQUAL           ::Ares::Key::Equal         /* = */
+#define VL_KEY_A               ::Ares::Key::A
+#define VL_KEY_B               ::Ares::Key::B
+#define VL_KEY_C               ::Ares::Key::C
+#define VL_KEY_D               ::Ares::Key::D
+#define VL_KEY_E               ::Ares::Key::E
+#define VL_KEY_F               ::Ares::Key::F
+#define VL_KEY_G               ::Ares::Key::G
+#define VL_KEY_H               ::Ares::Key::H
+#define VL_KEY_I               ::Ares::Key::I
+#define VL_KEY_J               ::Ares::Key::J
+#define VL_KEY_K               ::Ares::Key::K
+#define VL_KEY_L               ::Ares::Key::L
+#define VL_KEY_M               ::Ares::Key::M
+#define VL_KEY_N               ::Ares::Key::N
+#define VL_KEY_O               ::Ares::Key::O
+#define VL_KEY_P               ::Ares::Key::P
+#define VL_KEY_Q               ::Ares::Key::Q
+#define VL_KEY_R               ::Ares::Key::R
+#define VL_KEY_S               ::Ares::Key::S
+#define VL_KEY_T               ::Ares::Key::T
+#define VL_KEY_U               ::Ares::Key::U
+#define VL_KEY_V               ::Ares::Key::V
+#define VL_KEY_W               ::Ares::Key::W
+#define VL_KEY_X               ::Ares::Key::X
+#define VL_KEY_Y               ::Ares::Key::Y
+#define VL_KEY_Z               ::Ares::Key::Z
+#define VL_KEY_LEFT_BRACKET    ::Ares::Key::LeftBracket   /* [ */
+#define VL_KEY_BACKSLASH       ::Ares::Key::Backslash     /* \ */
+#define VL_KEY_RIGHT_BRACKET   ::Ares::Key::RightBracket  /* ] */
+#define VL_KEY_GRAVE_ACCENT    ::Ares::Key::GraveAccent   /* ` */
+#define VL_KEY_WORLD_1         ::Ares::Key::World1        /* non-US #1 */
+#define VL_KEY_WORLD_2         ::Ares::Key::World2        /* non-US #2 */
 
-#define VL_KEY_ESCAPE          ::Velvet::Key::Escape
-#define VL_KEY_ENTER           ::Velvet::Key::Enter
-#define VL_KEY_TAB             ::Velvet::Key::Tab
-#define VL_KEY_BACKSPACE       ::Velvet::Key::Backspace
-#define VL_KEY_INSERT          ::Velvet::Key::Insert
-#define VL_KEY_DELETE          ::Velvet::Key::Delete
-#define VL_KEY_RIGHT           ::Velvet::Key::Right
-#define VL_KEY_LEFT            ::Velvet::Key::Left
-#define VL_KEY_DOWN            ::Velvet::Key::Down
-#define VL_KEY_UP              ::Velvet::Key::Up
-#define VL_KEY_PAGE_UP         ::Velvet::Key::PageUp
-#define VL_KEY_PAGE_DOWN       ::Velvet::Key::PageDown
-#define VL_KEY_HOME            ::Velvet::Key::Home
-#define VL_KEY_END             ::Velvet::Key::End
-#define VL_KEY_CAPS_LOCK       ::Velvet::Key::CapsLock
-#define VL_KEY_SCROLL_LOCK     ::Velvet::Key::ScrollLock
-#define VL_KEY_NUM_LOCK        ::Velvet::Key::NumLock
-#define VL_KEY_PRINT_SCREEN    ::Velvet::Key::PrintScreen
-#define VL_KEY_PAUSE           ::Velvet::Key::Pause
-#define VL_KEY_F1              ::Velvet::Key::F1
-#define VL_KEY_F2              ::Velvet::Key::F2
-#define VL_KEY_F3              ::Velvet::Key::F3
-#define VL_KEY_F4              ::Velvet::Key::F4
-#define VL_KEY_F5              ::Velvet::Key::F5
-#define VL_KEY_F6              ::Velvet::Key::F6
-#define VL_KEY_F7              ::Velvet::Key::F7
-#define VL_KEY_F8              ::Velvet::Key::F8
-#define VL_KEY_F9              ::Velvet::Key::F9
-#define VL_KEY_F10             ::Velvet::Key::F10
-#define VL_KEY_F11             ::Velvet::Key::F11
-#define VL_KEY_F12             ::Velvet::Key::F12
-#define VL_KEY_F13             ::Velvet::Key::F13
-#define VL_KEY_F14             ::Velvet::Key::F14
-#define VL_KEY_F15             ::Velvet::Key::F15
-#define VL_KEY_F16             ::Velvet::Key::F16
-#define VL_KEY_F17             ::Velvet::Key::F17
-#define VL_KEY_F18             ::Velvet::Key::F18
-#define VL_KEY_F19             ::Velvet::Key::F19
-#define VL_KEY_F20             ::Velvet::Key::F20
-#define VL_KEY_F21             ::Velvet::Key::F21
-#define VL_KEY_F22             ::Velvet::Key::F22
-#define VL_KEY_F23             ::Velvet::Key::F23
-#define VL_KEY_F24             ::Velvet::Key::F24
-#define VL_KEY_F25             ::Velvet::Key::F25
+#define VL_KEY_ESCAPE          ::Ares::Key::Escape
+#define VL_KEY_ENTER           ::Ares::Key::Enter
+#define VL_KEY_TAB             ::Ares::Key::Tab
+#define VL_KEY_BACKSPACE       ::Ares::Key::Backspace
+#define VL_KEY_INSERT          ::Ares::Key::Insert
+#define VL_KEY_DELETE          ::Ares::Key::Delete
+#define VL_KEY_RIGHT           ::Ares::Key::Right
+#define VL_KEY_LEFT            ::Ares::Key::Left
+#define VL_KEY_DOWN            ::Ares::Key::Down
+#define VL_KEY_UP              ::Ares::Key::Up
+#define VL_KEY_PAGE_UP         ::Ares::Key::PageUp
+#define VL_KEY_PAGE_DOWN       ::Ares::Key::PageDown
+#define VL_KEY_HOME            ::Ares::Key::Home
+#define VL_KEY_END             ::Ares::Key::End
+#define VL_KEY_CAPS_LOCK       ::Ares::Key::CapsLock
+#define VL_KEY_SCROLL_LOCK     ::Ares::Key::ScrollLock
+#define VL_KEY_NUM_LOCK        ::Ares::Key::NumLock
+#define VL_KEY_PRINT_SCREEN    ::Ares::Key::PrintScreen
+#define VL_KEY_PAUSE           ::Ares::Key::Pause
+#define VL_KEY_F1              ::Ares::Key::F1
+#define VL_KEY_F2              ::Ares::Key::F2
+#define VL_KEY_F3              ::Ares::Key::F3
+#define VL_KEY_F4              ::Ares::Key::F4
+#define VL_KEY_F5              ::Ares::Key::F5
+#define VL_KEY_F6              ::Ares::Key::F6
+#define VL_KEY_F7              ::Ares::Key::F7
+#define VL_KEY_F8              ::Ares::Key::F8
+#define VL_KEY_F9              ::Ares::Key::F9
+#define VL_KEY_F10             ::Ares::Key::F10
+#define VL_KEY_F11             ::Ares::Key::F11
+#define VL_KEY_F12             ::Ares::Key::F12
+#define VL_KEY_F13             ::Ares::Key::F13
+#define VL_KEY_F14             ::Ares::Key::F14
+#define VL_KEY_F15             ::Ares::Key::F15
+#define VL_KEY_F16             ::Ares::Key::F16
+#define VL_KEY_F17             ::Ares::Key::F17
+#define VL_KEY_F18             ::Ares::Key::F18
+#define VL_KEY_F19             ::Ares::Key::F19
+#define VL_KEY_F20             ::Ares::Key::F20
+#define VL_KEY_F21             ::Ares::Key::F21
+#define VL_KEY_F22             ::Ares::Key::F22
+#define VL_KEY_F23             ::Ares::Key::F23
+#define VL_KEY_F24             ::Ares::Key::F24
+#define VL_KEY_F25             ::Ares::Key::F25
 
 /* Keypad */
-#define VL_KEY_KP_0            ::Velvet::Key::KP0
-#define VL_KEY_KP_1            ::Velvet::Key::KP1
-#define VL_KEY_KP_2            ::Velvet::Key::KP2
-#define VL_KEY_KP_3            ::Velvet::Key::KP3
-#define VL_KEY_KP_4            ::Velvet::Key::KP4
-#define VL_KEY_KP_5            ::Velvet::Key::KP5
-#define VL_KEY_KP_6            ::Velvet::Key::KP6
-#define VL_KEY_KP_7            ::Velvet::Key::KP7
-#define VL_KEY_KP_8            ::Velvet::Key::KP8
-#define VL_KEY_KP_9            ::Velvet::Key::KP9
-#define VL_KEY_KP_DECIMAL      ::Velvet::Key::KPDecimal
-#define VL_KEY_KP_DIVIDE       ::Velvet::Key::KPDivide
-#define VL_KEY_KP_MULTIPLY     ::Velvet::Key::KPMultiply
-#define VL_KEY_KP_SUBTRACT     ::Velvet::Key::KPSubtract
-#define VL_KEY_KP_ADD          ::Velvet::Key::KPAdd
-#define VL_KEY_KP_ENTER        ::Velvet::Key::KPEnter
-#define VL_KEY_KP_EQUAL        ::Velvet::Key::KPEqual
+#define VL_KEY_KP_0            ::Ares::Key::KP0
+#define VL_KEY_KP_1            ::Ares::Key::KP1
+#define VL_KEY_KP_2            ::Ares::Key::KP2
+#define VL_KEY_KP_3            ::Ares::Key::KP3
+#define VL_KEY_KP_4            ::Ares::Key::KP4
+#define VL_KEY_KP_5            ::Ares::Key::KP5
+#define VL_KEY_KP_6            ::Ares::Key::KP6
+#define VL_KEY_KP_7            ::Ares::Key::KP7
+#define VL_KEY_KP_8            ::Ares::Key::KP8
+#define VL_KEY_KP_9            ::Ares::Key::KP9
+#define VL_KEY_KP_DECIMAL      ::Ares::Key::KPDecimal
+#define VL_KEY_KP_DIVIDE       ::Ares::Key::KPDivide
+#define VL_KEY_KP_MULTIPLY     ::Ares::Key::KPMultiply
+#define VL_KEY_KP_SUBTRACT     ::Ares::Key::KPSubtract
+#define VL_KEY_KP_ADD          ::Ares::Key::KPAdd
+#define VL_KEY_KP_ENTER        ::Ares::Key::KPEnter
+#define VL_KEY_KP_EQUAL        ::Ares::Key::KPEqual
 
-#define VL_KEY_LEFT_SHIFT      ::Velvet::Key::LeftShift
-#define VL_KEY_LEFT_CONTROL    ::Velvet::Key::LeftControl
-#define VL_KEY_LEFT_ALT        ::Velvet::Key::LeftAlt
-#define VL_KEY_LEFT_SUPER      ::Velvet::Key::LeftSuper
-#define VL_KEY_RIGHT_SHIFT     ::Velvet::Key::RightShift
-#define VL_KEY_RIGHT_CONTROL   ::Velvet::Key::RightControl
-#define VL_KEY_RIGHT_ALT       ::Velvet::Key::RightAlt
-#define VL_KEY_RIGHT_SUPER     ::Velvet::Key::RightSuper
-#define VL_KEY_MENU            ::Velvet::Key::Menu
+#define VL_KEY_LEFT_SHIFT      ::Ares::Key::LeftShift
+#define VL_KEY_LEFT_CONTROL    ::Ares::Key::LeftControl
+#define VL_KEY_LEFT_ALT        ::Ares::Key::LeftAlt
+#define VL_KEY_LEFT_SUPER      ::Ares::Key::LeftSuper
+#define VL_KEY_RIGHT_SHIFT     ::Ares::Key::RightShift
+#define VL_KEY_RIGHT_CONTROL   ::Ares::Key::RightControl
+#define VL_KEY_RIGHT_ALT       ::Ares::Key::RightAlt
+#define VL_KEY_RIGHT_SUPER     ::Ares::Key::RightSuper
+#define VL_KEY_MENU            ::Ares::Key::Menu

@@ -1,7 +1,7 @@
 #pragma once
 #pragma once
 
-namespace Velvet {
+namespace Ares {
 
 	typedef enum class MouseCode : uint16_t
 	{
@@ -29,15 +29,15 @@ namespace Velvet {
 
 }
 
-#define VL_MOUSE_BUTTON_0      ::Velvet::Mouse::Button0
-#define VL_MOUSE_BUTTON_1      ::Velvet::Mouse::Button1
-#define VL_MOUSE_BUTTON_2      ::Velvet::Mouse::Button2
-#define VL_MOUSE_BUTTON_3      ::Velvet::Mouse::Button3
-#define VL_MOUSE_BUTTON_4      ::Velvet::Mouse::Button4
-#define VL_MOUSE_BUTTON_5      ::Velvet::Mouse::Button5
-#define VL_MOUSE_BUTTON_6      ::Velvet::Mouse::Button6
-#define VL_MOUSE_BUTTON_7      ::Velvet::Mouse::Button7
-#define VL_MOUSE_BUTTON_LAST   ::Velvet::Mouse::ButtonLast
-#define VL_MOUSE_BUTTON_LEFT   ::Velvet::Mouse::ButtonLeft
-#define VL_MOUSE_BUTTON_RIGHT  ::Velvet::Mouse::ButtonRight
-#define VL_MOUSE_BUTTON_MIDDLE ::Velvet::Mouse::ButtonMiddle
+#define VL_MOUSE_BUTTON_0      ::Ares::Mouse::Button0
+#define VL_MOUSE_BUTTON_1      ::Ares::Mouse::Button1
+#define VL_MOUSE_BUTTON_2      ::Ares::Mouse::Button2
+#define VL_MOUSE_BUTTON_3      ::Ares::Mouse::Button3
+#define VL_MOUSE_BUTTON_4      ::Ares::Mouse::Button4
+#define VL_MOUSE_BUTTON_5      ::Ares::Mouse::Button5
+#define VL_MOUSE_BUTTON_6      ::Ares::Mouse::Button6
+#define VL_MOUSE_BUTTON_7      ::Ares::Mouse::Button7
+#define VL_MOUSE_BUTTON_LAST   ::Ares::Mouse::ButtonLast
+#define VL_MOUSE_BUTTON_LEFT   ::Ares::Mouse::ButtonLeft
+#define VL_MOUSE_BUTTON_RIGHT  ::Ares::Mouse::ButtonRight
+#define VL_MOUSE_BUTTON_MIDDLE ::Ares::Mouse::ButtonMiddle
