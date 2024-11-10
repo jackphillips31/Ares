@@ -1,6 +1,8 @@
 [submodule "src/Vendor/GLFW"]
 	path = src/Vendor/GLFW
 	url = https://github.com/jackphillips31/glfw
+	branch = master
 [submodule "src/Vendor/spdlog"]
 	path = src/Vendor/spdlog
 	url = https://github.com/jackphillips31/spdlog
+	branch = v2.x
