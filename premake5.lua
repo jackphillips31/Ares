@@ -18,6 +18,7 @@ workspace "Ares"
 	IncludeDir["GLFW"] = "src/Vendor/GLFW/include"
 	IncludeDir["GLAD"] = "src/Vendor/GLAD/include"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
+	IncludeDir["glm"] = "src/Vendor/glm"
 
 	group "Dependencies"
 		include "src/Vendor/GLFW"
@@ -42,7 +43,9 @@ workspace "Ares"
 		files
 		{
 			"src/%{prj.name}/**.h",
-			"src/%{prj.name}/**.cpp"
+			"src/%{prj.name}/**.cpp",
+			"src/Vendor/glm/glm/**.hpp",
+			"src/Vendor/glm/glm/**.inl"
 		}
 
 		includedirs
@@ -51,7 +54,8 @@ workspace "Ares"
 			"%{IncludeDir.spdlog}",
 			"%{IncludeDir.GLFW}",
 			"%{IncludeDir.GLAD}",
-			"%{IncludeDir.ImGui}"
+			"%{IncludeDir.ImGui}",
+			"%{IncludeDir.glm}"
 		}
 
 		links
@@ -109,7 +113,8 @@ workspace "Ares"
 		{
 			"src/Ares",
 			"src/Vendor",
-			"%{IncludeDir.spdlog}"
+			"%{IncludeDir.spdlog}",
+			"%{IncludeDir.glm}"
 		}
 
 		links
