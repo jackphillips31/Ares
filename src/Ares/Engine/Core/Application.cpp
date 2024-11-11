@@ -14,6 +14,7 @@ namespace Ares {
 		s_Instance = this;
 
 		m_Window = Window::Create();
+		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 	}
 
 	Application::~Application()

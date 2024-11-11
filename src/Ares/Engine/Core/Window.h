@@ -2,6 +2,8 @@
 
 #include "Engine/Core/Core.h"
 
+#include "Engine/Events/Event.h"
+
 namespace Ares {
 
 	struct WindowProps
@@ -22,6 +24,8 @@ namespace Ares {
 	class Window
 	{
 	public:
+		using EventCallbackFn = std::function<void(Event&)>;
+
 		virtual ~Window() {}
 
 		virtual void OnUpdate() = 0;
@@ -30,6 +34,7 @@ namespace Ares {
 		virtual unsigned int GetHeight() const = 0;
 
 		// Window attributes
+		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
 
