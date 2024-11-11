@@ -6,3 +6,7 @@
 	path = src/Vendor/spdlog
 	url = https://github.com/jackphillips31/spdlog
 	branch = v2.x
+[submodule "src/Vendor/imgui"]
+	path = src/Vendor/imgui
+	url = https://github.com/jackphillips31/imgui.git
+	branch = docking
