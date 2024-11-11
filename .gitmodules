@@ -10,3 +10,7 @@
 	path = src/Vendor/imgui
 	url = https://github.com/jackphillips31/imgui.git
 	branch = docking
+[submodule "src/Vendor/glm"]
+	path = src/Vendor/glm
+	url = https://github.com/g-truc/glm.git
+	branch = master

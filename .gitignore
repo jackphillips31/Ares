@@ -8,3 +8,7 @@
 **.vcxproj
 **.vcxproj.filters
 **.vcxproj.user
+
+# Specific Files
+/src/Sandbox/imgui.ini
+/src/Sandbox/imgui_log.txt
