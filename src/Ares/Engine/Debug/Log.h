@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Engine/Core/Core.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/ostr.h>
 
-#include "Engine/Core/Core.h"
 
 namespace Ares {
 
@@ -38,9 +38,9 @@ namespace LogDebug {
 	}
 
 	template<typename... Args>
-	inline static std::string ToString(const std::string& fmt, Args&&... args)
+	inline static std::string ToString(const std::string& formatStr, Args&&... args)
 	{
-		return fmt::format(fmt, std::forward<Args>(args)...);
+		return fmt::vformat(formatStr, fmt::make_format_args(std::forward<Args>(args)...));
 	}
 
 	inline static std::string ExtractFileName(const char* fullFilePath)
