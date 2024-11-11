@@ -16,10 +16,12 @@ workspace "Ares"
 	IncludeDir = {}
 	IncludeDir["spdlog"] = "src/Vendor/spdlog/include"
 	IncludeDir["GLFW"] = "src/Vendor/GLFW/include"
+	IncludeDir["GLAD"] = "src/Vendor/GLAD/include"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
 
 	group "Dependencies"
 		include "src/Vendor/GLFW"
+		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
 		include "src/Vendor/spdlog"
 	group ""
@@ -48,14 +50,17 @@ workspace "Ares"
 			"src/%{prj.name}",
 			"%{IncludeDir.spdlog}",
 			"%{IncludeDir.GLFW}",
+			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}"
 		}
 
 		links
 		{
 			"GLFW",
+			"GLAD",
 			"ImGui",
-			"spdlog"
+			"spdlog",
+			"opengl32.lib"
 		}
 
 		filter "system:windows"
@@ -64,7 +69,9 @@ workspace "Ares"
 			defines
 			{
 				"AR_PLATFORM_WINDOWS",
-				"AR_BUILD_DLL"
+				"AR_BUILD_DLL",
+				"GLFW_INCLUDE_NONE",
+				"IMGUI_IMPL_OPENGL_LOADER_GLAD"
 			}
 
 		filter "configurations:Debug"
