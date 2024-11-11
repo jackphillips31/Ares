@@ -7,6 +7,8 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
 
+#include "Engine/Renderer/Renderer.h"
+
 namespace Ares {
 	static uint8_t s_GLFWWindowCount = 0;
 
@@ -41,14 +43,19 @@ namespace Ares {
 		}
 
 		{
-#if defined(AR_DEBUG)
-#endif
+		#if defined(AR_DEBUG)
+			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
+				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+		#endif
 
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 
 			glfwSetWindowSizeLimits(m_Window, 1280, 720, GLFW_DONT_CARE, GLFW_DONT_CARE);
 		}
+
+		m_Context = GraphicsContext::Create(m_Window);
+		m_Context->Init();
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
@@ -148,6 +155,7 @@ namespace Ares {
 	{
 		glfwDestroyWindow(m_Window);
 		--s_GLFWWindowCount;
+		m_Context.reset();
 		if (s_GLFWWindowCount == 0)
 		{
 			glfwTerminate();
@@ -157,6 +165,7 @@ namespace Ares {
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
+		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)

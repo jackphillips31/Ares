@@ -4,6 +4,7 @@
 #include "Engine/Core/Application.h"
 
 #include "Engine/Core/Timestep.h"
+#include "Engine/Renderer/Renderer.h"
 
 namespace Ares {
 
@@ -15,11 +16,16 @@ namespace Ares {
 
 		m_Window = Window::Create();
 		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
+
+		Renderer::Init();
+
+		m_ImGuiLayer = new ImGuiLayer();
+		PushOverlay(m_ImGuiLayer);
 	}
 
 	Application::~Application()
 	{
-
+		Renderer::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -48,6 +54,13 @@ namespace Ares {
 				for (Layer* layer : m_LayerStack)
 					layer->OnUpdate(timestep);
 			}
+
+			m_ImGuiLayer->Begin();
+			{
+				for (Layer* layer : m_LayerStack)
+					layer->OnImGuiRender();
+			}
+			m_ImGuiLayer->End();
 
 			m_Window->OnUpdate();
 		}

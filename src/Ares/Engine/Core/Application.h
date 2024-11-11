@@ -5,6 +5,7 @@
 #include "Engine/Core/Window.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/Event.h"
+#include "Engine/Layers/ImGuiLayer.h"
 #include "Engine/Layers/LayerStack.h"
 
 int main(int argc, char** argv);
@@ -33,6 +34,7 @@ namespace Ares {
 	
 	private:
 		Scope<Window> m_Window;
+		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		bool m_Minimized = false;
 		LayerStack m_LayerStack;

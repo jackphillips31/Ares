@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Engine/Core/Window.h"
+#include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
 
@@ -30,6 +31,7 @@ namespace Ares {
 
 	private:
 		GLFWwindow* m_Window;
+		Scope<GraphicsContext> m_Context;
 
 		struct WindowData
 		{

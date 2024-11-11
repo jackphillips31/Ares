@@ -13,6 +13,7 @@ public:
 
 	void OnUpdate(Ares::Timestep ts) override;
 	void OnEvent(Ares::Event& e) override;
+	virtual void OnImGuiRender() override;
 
 private:
 	Ares::Window& m_Window;
