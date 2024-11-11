@@ -38,9 +38,9 @@ namespace LogDebug {
 	}
 
 	template<typename... Args>
-	inline static std::string ToString(const std::string& formatStr, Args&&... args)
+	inline static std::string ToString(const std::string formatStr, Args&&... args)
 	{
-		return fmt::vformat(formatStr, fmt::make_format_args(std::forward<Args>(args)...));
+		return fmt::format(fmt::runtime(formatStr), std::forward<Args>(args)...);
 	}
 
 	inline static std::string ExtractFileName(const char* fullFilePath)
