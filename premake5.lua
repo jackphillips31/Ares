@@ -16,9 +16,11 @@ workspace "Ares"
 	IncludeDir = {}
 	IncludeDir["spdlog"] = "src/Vendor/spdlog/include"
 	IncludeDir["GLFW"] = "src/Vendor/GLFW/include"
+	IncludeDir["ImGui"] = "src/Vendor/imgui"
 
 	group "Dependencies"
 		include "src/Vendor/GLFW"
+		include "src/Vendor/imgui"
 		include "src/Vendor/spdlog"
 	group ""
 
@@ -45,12 +47,14 @@ workspace "Ares"
 		{
 			"src/%{prj.name}",
 			"%{IncludeDir.spdlog}",
-			"%{IncludeDir.GLFW}"
+			"%{IncludeDir.GLFW}",
+			"%{IncludeDir.ImGui}"
 		}
 
 		links
 		{
 			"GLFW",
+			"ImGui",
 			"spdlog"
 		}
 
