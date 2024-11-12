@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Core/Input.h"
+#include "Engine/Events/MouseCodes.h"
 #include "Engine/Events/Event.h"
 
 namespace Ares {
