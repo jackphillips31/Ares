@@ -4,6 +4,7 @@
 
 #include "Engine/Core/Window.h"
 #include "Engine/Events/ApplicationEvent.h"
+#include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Layers/ImGuiLayer.h"
 #include "Engine/Layers/LayerStack.h"
@@ -31,12 +32,14 @@ namespace Ares {
 		void Run();
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+		bool OnKeyPressed(KeyPressedEvent& e);
 	
 	private:
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		bool m_Minimized = false;
+		bool m_ShowConsole = false;
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
 

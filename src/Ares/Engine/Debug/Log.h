@@ -1,10 +1,12 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/ostr.h>
 
+#include "Engine/Core/Core.h"
+#include "Engine/Debug/Console.h"
+#include "Engine/Debug/ImGuiConsoleSink.h"
 
 namespace Ares {
 
@@ -15,10 +17,12 @@ namespace Ares {
 
 		inline static Ref<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
 		inline static Ref<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+		inline static Console& GetConsole() { return s_Console; }
 
 	private:
 		static Ref<spdlog::logger> s_CoreLogger;
 		static Ref<spdlog::logger> s_ClientLogger;
+		static Console s_Console;
 	};
 
 }

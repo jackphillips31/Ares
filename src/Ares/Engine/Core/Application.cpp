@@ -4,6 +4,7 @@
 #include "Engine/Core/Application.h"
 
 #include "Engine/Core/Timestep.h"
+#include "Engine/Debug/Console.h"
 #include "Engine/Renderer/Renderer.h"
 
 namespace Ares {
@@ -59,6 +60,8 @@ namespace Ares {
 			{
 				for (Layer* layer : m_LayerStack)
 					layer->OnImGuiRender();
+
+				Log::GetConsole().Draw("Console", m_ShowConsole);
 			}
 			m_ImGuiLayer->End();
 
@@ -71,6 +74,7 @@ namespace Ares {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
+		dispatcher.Dispatch<KeyPressedEvent>(AR_BIND_EVENT_FN(Application::OnKeyPressed));
 
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
@@ -95,6 +99,17 @@ namespace Ares {
 		}
 
 		m_Minimized = false;
+		return false;
+	}
+
+	bool Application::OnKeyPressed(KeyPressedEvent& e)
+	{
+		if (e.GetKeyCode() == KeyCode::GraveAccent)
+		{
+			m_ShowConsole = !m_ShowConsole;
+			return true;
+		}
+
 		return false;
 	}
 
