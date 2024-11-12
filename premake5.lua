@@ -43,9 +43,7 @@ workspace "Ares"
 		files
 		{
 			"src/%{prj.name}/**.h",
-			"src/%{prj.name}/**.cpp",
-			"src/Vendor/glm/glm/**.hpp",
-			"src/Vendor/glm/glm/**.inl"
+			"src/%{prj.name}/**.cpp"
 		}
 
 		includedirs
