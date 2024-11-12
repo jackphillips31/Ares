@@ -2,8 +2,8 @@
 
 #include "Engine/Core/Core.h"
 
-#include "Engine/Core/KeyCodes.h"
-#include "Engine/Core/MouseCodes.h"
+#include "Engine/Events/KeyCodes.h"
+#include "Engine/Events/MouseCodes.h"
 
 namespace Ares {
 

@@ -4,8 +4,6 @@
 
 #ifdef AR_PLATFORM_WINDOWS
 
-extern Ares::Application* Ares::CreateApplication();
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	return EntryPoint(__argc, __argv);
