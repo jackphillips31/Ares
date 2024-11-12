@@ -9,7 +9,7 @@
 #include "Engine/Layers/ImGuiLayer.h"
 #include "Engine/Layers/LayerStack.h"
 
-int main(int argc, char** argv);
+int EntryPoint(int argc, char** argv);
 
 namespace Ares {
 
@@ -45,9 +45,10 @@ namespace Ares {
 
 	private:
 		static Application* s_Instance;
-		friend int ::main(int argc, char** argv);
+		friend int ::EntryPoint(int argc, char** argv);
 	};
 
 	// To be defined in CLIENT
 	Application* CreateApplication();
+
 }
