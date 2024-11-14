@@ -2,12 +2,12 @@
 
 #include "Engine/Core/Core.h"
 
+#include "Engine/Core/LayerStack.h"
 #include "Engine/Core/Window.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Layers/ImGuiLayer.h"
-#include "Engine/Layers/LayerStack.h"
 
 int EntryPoint(int argc, char** argv);
 

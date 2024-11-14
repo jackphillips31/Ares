@@ -7,6 +7,7 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Core/Layer.h"
 #include "Engine/Core/Timestep.h"
 
 #include "Engine/Events/ApplicationEvent.h"
@@ -16,7 +17,6 @@
 #include "Engine/Events/MouseCodes.h"
 #include "Engine/Events/MouseEvent.h"
 
-#include "Engine/Layers/Layer.h"
 #include "Engine/Layers/ImGuiLayer.h"
 
 //----------------- RENDERER ------------------
