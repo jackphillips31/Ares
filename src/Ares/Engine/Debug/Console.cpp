@@ -29,8 +29,12 @@ namespace Ares {
 
 			ImGui::BeginChild("ScrollableRegion", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
+			ImGui::PushTextWrapPos();
+
 			for (const auto& item : m_Items)
 				ImGui::TextUnformatted(item.c_str());
+
+			ImGui::PopTextWrapPos();
 
 			if (m_ScrollToBottom)
 				ImGui::SetScrollHereY(1.0f);
