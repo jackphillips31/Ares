@@ -1,6 +1,5 @@
 #include <arespch.h>
-#include <imgui.h>
-#include <backends/imgui_impl_win32.h>
+#include <imgui_impl_win32.h>
 #include <glad/wgl.h>
 
 #include "Platform/WinAPI/WinWindow.h"
