@@ -5,5 +5,6 @@
 namespace Ares {
 
 	KeyCode WinAPIKeyToKeyCode(uint32_t winApiKey);
+	uint32_t KeyCodeToWinAPIKey(KeyCode keyCode);
 
 }

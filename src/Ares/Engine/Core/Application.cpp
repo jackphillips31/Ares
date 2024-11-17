@@ -27,7 +27,7 @@ namespace Ares {
 	Application::~Application()
 	{
 		Renderer::Shutdown();
-		//Input::Shutdown();
+		Input::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

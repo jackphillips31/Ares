@@ -2,11 +2,9 @@
 
 #include "Engine/Core/Input.h"
 
-/*
-
 namespace Ares {
-	
-	class WindowsInput : public Input
+
+	class WinInput : public Input
 	{
 	protected:
 		virtual bool IsKeyPressedImpl(KeyCode key) override;
@@ -18,5 +16,3 @@ namespace Ares {
 	};
 
 }
-
-*/
