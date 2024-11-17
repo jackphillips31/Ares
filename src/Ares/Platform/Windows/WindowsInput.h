@@ -2,6 +2,8 @@
 
 #include "Engine/Core/Input.h"
 
+/*
+
 namespace Ares {
 	
 	class WindowsInput : public Input
@@ -16,3 +18,5 @@ namespace Ares {
 	};
 
 }
+
+*/

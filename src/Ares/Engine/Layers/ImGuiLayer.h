@@ -7,17 +7,13 @@ namespace Ares {
 	class ImGuiLayer : public Layer
 	{
 	public:
-		ImGuiLayer();
-		~ImGuiLayer();
+		ImGuiLayer(const std::string& name = "ImGuiLayer");
+		virtual ~ImGuiLayer() {};
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
+		virtual void Begin() {};
+		virtual void End() {};
 
-		void Begin();
-		void End();
-
-	private:
-		float m_Time = 0.0f;
+		static ImGuiLayer* Create();
 	};
 
 }

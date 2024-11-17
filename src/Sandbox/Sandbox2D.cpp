@@ -27,7 +27,7 @@ void Sandbox2D::OnEvent(Ares::Event& e)
 
 void Sandbox2D::OnImGuiRender()
 {
-	ImGui::Begin("Test");
-	ImGui::LabelText("TEST LABEL", "TESTLABEL2");
+	ImGui::Begin("Performance");
+	ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
 }

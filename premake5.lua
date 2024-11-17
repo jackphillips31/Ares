@@ -15,13 +15,11 @@ workspace "Ares"
 	-- Include directories relative to root folder (solution directory)
 	IncludeDir = {}
 	IncludeDir["spdlog"] = "src/Vendor/spdlog/include"
-	IncludeDir["GLFW"] = "src/Vendor/GLFW/include"
 	IncludeDir["GLAD"] = "src/Vendor/GLAD/include"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
 	IncludeDir["glm"] = "src/Vendor/glm"
 
 	group "Dependencies"
-		include "src/Vendor/GLFW"
 		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
 		include "src/Vendor/spdlog"
@@ -50,7 +48,6 @@ workspace "Ares"
 		{
 			"src/%{prj.name}",
 			"%{IncludeDir.spdlog}",
-			"%{IncludeDir.GLFW}",
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}"
@@ -58,7 +55,6 @@ workspace "Ares"
 
 		links
 		{
-			"GLFW",
 			"GLAD",
 			"ImGui",
 			"spdlog",
@@ -72,7 +68,6 @@ workspace "Ares"
 			{
 				"AR_PLATFORM_WINDOWS",
 				"AR_BUILD_DLL",
-				"GLFW_INCLUDE_NONE",
 				"IMGUI_IMPL_OPENGL_LOADER_GLAD"
 			}
 
@@ -93,7 +88,7 @@ workspace "Ares"
 
 	project "Sandbox"
 		location "src/Sandbox"
-		kind "WindowedApp"
+		kind "ConsoleApp"
 		language "C++"
 		cppdialect "C++20"
 		staticruntime "on"

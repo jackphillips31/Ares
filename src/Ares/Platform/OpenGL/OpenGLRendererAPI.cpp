@@ -1,5 +1,5 @@
 #include <arespch.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 
@@ -30,8 +30,7 @@ namespace Ares {
 	{
 		AR_CORE_INFO("Initializing OpenGLRendererAPI");
 		
-		/*
-#ifdef VL_DEBUG
+#ifdef AR_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(OpenGLMessageCallback, nullptr);
@@ -44,7 +43,6 @@ namespace Ares {
 
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
-		*/
 	}
 
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)

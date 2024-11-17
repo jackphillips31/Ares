@@ -1,24 +1,21 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-
 #include "Engine/Core/Window.h"
 #include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
 
-	class WindowsWindow : public Window
+	class WinWindow : public Window
 	{
 	public:
-		WindowsWindow(const WindowProps& props);
-		virtual ~WindowsWindow();
+		WinWindow(const WindowProps& props);
+		virtual ~WinWindow();
 
 		void OnUpdate() override;
 
 		inline unsigned int GetWidth() const override { return m_Data.Width; }
 		inline unsigned int GetHeight() const override { return m_Data.Height; }
 
-		// Window attributes
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
@@ -28,20 +25,23 @@ namespace Ares {
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
+		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	private:
-		GLFWwindow* m_Window;
-		Scope<GraphicsContext> m_Context;
+		HWND m_Window;
+		Scope<GraphicsContext> m_GraphicsContext;
 
 		struct WindowData
 		{
 			std::string Title;
 			unsigned int Width, Height;
 			bool VSync;
-
+			
 			EventCallbackFn EventCallback;
 		};
 
 		WindowData m_Data;
 	};
+
 }

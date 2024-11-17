@@ -1,5 +1,4 @@
 #include <arespch.h>
-#include <GLFW/glfw3.h>
 
 #include "Engine/Core/Application.h"
 
@@ -21,14 +20,14 @@ namespace Ares {
 
 		Renderer::Init();
 
-		m_ImGuiLayer = new ImGuiLayer();
+		m_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(m_ImGuiLayer);
 	}
 
 	Application::~Application()
 	{
 		Renderer::Shutdown();
-		Input::Shutdown();
+		//Input::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -48,9 +47,12 @@ namespace Ares {
 		AR_CORE_INFO("Engine Running...");
 		while (m_Running)
 		{
-			float time = (float)glfwGetTime();
-			Timestep timestep = time - m_LastFrameTime;
-			m_LastFrameTime = time;
+			LARGE_INTEGER currentTime;
+			LARGE_INTEGER frequency;
+			QueryPerformanceCounter(&currentTime);
+			QueryPerformanceCounter(&frequency);
+			Timestep timestep = ((float)currentTime.QuadPart - m_LastFrameTime) / (float)frequency.QuadPart;
+			m_LastFrameTime = (float)currentTime.QuadPart;
 
 			if (!m_Minimized)
 			{
@@ -109,7 +111,7 @@ namespace Ares {
 		if (e.GetKeyCode() == KeyCode::GraveAccent)
 		{
 			m_ShowConsole = !m_ShowConsole;
-			return true;
+			return false;
 		}
 
 		return false;

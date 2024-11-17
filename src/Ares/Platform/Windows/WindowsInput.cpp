@@ -1,10 +1,10 @@
 #include <arespch.h>
-#include <GLFW/glfw3.h>
 
 #include "Platform/Windows/WindowsInput.h"
 
 #include "Engine/Core/Application.h"
 
+/*
 namespace Ares {
 
 	bool WindowsInput::IsKeyPressedImpl(KeyCode key)
@@ -47,3 +47,5 @@ namespace Ares {
 	}
 
 }
+
+*/

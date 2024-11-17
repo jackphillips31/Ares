@@ -2,20 +2,21 @@
 
 #include "Engine/Renderer/GraphicsContext.h"
 
-struct GLFWwindow;
-
 namespace Ares {
 
-	class OpenGLContext : public GraphicsContext
+	class WinOpenGLContext : public GraphicsContext
 	{
 	public:
-		OpenGLContext(GLFWwindow* windowHandle);
+		WinOpenGLContext(void* windowHandle);
 
 		virtual void Init() override;
 		virtual void SwapBuffers() override;
 
 	private:
-		GLFWwindow* m_WindowHandle;
+		HWND m_WindowHandle;
+		HGLRC m_Context;
+
+		static HGLRC s_SharedContext;
 	};
 
 }
