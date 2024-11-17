@@ -88,7 +88,7 @@ workspace "Ares"
 
 	project "Sandbox"
 		location "src/Sandbox"
-		kind "ConsoleApp"
+		kind "WindowedApp"
 		language "C++"
 		cppdialect "C++20"
 		staticruntime "on"

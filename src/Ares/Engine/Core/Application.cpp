@@ -61,8 +61,6 @@ namespace Ares {
 			{
 				for (Layer* layer : m_LayerStack)
 					layer->OnImGuiRender();
-
-				Log::GetConsole().Draw("Console", m_ShowConsole);
 			}
 			m_ImGuiLayer->End();
 
@@ -105,12 +103,6 @@ namespace Ares {
 
 	bool Application::OnKeyPressed(KeyPressedEvent& e)
 	{
-		if (e.GetKeyCode() == KeyCode::GraveAccent)
-		{
-			m_ShowConsole = !m_ShowConsole;
-			return false;
-		}
-
 		return false;
 	}
 

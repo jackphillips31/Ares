@@ -30,4 +30,6 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::Begin("Performance");
 	ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
+
+	Ares::Log::GetConsole().Draw("Console", true);
 }
