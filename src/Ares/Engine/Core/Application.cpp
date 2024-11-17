@@ -47,12 +47,9 @@ namespace Ares {
 		AR_CORE_INFO("Engine Running...");
 		while (m_Running)
 		{
-			LARGE_INTEGER currentTime;
-			LARGE_INTEGER frequency;
-			QueryPerformanceCounter(&currentTime);
-			QueryPerformanceCounter(&frequency);
-			Timestep timestep = ((float)currentTime.QuadPart - m_LastFrameTime) / (float)frequency.QuadPart;
-			m_LastFrameTime = (float)currentTime.QuadPart;
+			float time = std::chrono::duration<float>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+			Timestep timestep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
 
 			if (!m_Minimized)
 			{
