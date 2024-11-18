@@ -33,7 +33,7 @@ workspace "Ares"
 		staticruntime "on"
 
 		targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-		objdir ("%{wks.location}/src/bin/%{prj.name}/")
+		objdir ("%{wks.location}/bin/" ..outputdir.. "/%{prj.name}/obj")
 
 		pchheader "arespch.h"
 		pchsource "src/%{prj.name}/arespch.cpp"
@@ -94,7 +94,7 @@ workspace "Ares"
 		staticruntime "on"
 
 		targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-		objdir ("%{wks.location}/src/bin/%{prj.name}/")
+		objdir ("%{wks.location}/bin/" ..outputdir.. "/%{prj.name}/obj")
 
 		files
 		{
