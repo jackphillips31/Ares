@@ -147,7 +147,7 @@ namespace Ares {
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			HWND window = static_cast<HWND>(app.GetWindow().GetNativeWindow());
+			HWND window = (HWND)app.GetWindow().GetNativeWindow();
 			HDC backup_hdc = GetDC(window);
 			HGLRC backup_hglrc = wglGetCurrentContext();
 			wglMakeCurrent(backup_hdc, backup_hglrc);
