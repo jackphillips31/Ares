@@ -97,6 +97,11 @@ namespace Ares {
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+		ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
+		platformIO.Renderer_CreateWindow = CreateViewportContext;
+		platformIO.Renderer_DestroyWindow = DestroyViewportContext;
+		platformIO.Platform_RenderWindow = RenderViewport;
+
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
 
@@ -131,15 +136,9 @@ namespace Ares {
 
 	void WinImGuiLayer::End()
 	{
-		//AR_CORE_WARN("WinImGuiLayer::End");
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
-
-		ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
-		platformIO.Renderer_CreateWindow = CreateViewportContext;
-		platformIO.Renderer_DestroyWindow = DestroyViewportContext;
-		platformIO.Platform_RenderWindow = RenderViewport;
 
 		// Rendering
 		ImGui::Render();
@@ -150,7 +149,6 @@ namespace Ares {
 			HWND window = (HWND)app.GetWindow().GetNativeWindow();
 			HDC backup_hdc = GetDC(window);
 			HGLRC backup_hglrc = wglGetCurrentContext();
-			wglMakeCurrent(backup_hdc, backup_hglrc);
 
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
