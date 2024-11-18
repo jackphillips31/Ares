@@ -1,10 +1,10 @@
 #include <arespch.h>
-
 #include <glad/gl.h>
 #include <glad/wgl.h>
 
-#include "Platform/WinAPI/WinOpenGLContext.h"
 #include "Engine/Core/Application.h"
+
+#include "Platform/WinAPI/WinOpenGLContext.h"
 
 namespace Ares {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Events/MouseCodes.h"
 #include "Engine/Events/Event.h"
+#include "Engine/Events/MouseCodes.h"
 
 namespace Ares {
 	

@@ -1,11 +1,10 @@
 #include <arespch.h>
 
-#include "Engine/Core/Application.h"
-
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Timestep.h"
-#include "Engine/Debug/Console.h"
 #include "Engine/Renderer/Renderer.h"
+
+#include "Engine/Core/Application.h"
 
 namespace Ares {
 

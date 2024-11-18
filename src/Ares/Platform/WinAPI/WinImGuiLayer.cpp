@@ -3,80 +3,11 @@
 #include <imgui_impl_win32.h>
 #include <glad/wgl.h>
 
-#include "Platform/WinAPI/WinImGuiLayer.h"
-
 #include "Engine/Core/Application.h"
 
+#include "Platform/WinAPI/WinImGuiLayer.h"
+
 namespace Ares {
-
-	void CreateViewportContext(ImGuiViewport* viewport)
-	{
-		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
-		AR_CORE_ASSERT(hdc, "Failed to get device context for viewport pixel format!");
-
-		PIXELFORMATDESCRIPTOR pfd = {};
-		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-		pfd.iPixelType = PFD_TYPE_RGBA;
-		pfd.cColorBits = 32;
-		pfd.cDepthBits = 24;
-		pfd.iLayerType = PFD_MAIN_PLANE;
-
-		int pixelFormat = ChoosePixelFormat(hdc, &pfd);
-		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == 0)
-		{
-			AR_CORE_ASSERT(false, "Failed to set a compatible pixel format for viewport!");
-		}
-
-		int attributes[] = {
-			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
-			WGL_CONTEXT_FLAGS_ARB,
-			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-			0
-		};
-
-		HGLRC mainContext = wglGetCurrentContext();
-		AR_CORE_ASSERT(mainContext, "Failed to get main context for viewport!");
-
-		HGLRC sharedContext = wglCreateContextAttribsARB(hdc, mainContext, attributes);
-		AR_CORE_ASSERT(sharedContext, "Failed to create shared OpenGL context for viewport!");
-
-		if (!wglShareLists(mainContext, sharedContext))
-		{
-			DWORD error2 = GetLastError();
-			AR_CORE_ERROR("wglShareLists failed with error: {}", error2);
-			//AR_CORE_ASSERT(false, "Failed to share OpenGL resources!");
-		}
-
-		ReleaseDC((HWND)viewport->PlatformHandle, hdc);
-
-		viewport->RendererUserData = (void*)sharedContext;
-	}
-
-	void RenderViewport(ImGuiViewport* viewport, void* render_arg)
-	{
-		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
-		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
-
-		wglMakeCurrent(hdc, sharedContext);
-
-		ImGui_ImplOpenGL3_RenderDrawData(viewport->DrawData);
-
-		SwapBuffers(hdc);
-
-		wglMakeCurrent(nullptr, nullptr);
-	}
-
-	void DestroyViewportContext(ImGuiViewport* viewport)
-	{
-		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
-		if (sharedContext)
-		{
-			wglDeleteContext(sharedContext);
-			viewport->RendererUserData = nullptr;
-		}
-	}
 
 	WinImGuiLayer::WinImGuiLayer()
 		: ImGuiLayer("WinImGuiLayer")
@@ -155,6 +86,75 @@ namespace Ares {
 
 			wglMakeCurrent(backup_hdc, backup_hglrc);
 			ReleaseDC(window, backup_hdc);
+		}
+	}
+
+	void CreateViewportContext(ImGuiViewport* viewport)
+	{
+		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
+		AR_CORE_ASSERT(hdc, "Failed to get device context for viewport pixel format!");
+
+		PIXELFORMATDESCRIPTOR pfd = {};
+		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		pfd.iPixelType = PFD_TYPE_RGBA;
+		pfd.cColorBits = 32;
+		pfd.cDepthBits = 24;
+		pfd.iLayerType = PFD_MAIN_PLANE;
+
+		int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == 0)
+		{
+			AR_CORE_ASSERT(false, "Failed to set a compatible pixel format for viewport!");
+		}
+
+		int attributes[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+			WGL_CONTEXT_FLAGS_ARB,
+			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			0
+		};
+
+		HGLRC mainContext = wglGetCurrentContext();
+		AR_CORE_ASSERT(mainContext, "Failed to get main context for viewport!");
+
+		HGLRC sharedContext = wglCreateContextAttribsARB(hdc, mainContext, attributes);
+		AR_CORE_ASSERT(sharedContext, "Failed to create shared OpenGL context for viewport!");
+
+		if (!wglShareLists(mainContext, sharedContext))
+		{
+			DWORD error2 = GetLastError();
+			AR_CORE_ERROR("wglShareLists failed with error: {}", error2);
+			//AR_CORE_ASSERT(false, "Failed to share OpenGL resources!");
+		}
+
+		ReleaseDC((HWND)viewport->PlatformHandle, hdc);
+
+		viewport->RendererUserData = (void*)sharedContext;
+	}
+
+	void RenderViewport(ImGuiViewport* viewport, void* render_arg)
+	{
+		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
+		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
+
+		wglMakeCurrent(hdc, sharedContext);
+
+		ImGui_ImplOpenGL3_RenderDrawData(viewport->DrawData);
+
+		SwapBuffers(hdc);
+
+		wglMakeCurrent(nullptr, nullptr);
+	}
+
+	void DestroyViewportContext(ImGuiViewport* viewport)
+	{
+		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
+		if (sharedContext)
+		{
+			wglDeleteContext(sharedContext);
+			viewport->RendererUserData = nullptr;
 		}
 	}
 

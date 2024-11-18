@@ -1,19 +1,22 @@
 #include <arespch.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "Engine/Core/Core.h"
+#include "Engine/Debug/ImGuiConsoleSink.h"
+
 #include "Engine/Debug/Log.h"
 
 namespace Ares {
 	Ref<spdlog::logger> Log::s_CoreLogger;
 	Ref<spdlog::logger> Log::s_ClientLogger;
-	Console Log::s_Console;
+	Ref<Console> Log::s_Console;
 
 	void Log::Init(spdlog::level setLevel)
 	{
 		auto pattern = "%^[%T] %7n: %v%$";
 
-		Ref<ImGuiConsoleSink_mt> imgui_sink = CreateRef<ImGuiConsoleSink_mt>(&s_Console);
+		s_Console = CreateRef<Console>();
+
+		Ref<ImGuiConsoleSink_mt> imgui_sink = CreateRef<ImGuiConsoleSink_mt>(s_Console);
 		Ref<spdlog::sinks::stdout_color_sink_mt> stdout_sink = CreateRef<spdlog::sinks::stdout_color_sink_mt>();
 		Ref<spdlog::sinks::stderr_color_sink_mt> stderr_sink = CreateRef<spdlog::sinks::stderr_color_sink_mt>();
 

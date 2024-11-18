@@ -1,9 +1,9 @@
 #include <arespch.h>
 
 #include "Engine/Core/Application.h"
+
 #include "Platform/WinAPI/WinMouseCodes.h"
 #include "Platform/WinAPI/WinKeyCodes.h"
-
 #include "Platform/WinAPI/WinInput.h"
 
 namespace Ares {

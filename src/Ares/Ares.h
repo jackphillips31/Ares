@@ -1,6 +1,7 @@
 #pragma once
-// For use by Ares applications
 
+//------- FOR USE BY ARES APPLICATION ---------
+//---------------------------------------------
 #include "Engine/Core/Core.h"
 
 #include "Engine/Debug/Log.h"

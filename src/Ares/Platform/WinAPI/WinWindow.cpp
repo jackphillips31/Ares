@@ -2,12 +2,12 @@
 #include <imgui_impl_win32.h>
 #include <glad/wgl.h>
 
-#include "Platform/WinAPI/WinWindow.h"
-
-#include "Platform/WinAPI/WinKeyCodes.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
+
+#include "Platform/WinAPI/WinKeyCodes.h"
+#include "Platform/WinAPI/WinWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -112,8 +112,8 @@ namespace Ares {
 		{
 		case WM_SIZING: {
 			RECT winRect; GetWindowRect(hwnd, &winRect);
-			UINT width = (UINT)(winRect.right - winRect.left);
-			UINT height = (UINT)(winRect.bottom - winRect.top);
+			unsigned int width = (unsigned int)(winRect.right - winRect.left);
+			unsigned int height = (unsigned int)(winRect.bottom - winRect.top);
 
 			m_Data.Width = width;
 			m_Data.Height = height;

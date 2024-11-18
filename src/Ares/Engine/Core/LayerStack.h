@@ -1,10 +1,7 @@
 #pragma once
 
-#include <vector>
-
 #include "Engine/Core/Core.h"
 #include "Engine/Core/Layer.h"
-
 
 namespace Ares {
 

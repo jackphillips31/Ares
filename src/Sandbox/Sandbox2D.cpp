@@ -40,5 +40,5 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::End();
 	ImGui::PopFont();
 
-	Ares::Log::GetConsole().Draw("Console", true);
+	Ares::Log::GetConsole()->Draw("Console", true);
 }

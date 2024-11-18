@@ -1,9 +1,5 @@
 #pragma once
 
-#include <arespch.h>
-
-#include "Engine/Core/Core.h"
-
 namespace Ares {
 	
 	/* Events in Ares are currently blocking, meaning when an event occurs it
