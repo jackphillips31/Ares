@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Ares.h>
+#include <imgui/imgui.h>
 
 class Sandbox2D : public Ares::Layer
 {
@@ -17,4 +18,5 @@ public:
 
 private:
 	Ares::Window& m_Window;
+	ImFont* myFont = nullptr;
 };
