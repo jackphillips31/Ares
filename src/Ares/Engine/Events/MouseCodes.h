@@ -28,15 +28,15 @@ namespace Ares {
 
 }
 
-#define VL_MOUSE_BUTTON_0      ::Ares::Mouse::Button0
-#define VL_MOUSE_BUTTON_1      ::Ares::Mouse::Button1
-#define VL_MOUSE_BUTTON_2      ::Ares::Mouse::Button2
-#define VL_MOUSE_BUTTON_3      ::Ares::Mouse::Button3
-#define VL_MOUSE_BUTTON_4      ::Ares::Mouse::Button4
-#define VL_MOUSE_BUTTON_5      ::Ares::Mouse::Button5
-#define VL_MOUSE_BUTTON_6      ::Ares::Mouse::Button6
-#define VL_MOUSE_BUTTON_7      ::Ares::Mouse::Button7
-#define VL_MOUSE_BUTTON_LAST   ::Ares::Mouse::ButtonLast
-#define VL_MOUSE_BUTTON_LEFT   ::Ares::Mouse::ButtonLeft
-#define VL_MOUSE_BUTTON_RIGHT  ::Ares::Mouse::ButtonRight
-#define VL_MOUSE_BUTTON_MIDDLE ::Ares::Mouse::ButtonMiddle
+#define AR_MOUSE_BUTTON_0      ::Ares::Mouse::Button0
+#define AR_MOUSE_BUTTON_1      ::Ares::Mouse::Button1
+#define AR_MOUSE_BUTTON_2      ::Ares::Mouse::Button2
+#define AR_MOUSE_BUTTON_3      ::Ares::Mouse::Button3
+#define AR_MOUSE_BUTTON_4      ::Ares::Mouse::Button4
+#define AR_MOUSE_BUTTON_5      ::Ares::Mouse::Button5
+#define AR_MOUSE_BUTTON_6      ::Ares::Mouse::Button6
+#define AR_MOUSE_BUTTON_7      ::Ares::Mouse::Button7
+#define AR_MOUSE_BUTTON_LAST   ::Ares::Mouse::ButtonLast
+#define AR_MOUSE_BUTTON_LEFT   ::Ares::Mouse::ButtonLeft
+#define AR_MOUSE_BUTTON_RIGHT  ::Ares::Mouse::ButtonRight
+#define AR_MOUSE_BUTTON_MIDDLE ::Ares::Mouse::ButtonMiddle
