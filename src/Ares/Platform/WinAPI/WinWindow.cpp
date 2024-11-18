@@ -39,12 +39,27 @@ namespace Ares {
 
 		RegisterClass(&wc);
 
+		bool isBorderless = true;
+		DWORD windowStyle;
+		DWORD windowExStyle;
+
+		if (isBorderless)
+		{
+			windowStyle = WS_POPUP;
+			windowExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+		}
+		else
+		{
+			windowStyle = WS_OVERLAPPEDWINDOW;
+			windowExStyle = 0;
+		}
+
 		// Create the window
 		m_Window = CreateWindowEx(
-			0,
+			windowExStyle,
 			wc.lpszClassName,
 			std::wstring(props.Title.begin(), props.Title.end()).c_str(),
-			WS_OVERLAPPEDWINDOW,
+			windowStyle,
 			CW_USEDEFAULT, CW_USEDEFAULT,
 			props.Width, props.Height,
 			nullptr, nullptr, wc.hInstance, this
