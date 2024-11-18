@@ -1,19 +1,13 @@
 #include <arespch.h>
 #include <imgui.h>
-#include <cstdarg>
 
 #include "Engine/Debug/Console.h"
 
 namespace Ares {
 
-	void Console::AddLog(const char* fmt, ...)
+	void Console::AddLog(const char* fmt, spdlog::level severity)
 	{
-		char buf[1024];
-		va_list args;
-		va_start(args, fmt);
-		vsnprintf(buf, sizeof(buf), fmt, args);
-		va_end(args);
-		m_Items.push_back(std::string(buf));
+		m_Items.push_back({ std::string(fmt), severity });
 		m_ScrollToBottom = true;
 	}
 
@@ -32,7 +26,34 @@ namespace Ares {
 			ImGui::PushTextWrapPos();
 
 			for (const auto& item : m_Items)
-				ImGui::TextUnformatted(item.c_str());
+			{
+				switch (item.second)
+				{
+				case spdlog::level::trace:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+					break;
+				case spdlog::level::debug:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.5f, 1.0f, 1.0f));
+					break;
+				case spdlog::level::info:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 1.0f, 0.2f, 1.0f));
+					break;
+				case spdlog::level::warn:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.2f, 1.0f));
+					break;
+				case spdlog::level::err:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.2f, 1.0f));
+					break;
+				case spdlog::level::critical:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+					break;
+				default:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+					break;
+				}
+				ImGui::TextUnformatted(item.first.c_str());
+				ImGui::PopStyleColor();
+			}
 
 			ImGui::PopTextWrapPos();
 

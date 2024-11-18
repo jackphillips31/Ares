@@ -22,7 +22,7 @@ namespace Ares {
 		{
 			spdlog::memory_buf_t formatted;
 			this->formatter_->format(msg, formatted);
-			console->AddLog(fmt::to_string(formatted).c_str());
+			console->AddLog(fmt::to_string(formatted).c_str(), msg.log_level);
 		}
 
 		void flush_() override
