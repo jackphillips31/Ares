@@ -28,6 +28,8 @@ namespace Ares {
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
+		m_Data.XPos = props.XPos;
+		m_Data.YPos = props.YPos;
 
 		// Register the window class
 		WNDCLASS wc = {};
@@ -88,7 +90,17 @@ namespace Ares {
 			}
 		}
 
+		SetWindowPos(m_Window, 0, (int)m_Data.XPos, (int)m_Data.YPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
 		m_GraphicsContext->SwapBuffers();
+	}
+
+	std::pair<int, int> WinWindow::GetCursorPos() const
+	{
+		POINT cursorPos;
+		::GetCursorPos(&cursorPos);
+
+		return std::pair<int, int>(cursorPos.x, cursorPos.y);
 	}
 
 	void WinWindow::SetVSync(bool enabled)

@@ -10,11 +10,15 @@ namespace Ares {
 		std::string Title;
 		unsigned int Width;
 		unsigned int Height;
+		unsigned int XPos;
+		unsigned int YPos;
 
 		WindowProps(const std::string& title = "Ares Engine",
 			unsigned int width = 1280,
-			unsigned int height = 720)
-			: Title(title), Width(width), Height(height)
+			unsigned int height = 720,
+			unsigned int xpos = 200,
+			unsigned int ypos = 200)
+			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos)
 		{
 		}
 	};
@@ -31,11 +35,14 @@ namespace Ares {
 
 		virtual unsigned int GetWidth() const = 0;
 		virtual unsigned int GetHeight() const = 0;
+		virtual std::pair<int, int> GetWindowPos() const = 0;
+		virtual std::pair<int, int> GetCursorPos() const = 0;
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
+		virtual void SetPos(int x, int y) = 0;
 
 		virtual void* GetNativeWindow() const = 0;
 

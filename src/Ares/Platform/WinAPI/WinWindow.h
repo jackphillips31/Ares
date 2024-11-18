@@ -15,10 +15,13 @@ namespace Ares {
 
 		inline unsigned int GetWidth() const override { return m_Data.Width; }
 		inline unsigned int GetHeight() const override { return m_Data.Height; }
+		inline std::pair<int, int> GetWindowPos() const override { return std::pair<int, int>(m_Data.XPos, m_Data.YPos); }
+		std::pair<int, int> GetCursorPos() const override;
 
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
+		inline void SetPos(int x, int y) override { m_Data.XPos = x; m_Data.YPos = y; }
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 
@@ -36,6 +39,7 @@ namespace Ares {
 		{
 			std::string Title;
 			unsigned int Width, Height;
+			int XPos, YPos;
 			bool VSync;
 			
 			EventCallbackFn EventCallback;
