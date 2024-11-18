@@ -15,8 +15,7 @@ namespace Ares {
 	private:
 		HWND m_WindowHandle;
 		HGLRC m_Context;
-
-		static HGLRC s_SharedContext;
+		HDC m_DeviceContext;
 	};
 
 }

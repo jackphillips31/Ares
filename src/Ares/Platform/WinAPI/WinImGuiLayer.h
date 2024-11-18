@@ -1,5 +1,7 @@
 #pragma once
 
+#include <imgui.h>
+
 #include "Engine/Layers/ImGuiLayer.h"
 
 namespace Ares {
@@ -19,5 +21,9 @@ namespace Ares {
 	private:
 		float m_Time = 0.0f;
 	};
+
+	void CreateViewportContext(ImGuiViewport* viewport);
+	void DestroyViewportContext(ImGuiViewport* viewport);
+	void RenderViewport(ImGuiViewport* viewport, void* render_arg);
 
 }

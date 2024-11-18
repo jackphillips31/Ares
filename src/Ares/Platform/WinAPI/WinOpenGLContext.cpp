@@ -8,22 +8,16 @@
 
 namespace Ares {
 
-	HGLRC WinOpenGLContext::s_SharedContext = nullptr;
-
 	WinOpenGLContext::WinOpenGLContext(void* windowHandle)
-		: m_WindowHandle((HWND)windowHandle), m_Context(NULL)
+		: m_WindowHandle((HWND)windowHandle), m_Context(nullptr), m_DeviceContext(nullptr)
 	{
 	}
 
 	void WinOpenGLContext::Init()
 	{
 		HDC hdc = GetDC(m_WindowHandle);
-		if (!hdc)
-		{
-			AR_CORE_ASSERT(false, "Failed to get device context for OpenGL!");
-		}
+		AR_CORE_ASSERT(hdc, "Failed to get device context for pixel format!");
 
-		// Set up a pixel format for the window
 		PIXELFORMATDESCRIPTOR pfd = {};
 		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -33,23 +27,23 @@ namespace Ares {
 		pfd.iLayerType = PFD_MAIN_PLANE;
 
 		int pixelFormat = ChoosePixelFormat(hdc, &pfd);
-		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == FALSE)
+		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == 0)
 		{
 			AR_CORE_ASSERT(false, "Failed to set a compatible pixel format!");
 		}
 
-		// Create and enable a temporary (helper) opengl context
-		HGLRC tempContext = NULL;
-		if (NULL == (tempContext = wglCreateContext(hdc)))
-		{
-			AR_CORE_ASSERT(false, "Failed to create the initial rendering context!");
-		}
-		wglMakeCurrent(hdc, tempContext);
+		ReleaseDC(m_WindowHandle, hdc);
+		m_DeviceContext = GetDC(m_WindowHandle);
+
+		// Create temporary context
+		HGLRC tempContext = 0;
+		tempContext = wglCreateContext(m_DeviceContext);
+		AR_CORE_ASSERT(tempContext, "Failed to make temporary OpenGL context!");
+		wglMakeCurrent(m_DeviceContext, tempContext);
 
 		// Load WGL Extensions
-		gladLoaderLoadWGL(hdc);
+		gladLoaderLoadWGL(m_DeviceContext);
 
-		// Set the desired OpenGL Version
 		int attributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
 			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
@@ -58,34 +52,22 @@ namespace Ares {
 			0
 		};
 
-		// Create the final opengl context and get rid of the temporary one
-		if (s_SharedContext == nullptr)
-		{
-			if (NULL == (m_Context = wglCreateContext(hdc)))
-			{
-				AR_CORE_ASSERT(false, "Failed to create the final rendering context!");
-			}
-			s_SharedContext = m_Context;
-		}
-		else
-		{
-			if (NULL == (m_Context = wglCreateContextAttribsARB(hdc, s_SharedContext, attributes)))
-			{
-				AR_CORE_ASSERT(false, "Failed to create the final rendering shared context!");
-			}
-		}
-		
-		wglMakeCurrent(NULL, NULL);
+		// Create the final OpenGL context and get rid of the temporary one
+		m_Context = wglCreateContextAttribsARB(m_DeviceContext, 0, attributes);
+		AR_CORE_ASSERT(m_Context, "Failed to make final OpenGL context!");
+
+		wglMakeCurrent(nullptr, nullptr);
 		wglDeleteContext(tempContext);
-		wglMakeCurrent(hdc, m_Context);
+
+		wglMakeCurrent(m_DeviceContext, m_Context);
 
 		// Glad Loader!
 		if (!gladLoaderLoadGL())
 		{
-			AR_CORE_ASSERT(false, "Glad Loader failed!");
+			AR_CORE_ASSERT(false, "GLAD loader failed!");
 		}
 
-		if (!gladLoaderLoadWGL(hdc))
+		if (!gladLoaderLoadWGL(m_DeviceContext))
 		{
 			AR_CORE_ASSERT(false, "Failed to initialize WGL extensions with GLAD")
 		}
@@ -95,15 +77,11 @@ namespace Ares {
 		AR_CORE_INFO("  {:<10}- {}", "Vendor", (char*)glGetString(GL_VENDOR));
 		AR_CORE_INFO("  {:<10}- {}", "Renderer", (char*)glGetString(GL_RENDERER));
 		AR_CORE_INFO("  {:<10}- {}", "Version", (char*)glGetString(GL_VERSION));
-
-		ReleaseDC(m_WindowHandle, hdc);
 	}
 
 	void WinOpenGLContext::SwapBuffers()
 	{
-		HDC hdc = GetDC(m_WindowHandle);
-		::SwapBuffers(hdc);
-		ReleaseDC(m_WindowHandle, hdc);
+		::SwapBuffers(m_DeviceContext);
 	}
 
 }
