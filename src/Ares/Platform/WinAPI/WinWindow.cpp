@@ -39,7 +39,7 @@ namespace Ares {
 
 		RegisterClass(&wc);
 
-		bool isBorderless = true;
+		bool isBorderless = false;
 		DWORD windowStyle;
 		DWORD windowExStyle;
 
@@ -105,8 +105,6 @@ namespace Ares {
 			}
 		}
 
-		SetWindowPos(m_Window, 0, (int)m_Data.XPos, (int)m_Data.YPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-
 		m_GraphicsContext->SwapBuffers();
 	}
 
@@ -129,6 +127,14 @@ namespace Ares {
 		return m_Data.VSync;
 	}
 
+	void WinWindow::SetWindowPosition(int x, int y)
+	{
+		m_Data.XPos = x;
+		m_Data.YPos = y;
+
+		SetWindowPos(m_Window, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	}
+
 	LRESULT WinWindow::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
@@ -137,6 +143,12 @@ namespace Ares {
 		}
 		switch (uMsg)
 		{
+		case WM_DESTROY: {
+			PostQuitMessage(0);
+			WindowCloseEvent event;
+			m_Data.EventCallback(event);
+			return 0;
+		}
 		case WM_SIZING: {
 			if (wParam != SIZE_MINIMIZED)
 			{
@@ -145,10 +157,9 @@ namespace Ares {
 			}
 			return 0;
 		}
-		case WM_DESTROY: {
-			PostQuitMessage(0);
-			WindowCloseEvent event;
-			m_Data.EventCallback(event);
+		case WM_MOVE: {
+			m_Data.XPos = LOWORD(lParam);
+			m_Data.YPos = HIWORD(lParam);
 			return 0;
 		}
 		case WM_KEYDOWN: {

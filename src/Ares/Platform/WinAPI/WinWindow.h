@@ -21,7 +21,7 @@ namespace Ares {
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
-		inline void SetPos(int x, int y) override { m_Data.XPos = x; m_Data.YPos = y; }
+		void SetWindowPosition(int x, int y) override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 
