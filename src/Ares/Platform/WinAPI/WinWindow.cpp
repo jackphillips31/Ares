@@ -138,15 +138,11 @@ namespace Ares {
 		switch (uMsg)
 		{
 		case WM_SIZING: {
-			RECT winRect; GetWindowRect(hwnd, &winRect);
-			unsigned int width = (unsigned int)(winRect.right - winRect.left);
-			unsigned int height = (unsigned int)(winRect.bottom - winRect.top);
-
-			m_Data.Width = width;
-			m_Data.Height = height;
-
-			WindowResizeEvent event(width, height);
-			m_Data.EventCallback(event);
+			if (wParam != SIZE_MINIMIZED)
+			{
+				WindowResizeEvent event((unsigned int)LOWORD(lParam), (unsigned int)HIWORD(lParam));
+				m_Data.EventCallback(event);
+			}
 			return 0;
 		}
 		case WM_DESTROY: {
