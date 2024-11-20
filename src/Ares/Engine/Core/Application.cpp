@@ -2,7 +2,6 @@
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Timestep.h"
-#include "Engine/ImGui/TitleBar.h"
 #include "Engine/Renderer/Renderer.h"
 
 #include "Engine/Core/Application.h"
@@ -19,8 +18,6 @@ namespace Ares {
 		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
-
-		PushLayer(new TitleBar("Ares Engine"));
 
 		m_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(m_ImGuiLayer);
