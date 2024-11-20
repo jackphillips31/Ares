@@ -95,6 +95,7 @@ namespace Ares {
 			break;
 		}
 		default: {
+			AR_CORE_WARN("Window setting not found! Will use default");
 			windowStyle = WS_OVERLAPPEDWINDOW;
 			break;
 		}
