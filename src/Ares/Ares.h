@@ -8,6 +8,7 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Core/Flags.h"
 #include "Engine/Core/Layer.h"
 #include "Engine/Core/Timestep.h"
 

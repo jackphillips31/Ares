@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Core/Window.h"
 #include "Engine/Events/ApplicationEvent.h"
@@ -10,6 +11,11 @@
 int EntryPoint(int argc, char** argv);
 
 namespace Ares {
+
+	struct StartupSettings
+	{
+		WindowFlags WindowSettings = WindowFlags::None;
+	};
 
 	class Application
 	{
@@ -25,6 +31,8 @@ namespace Ares {
 		inline Window& GetWindow() { return *m_Window; }
 
 		inline static Application& Get() { return *s_Instance; }
+
+		static void SetStartupSettings(WindowFlags flags);
 
 	private:
 		void Run();
@@ -43,6 +51,8 @@ namespace Ares {
 
 	private:
 		static Application* s_Instance;
+		static StartupSettings s_Settings;
+
 		friend int ::EntryPoint(int argc, char** argv);
 	};
 

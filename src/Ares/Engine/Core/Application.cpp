@@ -9,18 +9,20 @@
 namespace Ares {
 
 	Application* Application::s_Instance = nullptr;
+	StartupSettings Application::s_Settings = {};
+
 
 	Application::Application()
 	{
 		s_Instance = this;
 
-		m_Window = Window::Create();
+		m_Window = Window::Create({"Ares Engine", 1280, 720, 200, 200, s_Settings.WindowSettings});
 		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
 
 		m_ImGuiLayer = ImGuiLayer::Create();
-		PushOverlay(m_ImGuiLayer);
+		PushOverlay(m_ImGuiLayer);	
 	}
 
 	Application::~Application()
@@ -105,6 +107,11 @@ namespace Ares {
 	bool Application::OnKeyPressed(KeyPressedEvent& e)
 	{
 		return false;
+	}
+
+	void Application::SetStartupSettings(WindowFlags flags)
+	{
+		s_Settings.WindowSettings = flags;
 	}
 
 }

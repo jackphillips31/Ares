@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/Flags.h"
 #include "Engine/Events/Event.h"
 
 namespace Ares {
@@ -12,13 +13,15 @@ namespace Ares {
 		unsigned int Height;
 		unsigned int XPos;
 		unsigned int YPos;
+		WindowFlags Flags;
 
 		WindowProps(const std::string& title = "Ares Engine",
 			unsigned int width = 1280,
 			unsigned int height = 720,
 			unsigned int xpos = 200,
-			unsigned int ypos = 200)
-			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos)
+			unsigned int ypos = 200,
+			WindowFlags flags = WindowFlags::None)
+			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos), Flags(flags)
 		{
 		}
 	};
@@ -43,6 +46,7 @@ namespace Ares {
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
 		virtual void SetWindowPosition(int x, int y) = 0;
+		virtual void SetWindowSettings(WindowFlags flags) = 0;
 
 		virtual void* GetNativeWindow() const = 0;
 
