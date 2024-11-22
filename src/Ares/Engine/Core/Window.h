@@ -9,18 +9,18 @@ namespace Ares {
 	struct WindowProps
 	{
 		std::string Title;
-		unsigned int Width;
-		unsigned int Height;
-		unsigned int XPos;
-		unsigned int YPos;
-		WindowFlags Flags;
+		uint32_t Width;
+		uint32_t Height;
+		int32_t XPos;
+		int32_t YPos;
+		uint16_t Flags;
 
 		WindowProps(const std::string& title = "Ares Engine",
-			unsigned int width = 1280,
-			unsigned int height = 720,
-			unsigned int xpos = 200,
-			unsigned int ypos = 200,
-			WindowFlags flags = WindowFlags::None)
+			uint32_t width = 1280,
+			uint32_t height = 720,
+			int32_t xpos = 200,
+			int32_t ypos = 200,
+			uint16_t flags = 0)
 			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos), Flags(flags)
 		{
 		}
@@ -36,17 +36,16 @@ namespace Ares {
 
 		virtual void OnUpdate() = 0;
 
-		virtual unsigned int GetWidth() const = 0;
-		virtual unsigned int GetHeight() const = 0;
-		virtual std::pair<int, int> GetWindowPos() const = 0;
-		virtual std::pair<int, int> GetCursorPos() const = 0;
+		virtual uint32_t GetWidth() const = 0;
+		virtual uint32_t GetHeight() const = 0;
+		virtual std::pair<int32_t, int32_t> GetWindowPos() const = 0;
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
-		virtual void SetWindowPosition(int x, int y) = 0;
-		virtual void SetWindowSettings(WindowFlags flags) = 0;
+		virtual void SetWindowPosition(int32_t x, int32_t y) = 0;
+		virtual void SetWindowSettings(uint16_t flags) = 0;
 
 		virtual void* GetNativeWindow() const = 0;
 

@@ -32,7 +32,6 @@ namespace Ares {
 		m_Data.YPos = props.YPos;
 		m_Data.Flags = props.Flags;
 
-		// Register the window class
 		WNDCLASS wc = {};
 		wc.lpfnWndProc = WndProc;
 		wc.hInstance = GetModuleHandle(nullptr);
@@ -40,68 +39,58 @@ namespace Ares {
 
 		RegisterClass(&wc);
 
-		int windowStyle = 0;
-		int windowExStyle = 0;
+		int32_t windowStyle = 0;
+		int32_t windowExStyle = 0;
 
-		switch (m_Data.Flags)
+		if ((props.Flags & WindowSettings::Fullscreen) || (props.Flags & WindowSettings::Borderless))
 		{
-		case WindowFlags::None: {
-			windowStyle = WS_OVERLAPPEDWINDOW;
-			break;
-		}
-		case WindowFlags::Borderless: {
 			windowStyle = WS_POPUP;
 			windowExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-			break;
-		}
-		case WindowFlags::Fullscreen: {
-			POINT pt = { 0, 0 };
-			HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
-			MONITORINFO mi = { sizeof(mi) };
-			if (GetMonitorInfo(hMonitor, &mi))
-			{
-				m_Data.Width = (uint32_t)mi.rcMonitor.right - mi.rcMonitor.left;
-				m_Data.Height = (uint32_t)(mi.rcMonitor.bottom - mi.rcMonitor.top);
-				m_Data.XPos = mi.rcMonitor.left;
-				m_Data.YPos = mi.rcMonitor.top;
 
-				DEVMODE dm = {};
-				dm.dmSize = sizeof(dm);
-				if (EnumDisplaySettings(0, ENUM_CURRENT_SETTINGS, &dm))
+			if (props.Flags & WindowSettings::Fullscreen)
+			{
+				POINT pt = { 0, 0 };
+				HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
+				MONITORINFO mi = { sizeof(mi) };
+				if (GetMonitorInfo(hMonitor, &mi))
 				{
-					dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY;
-					if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
+					m_Data.Width = static_cast<uint32_t>(mi.rcMonitor.right - mi.rcMonitor.left);
+					m_Data.Height = static_cast<uint32_t>(mi.rcMonitor.bottom - mi.rcMonitor.top);
+					m_Data.XPos = static_cast<int32_t>(mi.rcMonitor.left);
+					m_Data.YPos = static_cast<int32_t>(mi.rcMonitor.top);
+
+					if (!(props.Flags & WindowSettings::Borderless))
 					{
-						AR_CORE_ERROR("Failed to switch to exclusive fullscreen!");
+						DEVMODE dm = {};
+						dm.dmSize = sizeof(dm);
+						if (EnumDisplaySettings(0, ENUM_CURRENT_SETTINGS, &dm))
+						{
+							m_Data.Width = props.Width;
+							m_Data.Height = props.Height;
+							dm.dmPelsWidth = props.Width;
+							dm.dmPelsHeight = props.Height;
+							dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY;
+
+							if (ChangeDisplaySettings(&dm, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
+							{
+								windowStyle = WS_POPUP | WS_VISIBLE;
+								windowExStyle = 0;
+							}
+							else
+							{
+								AR_CORE_ERROR("Failed to switch to exclusive fullscreen!");
+							}
+						}
+						
 					}
 				}
 			}
-			windowStyle = WS_POPUP | WS_VISIBLE;
-			break;
 		}
-		case WindowFlags::BorderlessFullscreen: {
-			POINT pt = { 0, 0 };
-			HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
-			MONITORINFO mi = { sizeof(mi) };
-			if (GetMonitorInfo(hMonitor, &mi))
-			{
-				m_Data.Width = mi.rcMonitor.right - mi.rcMonitor.left;
-				m_Data.Height = mi.rcMonitor.bottom - mi.rcMonitor.top;
-				m_Data.XPos = mi.rcMonitor.left;
-				m_Data.YPos = mi.rcMonitor.top;
-			}
-			windowStyle = WS_POPUP;
-			windowExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-			break;
-		}
-		default: {
-			AR_CORE_WARN("Window setting not found! Will use default");
+		else
+		{
 			windowStyle = WS_OVERLAPPEDWINDOW;
-			break;
-		}
 		}
 
-		// Create the window
 		m_Window = CreateWindowEx(
 			windowExStyle,
 			wc.lpszClassName,
@@ -117,11 +106,9 @@ namespace Ares {
 			AR_CORE_ASSERT(false, "Failed to create window!");
 		}
 
-		// Show the window
 		ShowWindow(m_Window, SW_SHOW);
 		UpdateWindow(m_Window);
 
-		// Initialize OpenGL context
 		m_GraphicsContext = GraphicsContext::Create(m_Window);
 		m_GraphicsContext->Init();
 
@@ -155,14 +142,6 @@ namespace Ares {
 		m_GraphicsContext->SwapBuffers();
 	}
 
-	std::pair<int, int> WinWindow::GetCursorPos() const
-	{
-		POINT cursorPos;
-		::GetCursorPos(&cursorPos);
-
-		return std::pair<int, int>(cursorPos.x, cursorPos.y);
-	}
-
 	void WinWindow::SetVSync(bool enabled)
 	{
 		wglSwapIntervalEXT(enabled ? 1 : 0);
@@ -174,7 +153,7 @@ namespace Ares {
 		return m_Data.VSync;
 	}
 
-	void WinWindow::SetWindowPosition(int x, int y)
+	void WinWindow::SetWindowPosition(int32_t x, int32_t y)
 	{
 		m_Data.XPos = x;
 		m_Data.YPos = y;
@@ -182,63 +161,72 @@ namespace Ares {
 		SetWindowPos(m_Window, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 	}
 
-	void WinWindow::SetWindowSettings(WindowFlags flags)
+	void WinWindow::SetWindowSettings(uint16_t flags)
 	{
+		/**
+		 * THIS SECTION NEEDS WORK!
+		 */
 		switch (flags)
 		{
-		case WindowFlags::None: {
-			if (hasFlag(m_Data.Flags, WindowFlags::Borderless) || hasFlag(m_Data.Flags, WindowFlags::Fullscreen))
+		case WindowSettings::None: {
+			if ((m_Data.Flags & WindowSettings::Borderless) || (m_Data.Flags & WindowSettings::Fullscreen))
 			{
-				if (hasFlag(m_Data.Flags, WindowFlags::Fullscreen))
+				if ((m_Data.Flags & WindowSettings::Fullscreen) && !(m_Data.Flags & WindowSettings::Borderless))
+				{
 					ExitFullscreenExclusive();
+				}
 				SetWindowed();
-				m_Data.Flags & ~WindowFlags::Borderless;
-				m_Data.Flags & ~WindowFlags::Fullscreen;
+				m_Data.Flags = WindowSettings::None;
+				AR_CORE_WARN(m_Data.Flags);
 			}
 			break;
 		}
-		case WindowFlags::Borderless: {
-			if (!hasFlag(m_Data.Flags, WindowFlags::Borderless))
+		case WindowSettings::Borderless: {
+			if (!(m_Data.Flags & WindowSettings::Borderless))
 			{
-				if (hasFlag(m_Data.Flags, WindowFlags::Fullscreen))
+				if ((m_Data.Flags & WindowSettings::Fullscreen))
+				{
 					ExitFullscreenExclusive();
+					m_Data.Flags = m_Data.Flags & ~WindowSettings::Fullscreen;
+				}
 				SetBorderless();
-				m_Data.Flags |= WindowFlags::Borderless;
+				m_Data.Flags = WindowSettings::Borderless;
 			}
 			break;
 		}
-		case WindowFlags::Fullscreen: {
-			if (!hasFlag(m_Data.Flags, WindowFlags::Fullscreen))
+		case WindowSettings::Fullscreen: {
+			if (!(m_Data.Flags & WindowSettings::Fullscreen))
 			{
 				SetFullscreenExclusive();
-				m_Data.Flags |= WindowFlags::Fullscreen;
+				m_Data.Flags = WindowSettings::Fullscreen;
 			}
 			break;
 		}
-		case WindowFlags::BorderlessFullscreen: {
-			if (!hasFlag(m_Data.Flags, WindowFlags::BorderlessFullscreen))
+		case WindowSettings::FullscreenBorderless: {
+			if (!(m_Data.Flags & WindowSettings::FullscreenBorderless))
 			{
-				if (hasFlag(m_Data.Flags, WindowFlags::Fullscreen))
+				if ((m_Data.Flags & WindowSettings::Fullscreen))
 					ExitFullscreenExclusive();
-				SetBorderlessFullscreen();
-				m_Data.Flags |= WindowFlags::BorderlessFullscreen;
+				SetFullscreenBorderless();
+				m_Data.Flags |= WindowSettings::Fullscreen;
+				m_Data.Flags |= WindowSettings::Borderless;
 			}
 			break;
 		}
 		default: {
 			AR_CORE_WARN("Window setting not found! Will use default");
-			if (hasFlag(m_Data.Flags, WindowFlags::Borderless) || hasFlag(m_Data.Flags, WindowFlags::Fullscreen))
+			if ((m_Data.Flags & WindowSettings::Borderless) || (m_Data.Flags & WindowSettings::Fullscreen))
 			{
 				SetWindowed();
-				m_Data.Flags & ~WindowFlags::Borderless;
-				m_Data.Flags & ~WindowFlags::Fullscreen;
+				m_Data.Flags & ~WindowSettings::Borderless;
+				m_Data.Flags & ~WindowSettings::Fullscreen;
 			}
 			break;
 		}
 		}
 	}
 
-	void WinWindow::SetWindowMode(DWORD newStyle, DWORD newExStyle, int width, int height, int x, int y)
+	void WinWindow::SetWindowMode(DWORD newStyle, DWORD newExStyle, uint32_t width, uint32_t height, int32_t x, int32_t y)
 	{
 		AR_CORE_ERROR("SET WINDOW MODE");
 		SetWindowLong(m_Window, GWL_STYLE, newStyle);
@@ -258,26 +246,26 @@ namespace Ares {
 		SetWindowMode(WS_POPUP, WS_EX_APPWINDOW | WS_EX_WINDOWEDGE, m_Data.Width, m_Data.Height, m_Data.XPos, m_Data.YPos);
 	}
 
-	void WinWindow::SetBorderlessFullscreen()
+	void WinWindow::SetFullscreenBorderless()
 	{
 		HMONITOR hMonitor = MonitorFromWindow(m_Window, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO mi = { sizeof(mi) };
 		if (GetMonitorInfo(hMonitor, &mi))
 		{
-			int width = mi.rcMonitor.right - mi.rcMonitor.left;
-			int height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+			uint32_t width = mi.rcMonitor.right - mi.rcMonitor.left;
+			uint32_t height = mi.rcMonitor.bottom - mi.rcMonitor.top;
 			SetWindowMode(WS_POPUP, WS_EX_APPWINDOW | WS_EX_WINDOWEDGE, width, height, mi.rcMonitor.left, mi.rcMonitor.top);
 		}
 	}
 
-	void WinWindow::SetFullscreenExclusive(int refreshRate)
+	void WinWindow::SetFullscreenExclusive(uint16_t refreshRate)
 	{
 		HMONITOR hMonitor = MonitorFromWindow(m_Window, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO mi = { sizeof(mi) };
 		if (GetMonitorInfo(hMonitor, &mi))
 		{
-			int width = mi.rcMonitor.right - mi.rcMonitor.left;
-			int height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+			uint32_t width = mi.rcMonitor.right - mi.rcMonitor.left;
+			uint32_t height = mi.rcMonitor.bottom - mi.rcMonitor.top;
 
 			DEVMODE dm = {};
 			dm.dmSize = sizeof(dm);
@@ -300,6 +288,7 @@ namespace Ares {
 
 	void WinWindow::ExitFullscreenExclusive()
 	{
+		AR_CORE_WARN("EXIT FULLSCREEN EXCLUSIVE");
 		ChangeDisplaySettings(nullptr, 0);
 	}
 
@@ -326,7 +315,13 @@ namespace Ares {
 				m_Data.Width = windowRect.right - windowRect.left;
 				m_Data.Height = windowRect.bottom - windowRect.top;
 
-				WindowResizeEvent event((unsigned int)LOWORD(lParam), (unsigned int)HIWORD(lParam));
+				RECT clientRect;
+				GetClientRect(hwnd, &clientRect);
+
+				uint32_t clientWidth = clientRect.right - clientRect.left;
+				uint32_t clientHeight = clientRect.bottom - clientRect.top;
+
+				WindowResizeEvent event(clientWidth, clientHeight);
 				m_Data.EventCallback(event);
 			}
 			return 0;
@@ -336,7 +331,7 @@ namespace Ares {
 			{
 				if (m_Data.EventCallback)
 				{
-					WindowResizeEvent event((unsigned int)LOWORD(lParam), (unsigned int)HIWORD(lParam));
+					WindowResizeEvent event((uint32_t)LOWORD(lParam), (uint32_t)HIWORD(lParam));
 					m_Data.EventCallback(event);
 				}
 			}
@@ -419,24 +414,16 @@ namespace Ares {
 			return 0;
 		}
 		case WM_MOUSEWHEEL: {
-			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			int16_t zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 			float yOffset = static_cast<float>(zDelta) / WHEEL_DELTA;
 
 			MouseScrolledEvent event(0.0f, yOffset);
 			m_Data.EventCallback(event);
 			return 0;
 		}
-		case WM_MOUSEHWHEEL: {
-			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-			float xOffset = static_cast<float>(zDelta) / WHEEL_DELTA;
-
-			MouseScrolledEvent event(xOffset, 0.0f);
-			m_Data.EventCallback(event);
-			return 0;
-		}
 		case WM_MOUSEMOVE: {
-			int xPos = (int)(short)LOWORD(lParam);
-			int yPos = (int)(short)HIWORD(lParam);
+			int16_t xPos = (int16_t)(short)LOWORD(lParam);
+			int16_t yPos = (int16_t)(short)HIWORD(lParam);
 
 			MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
 			m_Data.EventCallback(event);

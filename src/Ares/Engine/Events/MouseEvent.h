@@ -8,13 +8,13 @@ namespace Ares {
 	class MouseMovedEvent : public Event
 	{
 	public:
-		MouseMovedEvent(float x, float y)
+		MouseMovedEvent(int32_t x, int32_t y)
 			: m_MouseX(x), m_MouseY(y)
 		{
 		}
 
-		inline float GetX() const { return m_MouseX; }
-		inline float GetY() const { return m_MouseY; }
+		inline int32_t GetX() const { return m_MouseX; }
+		inline int32_t GetY() const { return m_MouseY; }
 
 		std::string ToString() const override
 		{
@@ -27,7 +27,7 @@ namespace Ares {
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	private:
-		float m_MouseX, m_MouseY;
+		int32_t m_MouseX, m_MouseY;
 	};
 
 	class MouseScrolledEvent : public Event

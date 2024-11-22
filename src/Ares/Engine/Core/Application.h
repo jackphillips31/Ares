@@ -14,7 +14,7 @@ namespace Ares {
 
 	struct StartupSettings
 	{
-		WindowFlags WindowSettings = WindowFlags::None;
+		uint16_t WindowSettings = 0;
 	};
 
 	class Application
@@ -32,7 +32,7 @@ namespace Ares {
 
 		inline static Application& Get() { return *s_Instance; }
 
-		static void SetStartupSettings(WindowFlags flags);
+		static void SetStartupSettings(uint16_t flags = 0);
 
 	private:
 		void Run();

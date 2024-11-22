@@ -18,6 +18,6 @@ public:
 
 Ares::Application* Ares::CreateApplication()
 {
-	Ares::Application::SetStartupSettings(WindowFlags::None);
+	Ares::Application::SetStartupSettings(AR_WINDOW_DEFAULT);
 	return new SandboxApp();
 }

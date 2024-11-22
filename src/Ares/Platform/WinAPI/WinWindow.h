@@ -13,27 +13,26 @@ namespace Ares {
 
 		void OnUpdate() override;
 
-		inline unsigned int GetWidth() const override { return m_Data.Width; }
-		inline unsigned int GetHeight() const override { return m_Data.Height; }
-		inline std::pair<int, int> GetWindowPos() const override { return std::pair<int, int>(m_Data.XPos, m_Data.YPos); }
-		std::pair<int, int> GetCursorPos() const override;
+		inline uint32_t GetWidth() const override { return m_Data.Width; }
+		inline uint32_t GetHeight() const override { return m_Data.Height; }
+		inline std::pair<int32_t, int32_t> GetWindowPos() const override { return std::pair<int32_t, int32_t>(m_Data.XPos, m_Data.YPos); }
 
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
-		void SetWindowPosition(int x, int y) override;
-		void SetWindowSettings(WindowFlags flags) override;
+		void SetWindowPosition(int32_t x, int32_t y) override;
+		void SetWindowSettings(uint16_t flags) override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
-		void SetWindowMode(DWORD newStyle, DWORD newExStyle, int width, int height, int x = 0, int y = 0);
+		void SetWindowMode(DWORD newStyle, DWORD newExStyle, uint32_t width, uint32_t height, int32_t x = 0, int32_t y = 0);
 		void SetWindowed();
 		void SetBorderless();
-		void SetBorderlessFullscreen();
-		void SetFullscreenExclusive(int refreshRate = 60);
+		void SetFullscreenBorderless();
+		void SetFullscreenExclusive(uint16_t refreshRate = 60);
 		void ExitFullscreenExclusive();
 		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -45,10 +44,10 @@ namespace Ares {
 		struct WindowData
 		{
 			std::string Title;
-			unsigned int Width, Height;
-			int XPos, YPos;
+			uint32_t Width, Height;
+			int32_t XPos, YPos;
 			bool VSync;
-			WindowFlags Flags;
+			uint16_t Flags;
 			
 			EventCallbackFn EventCallback;
 		};

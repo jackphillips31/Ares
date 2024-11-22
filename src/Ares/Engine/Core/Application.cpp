@@ -109,7 +109,7 @@ namespace Ares {
 		return false;
 	}
 
-	void Application::SetStartupSettings(WindowFlags flags)
+	void Application::SetStartupSettings(uint16_t flags)
 	{
 		s_Settings.WindowSettings = flags;
 	}

@@ -24,12 +24,12 @@ namespace Ares {
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(KeyCode keycode, int repeatCount)
+		KeyPressedEvent(KeyCode keycode, uint32_t repeatCount)
 			: KeyEvent(keycode), m_RepeatCount(repeatCount)
 		{
 		}
 
-		inline int GetRepeatCount() const { return m_RepeatCount; }
+		inline uint32_t GetRepeatCount() const { return m_RepeatCount; }
 
 		std::string ToString() const override
 		{
@@ -41,7 +41,7 @@ namespace Ares {
 		EVENT_CLASS_TYPE(KeyPressed)
 
 	private:
-		int m_RepeatCount;
+		uint32_t m_RepeatCount;
 	};
 
 	class KeyReleasedEvent : public KeyEvent

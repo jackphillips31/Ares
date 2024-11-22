@@ -6,11 +6,11 @@
 namespace Ares {
 
 	void OpenGLMessageCallback(
-		unsigned source,
-		unsigned type,
-		unsigned id,
-		unsigned severity,
-		int length,
+		uint32_t source,
+		uint32_t type,
+		uint32_t id,
+		uint32_t severity,
+		int32_t length,
 		const char* message,
 		const void* userParam
 	)
@@ -63,7 +63,7 @@ namespace Ares {
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		vertexArray->Bind();
-		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+		int32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}

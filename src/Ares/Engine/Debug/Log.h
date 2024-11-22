@@ -56,7 +56,7 @@ namespace LogDebug {
 		return filePath;
 	}
 
-	inline static std::string FormatFileAndLine(std::string fileName, int line)
+	inline static std::string FormatFileAndLine(std::string fileName, uint32_t line)
 	{
 		return fmt::format("({}:{})", fileName, line);
 	}
