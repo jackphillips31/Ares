@@ -28,12 +28,10 @@ namespace Ares {
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
-		void SetWindowMode(DWORD newStyle, DWORD newExStyle, uint32_t width, uint32_t height, int32_t x = 0, int32_t y = 0);
-		void SetWindowed();
-		void SetBorderless();
-		void SetFullscreenBorderless();
-		void SetFullscreenExclusive(uint16_t refreshRate = 60);
-		void ExitFullscreenExclusive();
+		virtual void ApplySettings(uint16_t flags);
+		virtual void ConfigureFullscreen(uint16_t flags);
+		virtual void ConfigureWindowed(uint16_t flags);
+		virtual void UpdateWindowBounds(uint16_t flags);
 		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
