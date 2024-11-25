@@ -1,3 +1,5 @@
+#include "imgui/WindowSettings.h"
+
 #include "Sandbox2D.h"
 
 Sandbox2D::Sandbox2D()
@@ -39,6 +41,10 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
 	ImGui::PopFont();
+
+	DrawWindowSettingsWindow();
+
+	ImGui::ShowDemoWindow();
 
 	Ares::Log::GetConsole()->Draw("Console", true);
 }
