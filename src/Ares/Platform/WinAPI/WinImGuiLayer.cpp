@@ -28,6 +28,10 @@ namespace Ares {
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+#ifdef AR_CORE_DEBUG
+		io.ConfigDebugIsDebuggerPresent = true;
+#endif
+
 		ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
 		platformIO.Renderer_CreateWindow = CreateViewportContext;
 		platformIO.Renderer_DestroyWindow = DestroyViewportContext;
