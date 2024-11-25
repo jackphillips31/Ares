@@ -20,7 +20,6 @@ namespace Ares {
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
-		void SetWindowPosition(int32_t x, int32_t y) override;
 		void SetWindowSettings(uint16_t flags) override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
@@ -32,6 +31,7 @@ namespace Ares {
 		virtual void ConfigureFullscreen(uint16_t flags);
 		virtual void ConfigureWindowed(uint16_t flags);
 		virtual void UpdateWindowBounds(uint16_t flags);
+
 		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -43,6 +43,7 @@ namespace Ares {
 		{
 			std::string Title;
 			uint32_t Width, Height;
+			uint32_t ClientWidth, ClientHeight;
 			int32_t XPos, YPos;
 			bool VSync;
 			uint16_t Flags;

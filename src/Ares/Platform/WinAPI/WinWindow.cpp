@@ -26,8 +26,8 @@ namespace Ares {
 	void WinWindow::Init(const WindowProps& props)
 	{
 		m_Data.Title = props.Title;
-		m_Data.Width = props.Width;
-		m_Data.Height = props.Height;
+		m_Data.ClientWidth = props.Width;
+		m_Data.ClientHeight = props.Height;
 		m_Data.XPos = props.XPos;
 		m_Data.YPos = props.YPos;
 		m_Data.Flags = props.Flags;
@@ -95,20 +95,10 @@ namespace Ares {
 		return m_Data.VSync;
 	}
 
-	void WinWindow::SetWindowPosition(int32_t x, int32_t y)
-	{
-		m_Data.XPos = x;
-		m_Data.YPos = y;
-
-		SetWindowPos(m_Window, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-	}
-
 	void WinWindow::SetWindowSettings(uint16_t flags)
 	{
 		m_Data.Flags = flags;
-		AR_CORE_INFO("Window Dimensions: {} {}", m_Data.Width, m_Data.Height);
 		ApplySettings(flags);
-		AR_CORE_INFO("Window Dimensions: {} {}", m_Data.Width, m_Data.Height);
 	}
 
 	void WinWindow::ApplySettings(uint16_t flags)
@@ -182,7 +172,7 @@ namespace Ares {
 
 	void WinWindow::UpdateWindowBounds(uint16_t flags)
 	{
-		RECT rect = { m_Data.XPos, m_Data.YPos, m_Data.XPos + m_Data.Width, m_Data.YPos + m_Data.Height };
+		RECT rect = { m_Data.XPos, m_Data.YPos, m_Data.XPos + m_Data.ClientWidth, m_Data.YPos + m_Data.ClientHeight };
 
 		if (flags & WindowSettings::Fullscreen || flags & WindowSettings::FullscreenExclusive || flags & WindowSettings::Maximized)
 		{
@@ -191,7 +181,6 @@ namespace Ares {
 			GetMonitorInfo(monitor, &mi);
 			rect = mi.rcMonitor;
 		}
-
 		AdjustWindowRect(&rect, GetWindowLong(m_Window, GWL_STYLE), 0);
 		SetWindowPos(
 			m_Window, nullptr,
@@ -216,34 +205,34 @@ namespace Ares {
 			return 0;
 		}
 		case WM_SIZING: {
-			if (wParam != SIZE_MINIMIZED)
-			{
-				RECT windowRect;
-				GetWindowRect(m_Window, &windowRect);
+			RECT* rect = reinterpret_cast<RECT*>(lParam);
 
-				m_Data.Width = windowRect.right - windowRect.left;
-				m_Data.Height = windowRect.bottom - windowRect.top;
+			m_Data.Width = rect->right - rect->left;
+			m_Data.Height = rect->bottom - rect->top;
 
-				RECT clientRect;
-				GetClientRect(hwnd, &clientRect);
-
-				uint32_t clientWidth = clientRect.right - clientRect.left;
-				uint32_t clientHeight = clientRect.bottom - clientRect.top;
-
-				WindowResizeEvent event(clientWidth, clientHeight);
-				m_Data.EventCallback(event);
-			}
 			return 0;
 		}
 		case WM_SIZE: {
-			if (wParam == SIZE_RESTORED)
+			if (m_Data.EventCallback)
 			{
-				if (m_Data.EventCallback)
+				uint32_t width = LOWORD(lParam);
+				uint32_t height = HIWORD(lParam);
+
+				if (wParam == SIZE_MINIMIZED)
 				{
-					WindowResizeEvent event((uint32_t)LOWORD(lParam), (uint32_t)HIWORD(lParam));
+					WindowResizeEvent event(0, 0);
+					m_Data.EventCallback(event);
+				}
+				else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
+				{
+					m_Data.ClientWidth = width;
+					m_Data.ClientHeight = height;
+
+					WindowResizeEvent event(width, height);
 					m_Data.EventCallback(event);
 				}
 			}
+			
 			return 0;
 		}
 		case WM_MOVE: {
