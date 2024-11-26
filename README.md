@@ -2,6 +2,26 @@
 
 Ares is a simple, extensible game engine designed to eventually support both 2D and 3D game development. Currently, Ares supports rendering ImGui elements, window management with customizable startup options, and an event system. The engine is designed to grow with your project and will eventually include full 2D and 3D rendering capabilities.
 
+## Table of Contents
+1. [Introduction](#ares-game-engine)
+2. [Table of Contents](#table-of-contents)
+3. [Key Features](#key-features)
+4. [Installation](#installation)
+   - [Prerequisites](#prerequisites)
+   - [Cloning the Repo](#cloning-the-repository)
+   - [Building the Project](#building-the-project)
+5. [Creating a New Blank Project](#creating-a-new-blank-project)
+6. [Usage](#usage)
+   - [Create a New Application](#create-a-new-application)
+   - [Set Window Style (Optional)](#set-window-style-optional)
+   - [Creating and Adding Layers](#creating-and-adding-layers)
+   - [Handling Events](#handling-events)
+   - [Logging](#logging)
+   - [Rendering](#rendering)
+   - [Complete Example Code](#complete-code)
+7. [License](#license)
+8. [Contact](#contact)
+
 ## Key Features
 - **ImGui Rendering**: Currently supports rendering ImGui UI elements.
 - **Window Management**: Allows for window style customization:
