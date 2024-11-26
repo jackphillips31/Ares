@@ -3,6 +3,7 @@
 #include <imgui/imgui.h>
 
 static uint16_t s_WindowSettings = 0;
+static int s_WindowDimensions[2] = {1920, 1080};
 
 static void DrawWindowSettingsWindow()
 {
@@ -10,6 +11,10 @@ static void DrawWindowSettingsWindow()
 
 	std::bitset<16> binary(s_WindowSettings);
 	ImGui::Text("Binary value: %s", binary.to_string().c_str());
+	ImGui::Text("Window Dimensions: %u x %u", Ares::Application::Get().GetWindow().GetWidth(), Ares::Application::Get().GetWindow().GetHeight());
+	ImGui::Text("Client Dimensions: %u x %u", Ares::Application::Get().GetWindow().GetClientWidth(), Ares::Application::Get().GetWindow().GetClientHeight());
+	std::pair<int32_t, int32_t> windowPos = Ares::Application::Get().GetWindow().GetWindowPos();
+	ImGui::Text("Window Position: %u x %u", windowPos.first, windowPos.second);
 
 	ImGui::SeparatorText("Combined Flags");
 
@@ -68,6 +73,8 @@ static void DrawWindowSettingsWindow()
 	{
 		s_WindowSettings ^= AR_WINDOW_MAXIMIZED;
 	}
+
+	ImGui::Separator();
 
 	if (ImGui::Button("Set Window Settings"))
 	{
