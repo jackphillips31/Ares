@@ -26,6 +26,8 @@ namespace Ares {
 	void WinWindow::Init(const WindowProps& props)
 	{
 		m_Data.Title = props.Title;
+		m_Data.Width = 0;
+		m_Data.Height = 0;
 		m_Data.ClientWidth = props.Width;
 		m_Data.ClientHeight = props.Height;
 		m_Data.XPos = props.XPos;
@@ -43,9 +45,9 @@ namespace Ares {
 			0,
 			wc.lpszClassName,
 			std::wstring(props.Title.begin(), props.Title.end()).c_str(),
-			WS_OVERLAPPEDWINDOW,
-			props.XPos, props.YPos,
-			props.Width, props.Height,
+			0,
+			m_Data.XPos, m_Data.YPos,
+			m_Data.Width, m_Data.Height,
 			nullptr, nullptr, wc.hInstance, this
 		);
 
@@ -111,8 +113,6 @@ namespace Ares {
 		{
 			ConfigureWindowed(flags);
 		}
-
-		UpdateWindowBounds(flags);
 	}
 
 	void WinWindow::ConfigureFullscreen(uint16_t flags)
@@ -123,25 +123,19 @@ namespace Ares {
 
 		if (flags & WindowSettings::FullscreenExclusive)
 		{
-			// Exclusive fullscreen
-			devMode.dmPelsWidth = m_Data.Width;
-			devMode.dmPelsHeight = m_Data.Height;
+			devMode.dmPelsWidth = m_Data.ClientWidth;
+			devMode.dmPelsHeight = m_Data.ClientHeight;
 			ChangeDisplaySettings(&devMode, CDS_FULLSCREEN);
-			SetWindowLongPtr(m_Window, GWL_STYLE, WS_POPUP);
 		}
-		else if (flags & WindowSettings::Fullscreen && flags & WindowSettings::Borderless)
-		{
-			// Borderless fullscreen
-			SetWindowLongPtr(m_Window, GWL_STYLE, WS_POPUP);
-		}
+
+		SetWindowLongPtr(m_Window, GWL_STYLE, WS_POPUP);
 
 		SetWindowPos(
 			m_Window, HWND_TOP,
 			0, 0, devMode.dmPelsWidth, devMode.dmPelsHeight,
 			SWP_FRAMECHANGED | SWP_NOACTIVATE
 		);
-
-		ShowWindow(m_Window, SW_MAXIMIZE);
+		ShowWindow(m_Window, SW_NORMAL);
 	}
 
 	void WinWindow::ConfigureWindowed(uint16_t flags)
@@ -160,34 +154,16 @@ namespace Ares {
 
 		SetWindowLongPtr(m_Window, GWL_STYLE, windowStyle);
 
-		if (flags & WindowSettings::Maximized)
-		{
-			ShowWindow(m_Window, SW_MAXIMIZE);
-		}
-		else
-		{
-			ShowWindow(m_Window, SW_NORMAL);
-		}
-	}
-
-	void WinWindow::UpdateWindowBounds(uint16_t flags)
-	{
-		RECT rect = { m_Data.XPos, m_Data.YPos, m_Data.XPos + m_Data.ClientWidth, m_Data.YPos + m_Data.ClientHeight };
-
-		if (flags & WindowSettings::Fullscreen || flags & WindowSettings::FullscreenExclusive || flags & WindowSettings::Maximized)
-		{
-			HMONITOR monitor = MonitorFromWindow(m_Window, MONITOR_DEFAULTTOPRIMARY);
-			MONITORINFO mi = { sizeof(mi) };
-			GetMonitorInfo(monitor, &mi);
-			rect = mi.rcMonitor;
-		}
-		AdjustWindowRect(&rect, GetWindowLong(m_Window, GWL_STYLE), 0);
+		RECT rect = { 0, 0, m_Data.ClientWidth, m_Data.ClientHeight };
+		AdjustWindowRect(&rect, windowStyle, 0);
 		SetWindowPos(
 			m_Window, nullptr,
-			rect.left, rect.top,
+			m_Data.XPos, m_Data.YPos,
 			rect.right - rect.left, rect.bottom - rect.top,
 			SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
 		);
+
+		ShowWindow(m_Window, flags & WindowSettings::Maximized ? SW_MAXIMIZE : SW_NORMAL);
 	}
 
 	LRESULT WinWindow::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -213,31 +189,33 @@ namespace Ares {
 			return 0;
 		}
 		case WM_SIZE: {
-			if (m_Data.EventCallback)
-			{
-				uint32_t width = LOWORD(lParam);
-				uint32_t height = HIWORD(lParam);
+			uint32_t width = LOWORD(lParam);
+			uint32_t height = HIWORD(lParam);
 
-				if (wParam == SIZE_MINIMIZED)
-				{
-					WindowResizeEvent event(0, 0);
+			if (wParam == SIZE_MINIMIZED)
+			{
+				WindowResizeEvent event(0, 0);
+				if (m_Data.EventCallback)
 					m_Data.EventCallback(event);
-				}
-				else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
+			}
+			else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
+			{
+				if (m_Data.ClientWidth != width || m_Data.ClientHeight != height)
 				{
 					m_Data.ClientWidth = width;
 					m_Data.ClientHeight = height;
 
 					WindowResizeEvent event(width, height);
-					m_Data.EventCallback(event);
+					if (m_Data.EventCallback)
+						m_Data.EventCallback(event);
 				}
 			}
-			
 			return 0;
 		}
 		case WM_MOVE: {
 			m_Data.XPos = LOWORD(lParam);
 			m_Data.YPos = HIWORD(lParam);
+
 			return 0;
 		}
 		/*

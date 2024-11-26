@@ -15,6 +15,8 @@ namespace Ares {
 
 		inline uint32_t GetWidth() const override { return m_Data.Width; }
 		inline uint32_t GetHeight() const override { return m_Data.Height; }
+		inline uint32_t GetClientWidth() const override { return m_Data.ClientWidth; }
+		inline uint32_t GetClientHeight() const override { return m_Data.ClientHeight; }
 		inline std::pair<int32_t, int32_t> GetWindowPos() const override { return std::pair<int32_t, int32_t>(m_Data.XPos, m_Data.YPos); }
 
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
@@ -30,7 +32,6 @@ namespace Ares {
 		virtual void ApplySettings(uint16_t flags);
 		virtual void ConfigureFullscreen(uint16_t flags);
 		virtual void ConfigureWindowed(uint16_t flags);
-		virtual void UpdateWindowBounds(uint16_t flags);
 
 		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

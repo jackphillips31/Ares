@@ -38,6 +38,8 @@ namespace Ares {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
+		virtual uint32_t GetClientWidth() const = 0;
+		virtual uint32_t GetClientHeight() const = 0;
 		virtual std::pair<int32_t, int32_t> GetWindowPos() const = 0;
 
 		// Window attributes
