@@ -15,7 +15,7 @@ namespace Ares {
 			Maximized =				BIT(5),
 			DefaultWindow =			0b010001,
 			FullscreenBorderless =	0b000110,
-			FullscreenWindowed =	0b100101,
+			FullscreenWindowed =	0b100001,
 		};
 	}
 
@@ -29,4 +29,4 @@ namespace Ares {
 #define AR_WINDOW_MAXIMIZED (uint16_t)0b100000
 #define AR_WINDOW_DEFAULT_WINDOW (uint16_t)0b010001
 #define AR_WINDOW_FULLSCREEN_BORDERLESS (uint16_t)0b000110
-#define AR_WINDOW_FULLSCREEN_WINDOWED (uint16_t)0b100101
+#define AR_WINDOW_FULLSCREEN_WINDOWED (uint16_t)0b100001
