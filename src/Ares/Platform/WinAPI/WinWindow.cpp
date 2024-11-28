@@ -83,6 +83,7 @@ namespace Ares {
 	void WinWindow::OnUpdate()
 	{
 		MSG msg;
+		int32_t processedMessages = 0;
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -204,11 +205,14 @@ namespace Ares {
 		}
 		switch (uMsg)
 		{
-		case WM_DESTROY: {
-			PostQuitMessage(0);
-			ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
+		case WM_QUIT: {
 			WindowCloseEvent event;
 			m_Data.EventCallback(event);
+			return wParam;
+		}
+		case WM_DESTROY: {
+			ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
+			PostQuitMessage(0);
 			return 0;
 		}
 		case WM_SIZING: {
