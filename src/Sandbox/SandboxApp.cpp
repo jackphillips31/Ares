@@ -3,10 +3,13 @@
 
 #include "Sandbox2D.h"
 
+#include "assets/resource.h"
+
 class SandboxApp : public Ares::Application
 {
 public:
-	SandboxApp()
+	SandboxApp(Ares::ApplicationSettings settings)
+		: Application(settings)
 	{
 		PushLayer(new Sandbox2D());
 	}
@@ -18,6 +21,11 @@ public:
 
 Ares::Application* Ares::CreateApplication()
 {
-	Ares::Application::SetStartupSettings(AR_WINDOW_DEFAULT_WINDOW);
-	return new SandboxApp();
+	Ares::ApplicationSettings settings;
+	settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+	
+	int32_t appIcon = IDI_ICON1;
+	settings.Icon = &appIcon;
+
+	return new SandboxApp(settings);
 }

@@ -123,6 +123,11 @@ workspace "Ares"
 				"AR_PLATFORM_WINDOWS"
 			}
 
+			files 
+			{
+				"src/%{prj.name}/**.rc"
+			}
+
 		filter "configurations:Debug"
 			defines "AR_DEBUG"
 			runtime "Debug"
