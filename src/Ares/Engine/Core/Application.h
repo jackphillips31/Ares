@@ -12,15 +12,20 @@ int EntryPoint(int argc, char** argv);
 
 namespace Ares {
 
-	struct StartupSettings
+	struct ApplicationSettings
 	{
-		uint16_t WindowSettings = 0;
+		std::string Name = "Ares Engine";
+		uint32_t Width = 1280;
+		uint32_t Height = 720;
+
+		uint16_t WindowStyle = WindowSettings::DefaultWindow;
+		void* Icon = nullptr;
 	};
 
 	class Application
 	{
 	public:
-		Application();
+		Application(ApplicationSettings& settings);
 		virtual ~Application();
 
 		void OnEvent(Event& e);
@@ -31,8 +36,6 @@ namespace Ares {
 		inline Window& GetWindow() { return *m_Window; }
 
 		inline static Application& Get() { return *s_Instance; }
-
-		static void SetStartupSettings(uint16_t flags = 0);
 
 	private:
 		void Run();
@@ -51,7 +54,6 @@ namespace Ares {
 
 	private:
 		static Application* s_Instance;
-		static StartupSettings s_Settings;
 
 		friend int ::EntryPoint(int argc, char** argv);
 	};
