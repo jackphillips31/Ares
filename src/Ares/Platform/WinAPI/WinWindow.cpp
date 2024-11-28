@@ -39,6 +39,11 @@ namespace Ares {
 		wc.hInstance = GetModuleHandle(nullptr);
 		wc.lpszClassName = L"AresWindowClass";
 
+		if (props.Icon)
+		{
+			wc.hIcon = LoadIcon(wc.hInstance, MAKEINTRESOURCE(*(int32_t*)props.Icon));
+		}
+
 		RegisterClass(&wc);
 
 		m_Window = CreateWindowExW(

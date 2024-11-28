@@ -14,14 +14,16 @@ namespace Ares {
 		int32_t XPos;
 		int32_t YPos;
 		uint16_t Flags;
+		void* Icon;
 
 		WindowProps(const std::string& title = "Ares Engine",
 			uint32_t width = 1280,
 			uint32_t height = 720,
 			int32_t xpos = 200,
 			int32_t ypos = 200,
-			uint16_t flags = 0)
-			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos), Flags(flags)
+			uint16_t flags = 0,
+			void* icon = nullptr)
+			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos), Flags(flags), Icon(icon)
 		{
 		}
 	};
