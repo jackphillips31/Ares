@@ -33,6 +33,13 @@ namespace Ares {
 		m_Data.XPos = props.XPos;
 		m_Data.YPos = props.YPos;
 		m_Data.Flags = props.Flags;
+		m_Data.OriginalDisplay = {};
+
+		m_Data.OriginalDisplay.dmSize = sizeof(DEVMODE);
+		if (EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &m_Data.OriginalDisplay) == 0)
+		{
+			AR_CORE_ERROR("Failed to get the original display settings!");
+		}
 
 		WNDCLASS wc = {};
 		wc.lpfnWndProc = WndProc;
@@ -104,8 +111,15 @@ namespace Ares {
 
 	void WinWindow::SetWindowSettings(uint16_t flags)
 	{
-		ApplySettings(flags);
-		m_Data.Flags = flags;
+		if (m_Data.Flags != flags)
+		{
+			if (m_Data.Flags & WindowSettings::FullscreenExclusive && !(flags & WindowSettings::FullscreenExclusive))
+			{
+				ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
+			}
+			m_Data.Flags = flags;
+			ApplySettings(flags);
+		}
 	}
 
 	void WinWindow::ApplySettings(uint16_t flags)
@@ -130,7 +144,7 @@ namespace Ares {
 		{
 			devMode.dmPelsWidth = m_Data.ClientWidth;
 			devMode.dmPelsHeight = m_Data.ClientHeight;
-			ChangeDisplaySettings(&devMode, CDS_FULLSCREEN);
+			ChangeDisplaySettings(&devMode, 0);
 		}
 
 		SetWindowLongPtr(m_Window, GWL_STYLE, WS_POPUP);
@@ -158,6 +172,10 @@ namespace Ares {
 		else if (flags & WindowSettings::Resizable)
 		{
 			windowStyle |= WS_THICKFRAME;
+		}
+		else if (flags == WindowSettings::FullscreenWindowed)
+		{
+			windowStyle &= ~WS_MAXIMIZEBOX;
 		}
 
 		SetWindowLongPtr(m_Window, GWL_STYLE, windowStyle);
@@ -188,6 +206,7 @@ namespace Ares {
 		{
 		case WM_DESTROY: {
 			PostQuitMessage(0);
+			ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
 			WindowCloseEvent event;
 			m_Data.EventCallback(event);
 			return 0;
@@ -237,15 +256,12 @@ namespace Ares {
 				m_Data.Width = winWidth;
 				m_Data.Height = winHeight;
 
-				if (m_Data.ClientWidth != width || m_Data.ClientHeight != height)
-				{
-					m_Data.ClientWidth = width;
-					m_Data.ClientHeight = height;
+				m_Data.ClientWidth = width;
+				m_Data.ClientHeight = height;
 
-					WindowResizeEvent event(width, height);
-					if (m_Data.EventCallback)
-						m_Data.EventCallback(event);
-				}
+				WindowResizeEvent event(width, height);
+				if (m_Data.EventCallback)
+					m_Data.EventCallback(event);
 			}
 			return 0;
 		}
@@ -255,16 +271,27 @@ namespace Ares {
 
 			return 0;
 		}
-		/*
 		case WM_ACTIVATE: {
-			if (LOWORD(wParam) == WA_INACTIVE)
+			if (wParam == WA_INACTIVE)
 			{
-				ShowWindow(m_Window, SW_MINIMIZE);
-				break;
+				if (m_Data.Flags & WindowSettings::FullscreenExclusive)
+				{
+					ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
+				}
+				ShowWindow(hwnd, SW_MINIMIZE);
+			}
+			else if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE)
+			{
+				if (m_Data.Flags & WindowSettings::FullscreenExclusive)
+				{
+					DEVMODE devMode = m_Data.OriginalDisplay;
+					devMode.dmPelsWidth = m_Data.ClientWidth;
+					devMode.dmPelsHeight = m_Data.ClientHeight;
+					ChangeDisplaySettings(&devMode, 0);
+				}
 			}
 			return 0;
 		}
-		*/
 		case WM_KEYDOWN: {
 			KeyCode keyCode = WinAPIKeyToKeyCode(static_cast<uint32_t>(wParam));
 

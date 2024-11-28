@@ -48,6 +48,7 @@ namespace Ares {
 			int32_t XPos, YPos;
 			bool VSync;
 			uint16_t Flags;
+			DEVMODE OriginalDisplay;
 			
 			EventCallbackFn EventCallback;
 		};
