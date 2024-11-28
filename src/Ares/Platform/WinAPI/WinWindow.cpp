@@ -104,8 +104,8 @@ namespace Ares {
 
 	void WinWindow::SetWindowSettings(uint16_t flags)
 	{
-		m_Data.Flags = flags;
 		ApplySettings(flags);
+		m_Data.Flags = flags;
 	}
 
 	void WinWindow::ApplySettings(uint16_t flags)
@@ -145,6 +145,9 @@ namespace Ares {
 
 	void WinWindow::ConfigureWindowed(uint16_t flags)
 	{
+		uint32_t tempClientWidth = m_Data.ClientWidth;
+		uint32_t tempClientHeight = m_Data.ClientHeight;
+
 		DWORD windowStyle = WS_OVERLAPPEDWINDOW;
 		windowStyle &= ~WS_THICKFRAME;
 
@@ -159,13 +162,17 @@ namespace Ares {
 
 		SetWindowLongPtr(m_Window, GWL_STYLE, windowStyle);
 
-		RECT rect = { 0, 0, m_Data.ClientWidth, m_Data.ClientHeight };
+		RECT rect = { 0, 0, tempClientWidth, tempClientHeight };
 		AdjustWindowRect(&rect, windowStyle, 0);
+
+		m_Data.Width = rect.right - rect.left;
+		m_Data.Height = rect.bottom - rect.top;
+
 		SetWindowPos(
 			m_Window, nullptr,
-			m_Data.XPos, m_Data.YPos,
+			0, 0,
 			rect.right - rect.left, rect.bottom - rect.top,
-			SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
+			SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOMOVE
 		);
 
 		ShowWindow(m_Window, flags & WindowSettings::Maximized ? SW_MAXIMIZE : SW_NORMAL);
@@ -191,6 +198,22 @@ namespace Ares {
 			m_Data.Width = rect->right - rect->left;
 			m_Data.Height = rect->bottom - rect->top;
 
+			RECT clientRect;
+			GetClientRect(hwnd, &clientRect);
+
+			uint32_t clientWidth = clientRect.right - clientRect.left;
+			uint32_t clientHeight = clientRect.bottom - clientRect.top;
+
+			if (m_Data.ClientWidth != clientWidth || m_Data.ClientHeight != clientHeight)
+			{
+				m_Data.ClientWidth = clientWidth;
+				m_Data.ClientHeight = clientHeight;
+
+				WindowResizeEvent event(clientWidth, clientHeight);
+				if (m_Data.EventCallback)
+					m_Data.EventCallback(event);
+			}
+
 			return 0;
 		}
 		case WM_SIZE: {
@@ -205,6 +228,15 @@ namespace Ares {
 			}
 			else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
 			{
+				RECT windowRect;
+				GetWindowRect(hwnd, &windowRect);
+
+				uint32_t winWidth = windowRect.right - windowRect.left;
+				uint32_t winHeight = windowRect.bottom - windowRect.top;
+
+				m_Data.Width = winWidth;
+				m_Data.Height = winHeight;
+
 				if (m_Data.ClientWidth != width || m_Data.ClientHeight != height)
 				{
 					m_Data.ClientWidth = width;
