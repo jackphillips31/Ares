@@ -20,12 +20,22 @@ namespace Ares {
 
 		uint16_t WindowStyle = WindowSettings::DefaultWindow;
 		void* Icon = nullptr;
+
+		ApplicationSettings(
+			const std::string& name = "Ares Engine",
+			uint32_t width = 1280,
+			uint32_t height = 720,
+			uint16_t windowStyle = WindowSettings::DefaultWindow,
+			void* icon = nullptr
+		) : Name(name), Width(width), Height(height), WindowStyle(windowStyle), Icon(icon)
+		{
+		}
 	};
 
 	class Application
 	{
 	public:
-		Application(ApplicationSettings& settings);
+		Application(const ApplicationSettings& settings = ApplicationSettings());
 		virtual ~Application();
 
 		void OnEvent(Event& e);

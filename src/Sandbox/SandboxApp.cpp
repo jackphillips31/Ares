@@ -8,7 +8,7 @@
 class SandboxApp : public Ares::Application
 {
 public:
-	SandboxApp(Ares::ApplicationSettings settings)
+	SandboxApp(const Ares::ApplicationSettings& settings)
 		: Application(settings)
 	{
 		PushLayer(new Sandbox2D());

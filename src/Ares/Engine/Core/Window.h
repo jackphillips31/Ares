@@ -21,7 +21,7 @@ namespace Ares {
 			uint32_t height = 720,
 			int32_t xpos = 200,
 			int32_t ypos = 200,
-			uint16_t flags = 0,
+			uint16_t flags = WindowSettings::DefaultWindow,
 			void* icon = nullptr)
 			: Title(title), Width(width), Height(height), XPos(xpos), YPos(ypos), Flags(flags), Icon(icon)
 		{

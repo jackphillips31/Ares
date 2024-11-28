@@ -10,7 +10,7 @@ namespace Ares {
 
 	Application* Application::s_Instance = nullptr;
 	
-	Application::Application(ApplicationSettings& settings)
+	Application::Application(const ApplicationSettings& settings)
 	{
 		s_Instance = this;
 
