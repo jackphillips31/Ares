@@ -282,7 +282,10 @@ namespace Ares {
 				{
 					ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
 				}
-				ShowWindow(hwnd, SW_MINIMIZE);
+				if (m_Data.Flags & WindowSettings::FullscreenExclusive || m_Data.Flags & WindowSettings::Fullscreen)
+				{
+					ShowWindow(hwnd, SW_MINIMIZE);
+				}
 			}
 			else if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE)
 			{
