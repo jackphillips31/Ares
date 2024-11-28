@@ -39,40 +39,38 @@ Ares is a simple, extensible game engine designed to eventually support both 2D 
 
 ### Cloning the Repository
 ```bash
-git clone https://github.com/yourusername/ares.git
+git clone --recursive https://github.com/yourusername/ares.git
 cd ares
 ```
 
 ### Building the Project
 1. Download and install [Premake 5](https://premake.github.io/download) if you haven't already.
-2. In the root directory of the cloned repository, run Premake to generate project files for your development environment:
+2. Place premake5.exe inside the `/scripts` folder.
+3. In the scripts directory of the cloned repository, open a terminal and run Premake to generate project files for your development environment:
    ```bash
-   premake5 <your_environment>
+   premake5 --file=..\premake5.lua <your_environment>
    ```
    Replace `<your_environment>` with your desired build system, such as `vs2022` for Visual Studio 2022 or `gmake` for GNU Make.
 
-3. Open the generated project in your IDE and build the solution.
+4. Open the generated project in your IDE and build the solution.
 
 ## Creating a New Blank Project
-
-The current `premake5.lua` is set up with the main project named **"Sandbox"**. If you'd like to create a new blank project, such as **"MyApplication"**, follow these steps:
-
-1. **Update `premake5.lua`**:  
-   Open the `premake5.lua` file and replace all instances of `"Sandbox"` with your desired project name (e.g., `"MyApplication"`). One of these instances defines the location for the new project, so Premake will automatically create a new directory for it during the next step.
-
-2. **Regenerate Project Files**:  
-   Run Premake to generate project files for your new application by running the following command:
-   ```bash
-   premake5 <your_environment>
-   ```
-
-3. **Start Working**:  
-   A new directory (e.g., `src/MyApplication`) will be automatically created for your project. This will give you a blank slate to start working on your new application.
+The current `premake5.lua` is set up with the internal project named **Sandbox**. If you'd like to create a new blank project, such as **MyApplication**, follow these steps:
+1. Make sure you have downloaded [Premake 5](https://premake.github.io/download) and placed `premake5.exe` inside the `/scripts` folder.
+2. Run the `InitializeProjet.bat` script.
+   - First, it will ask you what you want to name your project. In the current `premake5.lua` file it is **Ares**.
+   - Then, it will ask you what you want the internal name of your project to be. In the current `premake5.lua` file it is **Sandbox**.
+   - Using these, the script will create a `premake5.lua` just for you, overwriting the one cloned from the repo. The only things that are different are the names.
+   - The script will then ask if you want it to generate a script for running **Premake**. If yes, it will create `GenerateProjectFiles.bat` in the `/scripts` folder.
+   - Finally, the script will ask you if you would like to run the generated script to create your project files.
+  
+3. With your project files generated, you are ready to start working on your blank project!
+4. Please see [Create a New Application](#create-a-new-application) to learn the basics.
 
 ## Usage
 
 ### Create a New Application
-In your `MyApplication.cpp`, include Ares and the necessary entry point:
+In your blank project, create a new file. For our example, it will be `MyApplication.cpp`. In `MyApplication.cpp` include Ares and the necessary entry point:
 ```cpp
 // MyApplication.cpp
 #include <Ares.h>
@@ -102,7 +100,10 @@ Ares::Application* Ares::CreateApplication()
 ### Set Window Style (Optional)
 You can customize the startup window style with macros:
 ```cpp
-Ares::Application::SetStartupSettings(AR_WINDOW_BORDERLESS);
+Ares::ApplicationSettings settings;
+settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+
+return new MyApplication(settings);
 ```
  
 <details>
@@ -116,7 +117,8 @@ Ares::Application::SetStartupSettings(AR_WINDOW_BORDERLESS);
  class MyApplication : public Ares::Application
  {
  public:
-    MyApplication()
+    MyApplication(const Ares::ApplicationSettings& settings)
+       : Application(settings)
     {
        // Constructor code
     }
@@ -128,8 +130,10 @@ Ares::Application::SetStartupSettings(AR_WINDOW_BORDERLESS);
 
  Ares::Application* Ares::CreateApplication()
  {
-    Ares::Application::SetStartupSettings(AR_WINDOW_DEFAULT_WINDOW);
-    return new MyApplication();
+    Ares::ApplicationSettings settings;
+    settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+
+    return new MyApplication(settings);
  }
  ```
 </details>
@@ -207,7 +211,8 @@ public:
 In `MyApplication.cpp`, push the layer:
 ```cpp
 // MyApplication.cpp
-MyApplication::MyApplication()
+MyApplication::MyApplication(const Ares::ApplicationSettings& settings)
+   : Application(settings)
 {
   PushLayer(new MyLayer());
 }
@@ -226,7 +231,8 @@ MyApplication::MyApplication()
   class MyApplication : public Ares::Application
   {
   public:
-     MyApplication()
+     MyApplication(const Ares::ApplicationSettings& settings)
+        : Application(settings)
      {
         // Constructor code
         PushLayer(new MyLayer());
@@ -239,8 +245,10 @@ MyApplication::MyApplication()
 
   Ares::Application* Ares::CreateApplication()
   {
-     Ares::Application::SetStartupSettings(AR_WINDOW_DEFAULT_WINDOW);
-     return new MyApplication();
+     Ares::ApplicationSettings settings;
+     settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+
+     return new MyApplication(settings);
   }
   ```
 </details>
@@ -531,7 +539,8 @@ This may not seem like much yet, but these functions are just the beginning. The
  class MyApplication : public Ares::Application
  {
  public:
-    MyApplication()
+    MyApplication(const Ares::ApplicationSettings& settings)
+       : Application(settings)
     {
        // Constructor code
        PushLayer(new MyLayer());
@@ -544,8 +553,10 @@ This may not seem like much yet, but these functions are just the beginning. The
 
  Ares::Application* Ares::CreateApplication()
  {
-    Ares::Application::SetStartupSettings(AR_WINDOW_DEFAULT_WINDOW);
-    return new MyApplication();
+    Ares::ApplicationSettings settings;
+    settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+
+    return new MyApplication(settings);
  }
  ```
 </details>
