@@ -89,6 +89,6 @@ namespace LogDebug {
 	#define AR_ERROR(...) ::Ares::Log::GetClientLogger()->error(LogDebug::ToString(__VA_ARGS__))
 	#define AR_WARN(...) ::Ares::Log::GetClientLogger()->warn(LogDebug::ToString(__VA_ARGS__))
 	#define AR_INFO(...) ::Ares::Log::GetClientLogger()->info(LogDebug::ToString(__VA_ARGS__))
-	#define AR_DEBUG(...) ::Ares::Log::GetClientLogger()->debug(LogDebug::ToString(__VA_ARGS__))
+	#define AR_BUG(...) ::Ares::Log::GetClientLogger()->debug(LogDebug::ToString(__VA_ARGS__))
 	#define AR_TRACE(...) ::Ares::Log::GetClientLogger()->trace(LogDebug::ToString(__VA_ARGS__))
 #endif

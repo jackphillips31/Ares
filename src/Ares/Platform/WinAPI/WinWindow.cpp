@@ -85,7 +85,6 @@ namespace Ares {
 	void WinWindow::OnUpdate()
 	{
 		MSG msg;
-		int32_t processedMessages = 0;
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -241,27 +240,6 @@ namespace Ares {
 			return 0;
 		}
 		case WM_SIZING: {
-			RECT* rect = reinterpret_cast<RECT*>(lParam);
-
-			m_Data.Width = rect->right - rect->left;
-			m_Data.Height = rect->bottom - rect->top;
-
-			RECT clientRect;
-			GetClientRect(hwnd, &clientRect);
-
-			uint32_t clientWidth = clientRect.right - clientRect.left;
-			uint32_t clientHeight = clientRect.bottom - clientRect.top;
-
-			if (m_Data.ClientWidth != clientWidth || m_Data.ClientHeight != clientHeight)
-			{
-				m_Data.ClientWidth = clientWidth;
-				m_Data.ClientHeight = clientHeight;
-
-				WindowResizeEvent event(clientWidth, clientHeight);
-				if (m_Data.EventCallback)
-					m_Data.EventCallback(event);
-			}
-
 			return 0;
 		}
 		case WM_SIZE: {
@@ -270,9 +248,11 @@ namespace Ares {
 
 			if (wParam == SIZE_MINIMIZED)
 			{
-				WindowResizeEvent event(0, 0);
 				if (m_Data.EventCallback)
+				{
+					WindowResizeEvent event(0, 0);
 					m_Data.EventCallback(event);
+				}
 			}
 			else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
 			{
@@ -288,10 +268,15 @@ namespace Ares {
 				m_Data.ClientWidth = width;
 				m_Data.ClientHeight = height;
 
-				WindowResizeEvent event(width, height);
 				if (m_Data.EventCallback)
+				{
+					WindowResizeEvent event(width, height);
 					m_Data.EventCallback(event);
+				}
 			}
+			return 0;
+		}
+		case WM_MOVING: {
 			return 0;
 		}
 		case WM_MOVE: {
@@ -304,12 +289,17 @@ namespace Ares {
 			m_Data.XPos = xpos;
 			m_Data.YPos = ypos;
 
-			m_Data.ClientXPos = LOWORD(lParam);
-			m_Data.ClientYPos = HIWORD(lParam);
+			POINT clientPos = { 0, 0 };
+			ClientToScreen(hwnd, &clientPos);
 
-			WindowMovedEvent event(xpos, ypos);
+			m_Data.ClientXPos = clientPos.x;
+			m_Data.ClientYPos = clientPos.y;
+
 			if (m_Data.EventCallback)
+			{
+				WindowMovedEvent event(xpos, ypos);
 				m_Data.EventCallback(event);
+			}
 
 			return 0;
 		}
