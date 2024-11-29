@@ -19,6 +19,8 @@ void Sandbox2D::OnAttach()
 	myFont = io.Fonts->AddFontFromFileTTF(fontPath, fontSize);
 
 	io.Fonts->Build();
+
+	m_FrameBuffer = Ares::FrameBuffer::Create(640, 480);
 }
 
 void Sandbox2D::OnDetach()
@@ -50,4 +52,20 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::PopFont();
 
 	DrawWindowSettingsWindow();
+
+	ImGui::Begin("Framebuffer Viewer");
+
+	ImVec2 availableSize = ImGui::GetContentRegionAvail();
+
+	m_FrameBuffer->Bind();
+	Ares::RenderCommand::SetViewport(0, 0, (uint32_t)availableSize.x, (uint32_t)availableSize.y);
+	Ares::RenderCommand::SetClearColor({ 1.0f, 0.1f, 0.1f, 0.1f });
+	Ares::RenderCommand::Clear();
+	m_FrameBuffer->Unbind();
+
+	ImGui::Image(
+		(ImTextureID)m_FrameBuffer->GetColorAttachmentHandle(),
+		availableSize
+	);
+	ImGui::End();
 }
