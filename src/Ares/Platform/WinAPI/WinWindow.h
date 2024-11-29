@@ -18,6 +18,7 @@ namespace Ares {
 		inline uint32_t GetClientWidth() const override { return m_Data.ClientWidth; }
 		inline uint32_t GetClientHeight() const override { return m_Data.ClientHeight; }
 		inline std::pair<int32_t, int32_t> GetWindowPos() const override { return std::pair<int32_t, int32_t>(m_Data.XPos, m_Data.YPos); }
+		inline uint16_t GetWindowSettings() const override { return m_Data.Flags; }
 
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;

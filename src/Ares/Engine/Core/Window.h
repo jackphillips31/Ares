@@ -43,6 +43,7 @@ namespace Ares {
 		virtual uint32_t GetClientWidth() const = 0;
 		virtual uint32_t GetClientHeight() const = 0;
 		virtual std::pair<int32_t, int32_t> GetWindowPos() const = 0;
+		virtual uint16_t GetWindowSettings() const = 0;
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
