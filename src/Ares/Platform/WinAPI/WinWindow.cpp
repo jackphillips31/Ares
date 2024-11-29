@@ -32,6 +32,8 @@ namespace Ares {
 		m_Data.ClientHeight = props.Height;
 		m_Data.XPos = props.XPos;
 		m_Data.YPos = props.YPos;
+		m_Data.ClientXPos = 0;
+		m_Data.ClientYPos = 0;
 		m_Data.Flags = props.Flags;
 		m_Data.OriginalDisplay = {};
 
@@ -293,11 +295,17 @@ namespace Ares {
 			return 0;
 		}
 		case WM_MOVE: {
-			int32_t xpos = LOWORD(lParam);
-			int32_t ypos = HIWORD(lParam);
+			RECT windowRect;
+			GetWindowRect(hwnd, &windowRect);
+
+			int32_t xpos = windowRect.left;
+			int32_t ypos = windowRect.top;
 
 			m_Data.XPos = xpos;
 			m_Data.YPos = ypos;
+
+			m_Data.ClientXPos = LOWORD(lParam);
+			m_Data.ClientYPos = HIWORD(lParam);
 
 			WindowMovedEvent event(xpos, ypos);
 			if (m_Data.EventCallback)
