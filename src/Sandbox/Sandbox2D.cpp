@@ -1,4 +1,5 @@
 #include "imgui/WindowSettings.h"
+#include "imgui/MainWindow.h"
 
 #include "Sandbox2D.h"
 
@@ -36,6 +37,12 @@ void Sandbox2D::OnEvent(Ares::Event& e)
 
 void Sandbox2D::OnImGuiRender()
 {
+	DrawMainWindow();
+
+	ImGui::ShowDemoWindow();
+
+	Ares::Log::GetConsole()->Draw("Console", true);
+
 	ImGui::PushFont(myFont);
 	ImGui::Begin("Performance");
 	ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -43,8 +50,4 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::PopFont();
 
 	DrawWindowSettingsWindow();
-
-	ImGui::ShowDemoWindow();
-
-	Ares::Log::GetConsole()->Draw("Console", true);
 }
