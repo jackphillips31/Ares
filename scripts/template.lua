@@ -1,5 +1,5 @@
 -- template.lua was generated on: 
--- Nov. 29, 2024 - 04:27AM UTC 
+-- Nov. 29, 2024 - 08:27PM UTC 
 workspace "TEMPLATENAME"
 	architecture "x86_64"
 	configurations
@@ -86,6 +86,7 @@ workspace "TEMPLATENAME"
 		}
 		includedirs
 		{
+			"src/%{prj.name}",
 			"src/Ares",
 			"src/Vendor",
 			"%{IncludeDir.spdlog}",

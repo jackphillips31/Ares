@@ -104,6 +104,7 @@ workspace "Ares"
 
 		includedirs
 		{
+			"src/%{prj.name}",
 			"src/Ares",
 			"src/Vendor",
 			"%{IncludeDir.spdlog}",
