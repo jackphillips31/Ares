@@ -293,8 +293,15 @@ namespace Ares {
 			return 0;
 		}
 		case WM_MOVE: {
-			m_Data.XPos = LOWORD(lParam);
-			m_Data.YPos = HIWORD(lParam);
+			int32_t xpos = LOWORD(lParam);
+			int32_t ypos = HIWORD(lParam);
+
+			m_Data.XPos = xpos;
+			m_Data.YPos = ypos;
+
+			WindowMovedEvent event(xpos, ypos);
+			if (m_Data.EventCallback)
+				m_Data.EventCallback(event);
 
 			return 0;
 		}

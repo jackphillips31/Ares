@@ -28,6 +28,30 @@ namespace Ares {
 		uint32_t m_Width, m_Height;
 	};
 
+	class WindowMovedEvent : public Event
+	{
+	public:
+		WindowMovedEvent(int32_t x, int32_t y)
+			: m_XPos(x), m_YPos(y)
+		{
+		}
+
+		inline int32_t GetXPos() const { return m_XPos; }
+		inline int32_t GetYPos() const { return m_YPos; }
+
+		std::string ToString() const override
+		{
+			std::stringstream ss;
+			ss << "WindowMoveEvent: " << m_XPos << ", " << m_YPos;
+			return ss.str();
+		}
+
+		EVENT_CLASS_TYPE(WindowMoved)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		int32_t m_XPos, m_YPos;
+	};
+
 	class WindowCloseEvent : public Event
 	{
 	public:
