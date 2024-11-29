@@ -22,18 +22,23 @@ namespace Ares {
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
+		inline void SetWindowPosition(int32_t x, int32_t y) override { SetWindowSizePos(x, y, m_Data.Width, m_Data.Height); }
+		inline void SetWindowSize(uint32_t width, uint32_t height) override { SetWindowSizePos(m_Data.XPos, m_Data.YPos, width, height); }
+		inline void SetClientSize(uint32_t width, uint32_t height) override { SetClientSizePos(m_Data.XPos, m_Data.YPos, width, height); }
+		void SetWindowSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) override;
+		void SetClientSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) override;
 		void SetWindowSettings(uint16_t flags) override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 
 	private:
-		virtual void Init(const WindowProps& props);
-		virtual void Shutdown();
-		virtual void ApplySettings(uint16_t flags);
-		virtual void ConfigureFullscreen(uint16_t flags);
-		virtual void ConfigureWindowed(uint16_t flags);
+		void Init(const WindowProps& props);
+		void Shutdown();
+		void ApplySettings(uint16_t flags);
+		void ConfigureFullscreen(uint16_t flags);
+		void ConfigureWindowed(uint16_t flags);
 
-		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	private:

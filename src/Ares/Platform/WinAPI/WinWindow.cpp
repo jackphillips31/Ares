@@ -110,6 +110,29 @@ namespace Ares {
 		return m_Data.VSync;
 	}
 
+	void WinWindow::SetWindowSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height)
+	{
+		SetWindowPos(
+			m_Window, nullptr,
+			x, y,
+			width, height,
+			SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
+		);
+	}
+
+	void WinWindow::SetClientSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height)
+	{
+		RECT rect = { 0, 0, width, height };
+		AdjustWindowRect(&rect, GetWindowLong(m_Window, GWL_STYLE), 0);
+
+		SetWindowPos(
+			m_Window, nullptr,
+			x, y,
+			rect.right - rect.left, rect.bottom-rect.top,
+			SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
+		);
+	}
+
 	void WinWindow::SetWindowSettings(uint16_t flags)
 	{
 		if (m_Data.Flags != flags)

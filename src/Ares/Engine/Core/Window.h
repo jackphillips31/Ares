@@ -48,6 +48,11 @@ namespace Ares {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
+		virtual void SetWindowPosition(int32_t x, int32_t y) = 0;
+		virtual void SetWindowSize(uint32_t width, uint32_t height) = 0;
+		virtual void SetClientSize(uint32_t width, uint32_t height) = 0;
+		virtual void SetWindowSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) = 0;
+		virtual void SetClientSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void SetWindowSettings(uint16_t flags) = 0;
 
 		virtual void* GetNativeWindow() const = 0;
