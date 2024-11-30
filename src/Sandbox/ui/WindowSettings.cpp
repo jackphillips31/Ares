@@ -118,9 +118,8 @@ void WindowSettingsElement::OnEvent(Ares::Event& e)
 
 bool WindowSettingsElement::OnWindowMoved(Ares::WindowMovedEvent& e)
 {
-	std::pair<int32_t, int32_t> tempPos = m_Window.GetWindowPos();
-	m_WindowPosition[0] = tempPos.first;
-	m_WindowPosition[1] = tempPos.second;
+	m_WindowPosition[0] = e.GetXPos();
+	m_WindowPosition[1] = e.GetYPos();
 
 	return false;
 }
