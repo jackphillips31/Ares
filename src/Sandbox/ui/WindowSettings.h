@@ -1,16 +1,14 @@
 #pragma once
-#include <Ares.h>
-#include <imgui/imgui.h>
 
-class WindowSettingsElement
+#include <Ares.h>
+
+class WindowSettingsElement : public Ares::ImGuiElement
 {
 public:
 	WindowSettingsElement();
-	~WindowSettingsElement() = default;
 
-	void Draw();
-
-	void OnEvent(Ares::Event& e);
+	void Draw() override;
+	void OnEvent(Ares::Event& e) override;
 
 private:
 	bool OnWindowMoved(Ares::WindowMovedEvent& e);

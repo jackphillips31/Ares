@@ -1,3 +1,5 @@
+#include <imgui/imgui.h>
+
 #include "ui/WindowSettings.h"
 
 WindowSettingsElement::WindowSettingsElement()

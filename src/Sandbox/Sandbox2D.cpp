@@ -1,5 +1,7 @@
 #include "ui/MainWindow.h"
 
+#include <windows.h>
+
 #include "Sandbox2D.h"
 
 Sandbox2D::Sandbox2D()
@@ -10,16 +12,18 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
-	const char* fontPath = "assets/fonts/Inter_18pt-SemiBold.ttf";
+	//const char* fontPath = "assets/fonts/Inter_18pt-SemiBold.ttf";
+	const char* fontPath = "assets/fonts/Inter_18pt-Regular.ttf";
 	float fontSize = 14.0f;
 
+	ImFontConfig config;
+	config.PixelSnapH = true;
+
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.FontGlobalScale = 1.0f;
 	io.Fonts->AddFontDefault();
-	myFont = io.Fonts->AddFontFromFileTTF(fontPath, fontSize);
-
+	myFont = io.Fonts->AddFontFromFileTTF(fontPath, fontSize, &config);
 	io.Fonts->Build();
-
-	m_FrameBuffer = Ares::FrameBuffer::Create(640, 480);
 }
 
 void Sandbox2D::OnDetach()
@@ -39,33 +43,26 @@ void Sandbox2D::OnEvent(Ares::Event& e)
 
 void Sandbox2D::OnImGuiRender()
 {
-	DrawMainWindow();
+	ImGui::PushFont(myFont);
+
+	m_MainWindowElement.Draw();
+
+	m_PerformanceElement.Draw();
+
+	m_WindowSettingsElement.Draw();
+
+	m_FrameBufferElement.BeginDraw();
+
+	ImVec2 availableSize = ImGui::GetContentRegionAvail();
+	Ares::RenderCommand::SetViewport(0, 0, (uint32_t)availableSize.x, (uint32_t)availableSize.y);
+	Ares::RenderCommand::SetClearColor({ 1.0f, 0.1f, 0.1f, 0.1f });
+	Ares::RenderCommand::Clear();
+	
+	m_FrameBufferElement.EndDraw();
 
 	ImGui::ShowDemoWindow();
 
 	Ares::Log::GetConsole()->Draw("Console", true);
 
-	ImGui::PushFont(myFont);
-	ImGui::Begin("Performance");
-	ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	ImGui::End();
 	ImGui::PopFont();
-
-	m_WindowSettingsElement.Draw();
-
-	ImGui::Begin("Framebuffer Viewer");
-
-	ImVec2 availableSize = ImGui::GetContentRegionAvail();
-
-	m_FrameBuffer->Bind();
-	Ares::RenderCommand::SetViewport(0, 0, (uint32_t)availableSize.x, (uint32_t)availableSize.y);
-	Ares::RenderCommand::SetClearColor({ 1.0f, 0.1f, 0.1f, 0.1f });
-	Ares::RenderCommand::Clear();
-	m_FrameBuffer->Unbind();
-
-	ImGui::Image(
-		(ImTextureID)m_FrameBuffer->GetColorAttachmentHandle(),
-		availableSize
-	);
-	ImGui::End();
 }
