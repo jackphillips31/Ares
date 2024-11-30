@@ -13,7 +13,7 @@ namespace Ares {
 		virtual void Begin() {};
 		virtual void End() {};
 
-		static ImGuiLayer* Create();
+		static Ref<ImGuiLayer> Create();
 	};
 
 }

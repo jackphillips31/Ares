@@ -40,8 +40,8 @@ namespace Ares {
 
 		void OnEvent(Event& e);
 
-		void PushLayer(Layer* layer);
-		void PushOverlay(Layer* overlay);
+		void PushLayer(Ref<Layer> layer);
+		void PushOverlay(Ref<Layer> overlay);
 
 		inline Window& GetWindow() { return *m_Window; }
 
@@ -55,7 +55,7 @@ namespace Ares {
 	
 	private:
 		Scope<Window> m_Window;
-		ImGuiLayer* m_ImGuiLayer;
+		Ref<ImGuiLayer> m_ImGuiLayer;
 		bool m_Running = true;
 		bool m_Minimized = false;
 		bool m_ShowConsole = false;

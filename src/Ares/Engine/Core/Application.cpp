@@ -39,13 +39,13 @@ namespace Ares {
 		Input::Shutdown();
 	}
 
-	void Application::PushLayer(Layer* layer)
+	void Application::PushLayer(Ref<Layer> layer)
 	{
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
 	}
 
-	void Application::PushOverlay(Layer* overlay)
+	void Application::PushOverlay(Ref<Layer> overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
 		overlay->OnAttach();
@@ -62,13 +62,13 @@ namespace Ares {
 
 			if (!m_Minimized)
 			{
-				for (Layer* layer : m_LayerStack)
+				for (Ref<Layer> layer : m_LayerStack)
 					layer->OnUpdate(timestep);
 			}
 
 			m_ImGuiLayer->Begin();
 			{
-				for (Layer* layer : m_LayerStack)
+				for (Ref<Layer> layer : m_LayerStack)
 					layer->OnImGuiRender();
 			}
 			m_ImGuiLayer->End();

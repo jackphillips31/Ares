@@ -8,10 +8,10 @@
 
 namespace Ares {
 
-	ImGuiLayer* ImGuiLayer::Create()
+	Ref<ImGuiLayer> ImGuiLayer::Create()
 	{
 #	ifdef AR_PLATFORM_WINDOWS
-		return new WinImGuiLayer();
+		return CreateRef<WinImGuiLayer>();
 	#else
 		AR_CORE_ASSERT(false, "Unknown Platform!");
 		return nullptr;

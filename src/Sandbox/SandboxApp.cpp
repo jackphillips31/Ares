@@ -11,7 +11,7 @@ public:
 	SandboxApp(const Ares::ApplicationSettings& settings)
 		: Application(settings)
 	{
-		PushLayer(new Sandbox2D());
+		PushLayer(Ares::CreateRef<Sandbox2D>());
 	}
 	~SandboxApp()
 	{
