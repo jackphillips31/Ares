@@ -12,7 +12,6 @@ namespace Ares {
 
 		void Bind() const override;
 		void Unbind() const override;
-		void Clear(float r, float g, float b, float a) const override;
 		void Resize(uint32_t width, uint32_t height) override;
 
 		inline uint32_t GetWidth() const override { return m_Width; }

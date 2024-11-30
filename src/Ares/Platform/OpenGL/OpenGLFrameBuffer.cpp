@@ -26,14 +26,6 @@ namespace Ares {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFrameBuffer::Clear(float r, float g, float b, float a) const
-	{
-		Bind();
-		glClearColor(r, g, b, a);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		Unbind();
-	}
-
 	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
 		if (width == m_Width && height == m_Height)
