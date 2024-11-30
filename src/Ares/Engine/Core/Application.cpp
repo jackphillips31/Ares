@@ -1,5 +1,6 @@
 #include <arespch.h>
 
+#include "Engine/Core/Cursor.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Timestep.h"
 #include "Engine/Renderer/Renderer.h"
@@ -37,6 +38,7 @@ namespace Ares {
 	{
 		Renderer::Shutdown();
 		Input::Shutdown();
+		Cursor::Shutdown();
 	}
 
 	void Application::PushLayer(Ref<Layer> layer)
