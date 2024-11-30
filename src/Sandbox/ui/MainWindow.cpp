@@ -18,8 +18,14 @@ void MainWindowElement::Draw()
 	// Start a fullscreen window
 	Ares::Application& app = Ares::Application::Get();
 	std::pair<int32_t, int32_t> clientPos = app.GetWindow().GetClientPos();
-	ImVec2 clientSize = ImVec2(app.GetWindow().GetClientWidth(), app.GetWindow().GetClientHeight());
-	ImGui::SetNextWindowPos(ImVec2(clientPos.first, clientPos.second));
+	ImVec2 clientSize = ImVec2(
+		static_cast<float>(app.GetWindow().GetClientWidth()),
+		static_cast<float>(app.GetWindow().GetClientHeight())
+	);
+	ImGui::SetNextWindowPos(ImVec2(
+		static_cast<float>(clientPos.first),
+		static_cast<float>(clientPos.second)
+	));
 	ImGui::SetNextWindowSize(clientSize);
 	ImGui::Begin("Main Window", nullptr, windowFlags);
 

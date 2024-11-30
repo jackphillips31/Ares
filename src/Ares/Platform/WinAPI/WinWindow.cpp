@@ -123,7 +123,7 @@ namespace Ares {
 
 	void WinWindow::SetClientSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height)
 	{
-		RECT rect = { 0, 0, width, height };
+		RECT rect = { 0, 0, static_cast<long>(width), static_cast<long>(height) };
 		AdjustWindowRect(&rect, GetWindowLong(m_Window, GWL_STYLE), 0);
 
 		SetWindowPos(
@@ -205,7 +205,7 @@ namespace Ares {
 
 		SetWindowLongPtr(m_Window, GWL_STYLE, windowStyle);
 
-		RECT rect = { 0, 0, tempClientWidth, tempClientHeight };
+		RECT rect = { 0, 0, static_cast<long>(tempClientWidth), static_cast<long>(tempClientHeight) };
 		AdjustWindowRect(&rect, windowStyle, 0);
 
 		m_Data.Width = rect.right - rect.left;
@@ -397,10 +397,10 @@ namespace Ares {
 			return 0;
 		}
 		case WM_MOUSEMOVE: {
-			int16_t xPos = (int16_t)(short)LOWORD(lParam);
-			int16_t yPos = (int16_t)(short)HIWORD(lParam);
+			int32_t xPos = static_cast<int32_t>(LOWORD(lParam));
+			int32_t yPos = static_cast<int32_t>(HIWORD(lParam));
 
-			MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
+			MouseMovedEvent event(xPos, yPos);
 			m_Data.EventCallback(event);
 			return 0;
 		}
