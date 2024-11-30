@@ -26,30 +26,59 @@ namespace Ares {
 		return (state & 0x8000) != 0;
 	}
 
-	std::pair<float, float> WinInput::GetMousePositionImpl()
+	std::pair<int32_t, int32_t> WinInput::GetMousePositionImpl()
 	{
-		AR_CORE_INFO("GetMousePositionImpl");
-		auto window = static_cast<HWND>(Application::Get().GetWindow().GetNativeWindow());
 		POINT p;
 
 		if (GetCursorPos(&p))
 		{
-			ScreenToClient(window, &p);
-			return { (float)p.x, (float)p.y };
+			return { static_cast<int32_t>(p.x), static_cast<int32_t>(p.y) };
 		}
-
-		return { 0.0f, 0.0f };
+		else
+		{
+			AR_CORE_WARN("GetCursorPos failed while trying to get mouse position!");
+			return { 0, 0 };
+		}
 	}
 
-	float WinInput::GetMouseXImpl()
+	int32_t WinInput::GetMouseXImpl()
 	{
 		auto [x, y] = GetMousePositionImpl();
 		return x;
 	}
 
-	float WinInput::GetMouseYImpl()
+	int32_t WinInput::GetMouseYImpl()
 	{
 		auto [x, y] = GetMousePositionImpl();
+		return y;
+	}
+
+	std::pair<int32_t, int32_t> WinInput::GetMouseClientPositionImpl()
+	{
+		HWND window = static_cast<HWND>(Application::Get().GetWindow().GetNativeWindow());
+		POINT p;
+
+		if (GetCursorPos(&p))
+		{
+			ScreenToClient(window, &p);
+			return { static_cast<int32_t>(p.x), static_cast<int32_t>(p.y) };
+		}
+		else
+		{
+			AR_CORE_WARN("GetCursorPos failed while trying to get mouse client position!");
+			return { 0, 0 };
+		}
+	}
+
+	int32_t WinInput::GetMouseClientXImpl()
+	{
+		auto [x, y] = GetMouseClientPositionImpl();
+		return x;
+	}
+
+	int32_t WinInput::GetMouseClientYImpl()
+	{
+		auto [x, y] = GetMouseClientPositionImpl();
 		return y;
 	}
 
