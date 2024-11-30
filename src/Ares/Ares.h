@@ -19,6 +19,7 @@
 #include "Engine/Events/MouseCodes.h"
 #include "Engine/Events/MouseEvent.h"
 
+#include "Engine/ImGui/ImGuiElement.h"
 #include "Engine/Layers/ImGuiLayer.h"
 
 //----------------- RENDERER ------------------
