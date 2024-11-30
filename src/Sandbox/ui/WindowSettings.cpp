@@ -127,10 +127,10 @@ bool WindowSettingsElement::OnWindowMoved(Ares::WindowMovedEvent& e)
 
 bool WindowSettingsElement::OnWindowResize(Ares::WindowResizeEvent& e)
 {
-	m_WindowDimensions[0] = (int32_t)m_Window.GetWidth();
-	m_WindowDimensions[1] = (int32_t)m_Window.GetHeight();
-	m_ClientDimensions[0] = (int32_t)m_Window.GetClientWidth();
-	m_ClientDimensions[1] = (int32_t)m_Window.GetClientHeight();
+	m_WindowDimensions[0] = (int32_t)e.GetWidth();
+	m_WindowDimensions[1] = (int32_t)e.GetHeight();
+	m_ClientDimensions[0] = (int32_t)e.GetClientWidth();
+	m_ClientDimensions[1] = (int32_t)e.GetClientHeight();
 
 	return false;
 }

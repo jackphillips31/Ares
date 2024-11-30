@@ -107,7 +107,7 @@ namespace Ares {
 		}
 
 		m_Minimized = false;
-		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+		Renderer::OnWindowResize(e.GetClientWidth(), e.GetClientHeight());
 
 		return false;
 	}

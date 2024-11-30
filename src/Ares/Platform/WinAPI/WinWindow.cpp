@@ -243,14 +243,14 @@ namespace Ares {
 			return 0;
 		}
 		case WM_SIZE: {
-			uint32_t width = LOWORD(lParam);
-			uint32_t height = HIWORD(lParam);
+			uint32_t clientWidth = LOWORD(lParam);
+			uint32_t clientHeight = HIWORD(lParam);
 
 			if (wParam == SIZE_MINIMIZED)
 			{
 				if (m_Data.EventCallback)
 				{
-					WindowResizeEvent event(0, 0);
+					WindowResizeEvent event(0, 0, 0, 0);
 					m_Data.EventCallback(event);
 				}
 			}
@@ -265,12 +265,12 @@ namespace Ares {
 				m_Data.Width = winWidth;
 				m_Data.Height = winHeight;
 
-				m_Data.ClientWidth = width;
-				m_Data.ClientHeight = height;
+				m_Data.ClientWidth = clientWidth;
+				m_Data.ClientHeight = clientHeight;
 
 				if (m_Data.EventCallback)
 				{
-					WindowResizeEvent event(width, height);
+					WindowResizeEvent event(winWidth, winHeight, clientWidth, clientHeight);
 					m_Data.EventCallback(event);
 				}
 			}
