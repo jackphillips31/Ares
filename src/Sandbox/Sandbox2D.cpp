@@ -54,7 +54,7 @@ void Sandbox2D::OnImGuiRender()
 	m_FrameBufferElement.BeginDraw();
 
 	ImVec2 availableSize = ImGui::GetContentRegionAvail();
-	Ares::RenderCommand::SetViewport(0, 0, (uint32_t)availableSize.x, (uint32_t)availableSize.y);
+	Ares::RenderCommand::SetViewport(0, 0, static_cast<uint32_t>(availableSize.x), static_cast<uint32_t>(availableSize.y));
 	Ares::RenderCommand::SetClearColor({ 1.0f, 0.1f, 0.1f, 0.1f });
 	Ares::RenderCommand::Clear();
 	

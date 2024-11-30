@@ -73,7 +73,10 @@ namespace Ares {
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();
-		io.DisplaySize = ImVec2((float)app.GetWindow().GetClientWidth(), (float)app.GetWindow().GetClientHeight());
+		io.DisplaySize = ImVec2(
+			static_cast<float>(app.GetWindow().GetClientWidth()),
+			static_cast<float>(app.GetWindow().GetClientHeight())
+		);
 
 		// Rendering
 		ImGui::Render();

@@ -62,8 +62,8 @@ namespace Ares {
 				element.GetComponentCount(),
 				ShaderDataTypeToOpenGLBaseType(element.Type),
 				element.Normalized ? GL_TRUE : GL_FALSE,
-				(int32_t)layout.GetStride(),
-				(const void*)element.Offset
+				static_cast<int32_t>(layout.GetStride()),
+				reinterpret_cast<const void*>(element.Offset)
 			);
 			m_VertexBufferIndex++;
 		}

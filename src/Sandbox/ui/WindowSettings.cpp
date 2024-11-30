@@ -5,9 +5,18 @@
 WindowSettingsElement::WindowSettingsElement()
 	: m_Window(Ares::Application::Get().GetWindow()),
 	m_WindowSettings(m_Window.GetWindowSettings()),
-	m_WindowDimensions{(int32_t)m_Window.GetWidth(), (int32_t)m_Window.GetHeight()},
-	m_ClientDimensions{(int32_t)m_Window.GetClientWidth(), (int32_t)m_Window.GetClientHeight()},
-	m_WindowPosition{ m_Window.GetWindowPos().first, m_Window.GetWindowPos().second }
+	m_WindowDimensions{
+		static_cast<int32_t>(m_Window.GetWidth()),
+		static_cast<int32_t>(m_Window.GetHeight()) 
+	},
+	m_ClientDimensions{
+		static_cast<int32_t>(m_Window.GetClientWidth()),
+		static_cast<int32_t>(m_Window.GetClientHeight())
+	},
+	m_WindowPosition{
+		m_Window.GetWindowPos().first,
+		m_Window.GetWindowPos().second
+	}
 {
 }
 
@@ -97,11 +106,11 @@ void WindowSettingsElement::Draw()
 
 	if (ImGui::Button("Apply Window Size", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
 	{
-		m_Window.SetWindowSize((uint32_t)m_WindowDimensions[0], (uint32_t)m_WindowDimensions[1]);
+		m_Window.SetWindowSize(static_cast<uint32_t>(m_WindowDimensions[0]), static_cast<uint32_t>(m_WindowDimensions[1]));
 	}
 	if (ImGui::Button("Apply Client Size", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
 	{
-		m_Window.SetClientSize((uint32_t)m_ClientDimensions[0], (uint32_t)m_ClientDimensions[1]);
+		m_Window.SetClientSize(static_cast<uint32_t>(m_ClientDimensions[0]), static_cast<uint32_t>(m_ClientDimensions[1]));
 	}
 	if (ImGui::Button("Apply Window Position", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
 	{
@@ -128,10 +137,10 @@ bool WindowSettingsElement::OnWindowMoved(Ares::WindowMovedEvent& e)
 
 bool WindowSettingsElement::OnWindowResize(Ares::WindowResizeEvent& e)
 {
-	m_WindowDimensions[0] = (int32_t)e.GetWidth();
-	m_WindowDimensions[1] = (int32_t)e.GetHeight();
-	m_ClientDimensions[0] = (int32_t)e.GetClientWidth();
-	m_ClientDimensions[1] = (int32_t)e.GetClientHeight();
+	m_WindowDimensions[0] = static_cast<int32_t>(e.GetWidth());
+	m_WindowDimensions[1] = static_cast<int32_t>(e.GetHeight());
+	m_ClientDimensions[0] = static_cast<int32_t>(e.GetClientWidth());
+	m_ClientDimensions[1] = static_cast<int32_t>(e.GetClientHeight());
 
 	return false;
 }
