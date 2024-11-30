@@ -1,12 +1,10 @@
 #include "ui/MainWindow.h"
 
-#include <windows.h>
-
 #include "Sandbox2D.h"
 
 Sandbox2D::Sandbox2D()
 	: Layer("Sandbox2D"),
-	m_Window(Ares::Application::Get().GetWindow())
+	m_Window(Ares::Application::Get().GetWindow()), myFont(nullptr)
 {
 }
 
