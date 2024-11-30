@@ -1,5 +1,4 @@
-#include "imgui/WindowSettings.h"
-#include "imgui/MainWindow.h"
+#include "ui/MainWindow.h"
 
 #include "Sandbox2D.h"
 
@@ -35,6 +34,7 @@ void Sandbox2D::OnUpdate(Ares::Timestep ts)
 
 void Sandbox2D::OnEvent(Ares::Event& e)
 {
+	m_WindowSettingsElement.OnEvent(e);
 }
 
 void Sandbox2D::OnImGuiRender()
@@ -51,7 +51,7 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::End();
 	ImGui::PopFont();
 
-	DrawWindowSettingsWindow();
+	m_WindowSettingsElement.Draw();
 
 	ImGui::Begin("Framebuffer Viewer");
 

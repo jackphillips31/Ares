@@ -3,6 +3,9 @@
 #include <Ares.h>
 #include <imgui/imgui.h>
 
+#include "ui/WindowSettings.h"
+
+
 class Sandbox2D : public Ares::Layer
 {
 public:
@@ -20,4 +23,7 @@ private:
 	Ares::Window& m_Window;
 	ImFont* myFont = nullptr;
 	Ares::Ref<Ares::FrameBuffer> m_FrameBuffer;
+
+private:
+	WindowSettingsElement m_WindowSettingsElement;
 };
