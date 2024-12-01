@@ -67,7 +67,6 @@ workspace "Ares"
 			defines
 			{
 				"AR_PLATFORM_WINDOWS",
-				"AR_BUILD_DLL",
 				"IMGUI_IMPL_OPENGL_LOADER_GLAD"
 			}
 
@@ -106,8 +105,9 @@ workspace "Ares"
 		{
 			"src/%{prj.name}",
 			"src/Ares",
-			"src/Vendor",
 			"%{IncludeDir.spdlog}",
+			"%{IncludeDir.GLAD}",
+			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}"
 		}
 

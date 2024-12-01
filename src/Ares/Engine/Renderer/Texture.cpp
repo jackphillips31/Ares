@@ -14,6 +14,9 @@ namespace Ares {
 		case RendererAPI::API::None: AR_CORE_ASSERT(false, "Cannot create Texture2D if RendererAPI::None"); return nullptr;
 		case RendererAPI::API::OpenGL: return CreateRef<OpenGLTexture2D>(name, width, height);
 		}
+
+		AR_CORE_ASSERT(false, "Unknown API!");
+		return nullptr;
 	}
 
 }

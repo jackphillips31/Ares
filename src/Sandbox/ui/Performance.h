@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Ares.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 class PerformanceElement : public Ares::ImGuiElement
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Ares.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include "ui/MainWindow.h"
 #include "ui/Performance.h"
