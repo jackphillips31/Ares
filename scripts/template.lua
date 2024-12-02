@@ -1,5 +1,5 @@
 -- template.lua was generated on: 
--- Nov. 29, 2024 - 08:27PM UTC 
+-- Dec. 2, 2024 - 01:51AM UTC 
 workspace "TEMPLATENAME"
 	architecture "x86_64"
 	configurations
@@ -16,9 +16,11 @@ workspace "TEMPLATENAME"
 	IncludeDir["GLAD"] = "src/Vendor/GLAD/include"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
 	IncludeDir["glm"] = "src/Vendor/glm"
+	IncludeDir["fmt"] = "src/Vendor/fmt/include"
 	group "Dependencies"
 		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
+		include "src/Vendor/fmt"
 		include "src/Vendor/spdlog"
 	group ""
 	project "Ares"
@@ -42,21 +44,25 @@ workspace "TEMPLATENAME"
 			"%{IncludeDir.spdlog}",
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
-			"%{IncludeDir.glm}"
+			"%{IncludeDir.glm}",
+			"%{IncludeDir.fmt}"
 		}
 		links
 		{
 			"GLAD",
 			"ImGui",
+			"fmt",
 			"spdlog",
 			"opengl32.lib"
+		}
+		defines
+		{
+			"FMT_UNICODE=0"
 		}
 		filter "system:windows"
 			systemversion "latest"
 			defines
 			{
-				"AR_PLATFORM_WINDOWS",
-				"AR_BUILD_DLL",
 				"IMGUI_IMPL_OPENGL_LOADER_GLAD"
 			}
 		filter "configurations:Debug"
@@ -88,20 +94,22 @@ workspace "TEMPLATENAME"
 		{
 			"src/%{prj.name}",
 			"src/Ares",
-			"src/Vendor",
 			"%{IncludeDir.spdlog}",
-			"%{IncludeDir.glm}"
+			"%{IncludeDir.GLAD}",
+			"%{IncludeDir.ImGui}",
+			"%{IncludeDir.glm}",
+			"%{IncludeDir.fmt}"
 		}
 		links
 		{
 			"Ares"
 		}
+		defines
+		{
+			"FMT_UNICODE=0"
+		}
 		filter "system:windows"
 			systemversion "latest"
-			defines
-			{
-				"AR_PLATFORM_WINDOWS"
-			}
 			files 
 			{
 				"src/%{prj.name}/**.rc"
