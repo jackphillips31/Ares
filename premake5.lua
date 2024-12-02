@@ -18,10 +18,12 @@ workspace "Ares"
 	IncludeDir["GLAD"] = "src/Vendor/GLAD/include"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
 	IncludeDir["glm"] = "src/Vendor/glm"
+	IncludeDir["fmt"] = "src/Vendor/fmt/include"
 
 	group "Dependencies"
 		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
+		include "src/Vendor/fmt"
 		include "src/Vendor/spdlog"
 	group ""
 
@@ -50,15 +52,22 @@ workspace "Ares"
 			"%{IncludeDir.spdlog}",
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
-			"%{IncludeDir.glm}"
+			"%{IncludeDir.glm}",
+			"%{IncludeDir.fmt}"
 		}
 
 		links
 		{
 			"GLAD",
 			"ImGui",
+			"fmt",
 			"spdlog",
 			"opengl32.lib"
+		}
+
+		defines
+		{
+			"FMT_UNICODE=0"
 		}
 
 		filter "system:windows"
@@ -66,7 +75,6 @@ workspace "Ares"
 
 			defines
 			{
-				"AR_PLATFORM_WINDOWS",
 				"IMGUI_IMPL_OPENGL_LOADER_GLAD"
 			}
 
@@ -108,7 +116,8 @@ workspace "Ares"
 			"%{IncludeDir.spdlog}",
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
-			"%{IncludeDir.glm}"
+			"%{IncludeDir.glm}",
+			"%{IncludeDir.fmt}"
 		}
 
 		links
@@ -116,13 +125,13 @@ workspace "Ares"
 			"Ares"
 		}
 
+		defines
+		{
+			"FMT_UNICODE=0"
+		}
+
 		filter "system:windows"
 			systemversion "latest"
-
-			defines
-			{
-				"AR_PLATFORM_WINDOWS"
-			}
 
 			files 
 			{
