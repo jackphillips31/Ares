@@ -12,6 +12,9 @@
 #include "Engine/Core/Layer.h"
 #include "Engine/Core/Timestep.h"
 
+#include "Engine/Data/FileBuffer.h"
+#include "Engine/Data/FileIO.h"
+
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Events/KeyCodes.h"
