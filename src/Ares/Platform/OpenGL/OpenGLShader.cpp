@@ -1,7 +1,8 @@
 #include <arespch.h>
-#include <fstream>
 #include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Engine/Data/FileIO.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 
@@ -9,7 +10,8 @@ namespace Ares {
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
-		std::string source = ReadFile(filepath);
+		FileBuffer file = FileIO::LoadFile(filepath);
+		std::string source(static_cast<const char*>(file.GetData()), file.GetSize());
 		std::unordered_map<uint32_t, std::string> shaderSource = PreProcess(source);
 		Compile(shaderSource);
 
@@ -51,34 +53,6 @@ namespace Ares {
 		AR_CORE_ERROR("Shader: {}", type);
 		AR_CORE_ASSERT(false, "Unknown shader type!");
 		return 0;
-	}
-
-	std::string OpenGLShader::ReadFile(const std::string& filepath)
-	{
-		std::string result;
-		std::ifstream in(filepath, std::ios::in | std::ios::binary);
-		if (in)
-		{
-			in.seekg(0, std::ios::end);
-			size_t size = in.tellg();
-			if (size != -1)
-			{
-				result.resize(size);
-				in.seekg(0, std::ios::beg);
-				in.read(&result[0], size);
-				in.close();
-			}
-			else
-			{
-				AR_CORE_ERROR("Could not read from file: '{}'", filepath);
-			}
-		}
-		else
-		{
-			AR_CORE_ERROR("Could not open file: '{}'", filepath);
-		}
-
-		return result;
 	}
 
 	std::unordered_map<uint32_t, std::string> OpenGLShader::PreProcess(const std::string& source)

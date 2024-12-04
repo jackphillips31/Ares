@@ -38,7 +38,6 @@ namespace Ares {
 
 	private:
 		uint32_t ShaderTypeFromString(const std::string& type);
-		std::string ReadFile(const std::string& filepath);
 		std::unordered_map<uint32_t, std::string> PreProcess(const std::string& source);
 		void Compile(const std::unordered_map<uint32_t, std::string>& shaderSources);
 
