@@ -11,7 +11,7 @@ namespace Ares {
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
 		FileBuffer file = FileIO::LoadFile(filepath);
-		std::string source(static_cast<const char*>(file.GetData()), file.GetSize());
+		std::string source(static_cast<const char*>(file.GetBuffer()), file.GetSize());
 		std::unordered_map<uint32_t, std::string> shaderSource = PreProcess(source);
 		Compile(shaderSource);
 

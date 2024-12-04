@@ -7,11 +7,11 @@ namespace Ares {
 	FileBuffer::FileBuffer(const void* data, size_t size)
 		: m_Size(size)
 	{
-		if (!data && size != 0)
+		if (!data && size)
 		{
 			m_Data = CreateScope<uint8_t[]>(size);
 		}
-		else if (!data && size == 0)
+		else if (!data && !size)
 		{
 			m_Data = nullptr;
 		}
@@ -23,22 +23,16 @@ namespace Ares {
 		}
 	}
 
-	FileBuffer::FileBuffer(const FileBuffer& other)
+	FileBuffer::FileBuffer(FileBuffer&& other) noexcept
 		: m_Size(other.m_Size)
 	{
-		if (!other.m_Data && other.m_Size != 0)
-		{
-			m_Data = CreateScope<uint8_t[]>(other.m_Size);
-		}
-		else if (!other.m_Data && other.m_Size == 0)
+		if (!other.m_Data)
 		{
 			m_Data = nullptr;
 		}
 		else
 		{
-			m_Data = CreateScope<uint8_t[]>(other.m_Size);
-
-			std::memcpy(m_Data.get(), other.m_Data.get(), other.m_Size);
+			m_Data = std::move(other.m_Data);
 		}
 	}
 

@@ -18,15 +18,17 @@ namespace Ares {
 			size_t fileSize = file.tellg();
 			file.seekg(0, std::ios::beg);
 
+			FileBuffer result(nullptr, fileSize);
+
 			Scope<uint8_t[]> buffer = CreateScope<uint8_t[]>(fileSize);
-			if (!file.read(reinterpret_cast<char*>(buffer.get()), fileSize))
+			if (!file.read(reinterpret_cast<char*>(result.SetBuffer()), fileSize))
 			{
 				AR_CORE_WARN("Failed to read from file: '{}'", filepath);
 				return FileBuffer(nullptr, 0);
 			}
 			else
 			{
-				return FileBuffer(buffer.get(), fileSize);
+				return result;
 			}
 		}
 	}
@@ -41,7 +43,7 @@ namespace Ares {
 		}
 		else
 		{
-			file.write(reinterpret_cast<const char*>(buffer.GetData()), buffer.GetSize());
+			file.write(reinterpret_cast<const char*>(buffer.GetBuffer()), buffer.GetSize());
 			file.close();
 			return true;
 		}
