@@ -2,9 +2,10 @@
 
 #include "ui/FramebufferViewer.h"
 
-FrameBufferViewerElement::FrameBufferViewerElement()
+FrameBufferViewerElement::FrameBufferViewerElement(const ImVec2& frameBufferSize)
+	: m_FrameBufferSize(frameBufferSize), m_ContentRegionAvailable(0.0f, 0.0f)
 {
-	m_FrameBuffer = Ares::FrameBuffer::Create(640, 480);
+	m_FrameBuffer = Ares::FrameBuffer::Create(m_FrameBufferSize.x, m_FrameBufferSize.y);
 }
 
 FrameBufferViewerElement::~FrameBufferViewerElement()
@@ -12,21 +13,22 @@ FrameBufferViewerElement::~FrameBufferViewerElement()
 	m_FrameBuffer.reset();
 }
 
-void FrameBufferViewerElement::BeginDraw()
+void FrameBufferViewerElement::Draw()
 {
-	ImGui::Begin("Framebuffer Viewer");
+	ImGui::Begin("FramebufferViewer");
+	m_ContentRegionAvailable = ImGui::GetContentRegionAvail();
 
-	m_FrameBuffer->Bind();
-}
-
-void FrameBufferViewerElement::EndDraw()
-{
-	m_FrameBuffer->Unbind();
-
-	ImVec2 availSize = ImGui::GetContentRegionAvail();
+	ImVec2 uv0 = ImVec2(0.0f, 0.0f);
+	ImVec2 uv1 = ImVec2(
+		m_ContentRegionAvailable.x / m_FrameBufferSize.x,
+		m_ContentRegionAvailable.y / m_FrameBufferSize.y
+	);
 	ImGui::Image(
 		static_cast<ImTextureID>(m_FrameBuffer->GetColorAttachmentHandle()),
-		availSize
+		m_ContentRegionAvailable,
+		uv0,
+		uv1
 	);
+
 	ImGui::End();
 }

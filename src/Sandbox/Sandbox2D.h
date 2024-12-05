@@ -18,6 +18,7 @@ public:
 	virtual void OnDetach() override;
 
 	void OnUpdate(Ares::Timestep ts) override;
+	void OnRender() override;
 	void OnEvent(Ares::Event& e) override;
 	virtual void OnImGuiRender() override;
 
@@ -30,4 +31,10 @@ private:
 	PerformanceElement m_PerformanceElement;
 	WindowSettingsElement m_WindowSettingsElement;
 	FrameBufferViewerElement m_FrameBufferElement;
+
+	Ares::Ref<Ares::VertexBuffer> m_VBO;
+	Ares::Ref<Ares::IndexBuffer> m_IBO;
+	Ares::Ref<Ares::VertexArray> m_VAO;
+	Ares::Ref<Ares::Shader> m_Shader;
+	Ares::Ref<Ares::FrameBuffer> m_FBO;
 };

@@ -21,10 +21,10 @@ public:
 
 Ares::Application* Ares::CreateApplication()
 {
+	int32_t appIcon = IDI_ICON1;
+	
 	Ares::ApplicationSettings settings;
 	settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
-	
-	int32_t appIcon = IDI_ICON1;
 	settings.Icon = &appIcon;
 
 	return new SandboxApp(settings);
