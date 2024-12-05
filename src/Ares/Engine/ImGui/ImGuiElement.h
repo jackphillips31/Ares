@@ -10,8 +10,7 @@ namespace Ares {
 		virtual ~ImGuiElement() = default;
 
 		virtual void Draw() {};
-		virtual void BeginDraw() {};
-		virtual void EndDraw() {};
+		virtual void OnUpdate() {};
 
 		virtual void OnEvent(Event& e) {};
 	};
