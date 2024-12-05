@@ -66,17 +66,23 @@ namespace Ares {
 				Timestep timestep = currentTime - m_LastFrameTime;
 				m_LastFrameTime = currentTime;
 
+				m_Window->OnUpdate();
+
 				if (!m_Minimized)
 				{
 					for (Ref<Layer> layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
-
-				m_Window->OnUpdate();
 			}
 
-			if (m_Minimized || !m_Running)
+			if (m_Minimized)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				continue;
+			}
+
+			if (!m_Running)
+				break;
 
 			for (Ref<Layer> layer : m_LayerStack)
 				layer->OnRender();
