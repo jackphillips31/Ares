@@ -61,7 +61,7 @@ void Sandbox2D::OnDetach()
 
 void Sandbox2D::OnUpdate(Ares::Timestep ts)
 {
-	
+	m_FrameBufferElement.OnUpdate();
 }
 
 void Sandbox2D::OnRender()
@@ -69,14 +69,20 @@ void Sandbox2D::OnRender()
 	Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.1f });
 	Ares::RenderCommand::Clear();
 
-	m_FrameBufferElement.GetFrameBuffer()->Bind();
+	Ares::Ref<Ares::FrameBuffer> frameBuffer = m_FrameBufferElement.GetFrameBuffer();
 	ImVec2 availableSize = m_FrameBufferElement.GetContentRegionAvail();
-	Ares::RenderCommand::SetViewport(0, 0, availableSize.x, availableSize.y);
-	Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
-	Ares::RenderCommand::Clear();
 
-	Ares::RenderCommand::DrawIndexed(m_VAO);
-	m_FrameBufferElement.GetFrameBuffer()->Unbind();
+	if (frameBuffer)
+	{
+		frameBuffer->Bind();
+
+		Ares::RenderCommand::SetViewport(0, 0, static_cast<uint32_t>(availableSize.x), static_cast<uint32_t>(availableSize.y));
+		Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+		Ares::RenderCommand::Clear();
+
+		Ares::RenderCommand::DrawIndexed(m_VAO);
+		frameBuffer->Unbind();
+	}
 }
 
 void Sandbox2D::OnEvent(Ares::Event& e)
