@@ -17,6 +17,7 @@ namespace Ares {
 		std::string Name = "Ares Engine";
 		uint32_t Width = 1280;
 		uint32_t Height = 720;
+		uint32_t UpdatesPerSecond = 120;
 
 		uint16_t WindowStyle = WindowSettings::DefaultWindow;
 		void* Icon = nullptr;
@@ -60,7 +61,8 @@ namespace Ares {
 		bool m_Minimized = false;
 		bool m_ShowConsole = false;
 		LayerStack m_LayerStack;
-		float m_LastFrameTime = 0.0f;
+		double m_UpdatesPerSecond = 0.0f;
+		double m_LastFrameTime = 0.0f;
 
 	private:
 		static Application* s_Instance;

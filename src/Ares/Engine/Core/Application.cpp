@@ -14,6 +14,9 @@ namespace Ares {
 	{
 		s_Instance = this;
 
+		m_UpdatesPerSecond = static_cast<double>(settings.UpdatesPerSecond);
+		m_LastFrameTime = std::chrono::duration<float>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
 		WindowProps windowProps = WindowProps(
 			settings.Name,
 			settings.Width,
@@ -56,24 +59,34 @@ namespace Ares {
 		AR_CORE_INFO("Engine Running...");
 		while (m_Running)
 		{
-			float time = std::chrono::duration<float>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-			Timestep timestep = time - m_LastFrameTime;
-			m_LastFrameTime = time;
+			double currentTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-			if (!m_Minimized)
+			while (currentTime - m_LastFrameTime >= (1.0f / m_UpdatesPerSecond))
 			{
-				for (Ref<Layer> layer : m_LayerStack)
-					layer->OnUpdate(timestep);
+				Timestep timestep = currentTime - m_LastFrameTime;
+				m_LastFrameTime = currentTime;
+
+				if (!m_Minimized)
+				{
+					for (Ref<Layer> layer : m_LayerStack)
+						layer->OnUpdate(timestep);
+				}
+
+				m_Window->OnUpdate();
 			}
+
+			if (m_Minimized || !m_Running)
+				continue;
+
+			for (Ref<Layer> layer : m_LayerStack)
+				layer->OnRender();
 
 			m_ImGuiLayer->Begin();
-			{
-				for (Ref<Layer> layer : m_LayerStack)
-					layer->OnImGuiRender();
-			}
+			for (Ref<Layer> layer : m_LayerStack)
+				layer->OnImGuiRender();
 			m_ImGuiLayer->End();
 
-			m_Window->OnUpdate();
+			m_Window->SwapBuffers();
 		}
 	}
 

@@ -96,7 +96,10 @@ namespace Ares {
 				m_Data.EventCallback(event);
 			}
 		}
+	}
 
+	void WinWindow::SwapBuffers()
+	{
 		m_GraphicsContext->SwapBuffers();
 	}
 

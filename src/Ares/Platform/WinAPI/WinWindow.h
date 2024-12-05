@@ -12,6 +12,7 @@ namespace Ares {
 		virtual ~WinWindow();
 
 		void OnUpdate() override;
+		void SwapBuffers() override;
 
 		inline uint32_t GetWidth() const override { return m_Data.Width; }
 		inline uint32_t GetHeight() const override { return m_Data.Height; }
