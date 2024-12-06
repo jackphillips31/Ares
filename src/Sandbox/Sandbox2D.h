@@ -8,6 +8,8 @@
 #include "ui/WindowSettings.h"
 #include "ui/FrameBufferViewer.h"
 
+#include "scene/ViewportCamera.h"
+
 class Sandbox2D : public Ares::Layer
 {
 public:
@@ -37,4 +39,6 @@ private:
 	Ares::Ref<Ares::VertexArray> m_VAO;
 	Ares::Ref<Ares::Shader> m_Shader;
 	Ares::Ref<Ares::FrameBuffer> m_FBO;
+
+	Ares::Scope<ViewportCamera> m_Camera;
 };
