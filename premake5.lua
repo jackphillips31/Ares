@@ -128,7 +128,8 @@ workspace "Ares"
 
 		defines
 		{
-			"FMT_UNICODE=0"
+			"FMT_UNICODE=0",
+			"GLM_ENABLE_EXPERIMENTAL"
 		}
 
 		filter "system:windows"

@@ -1,5 +1,5 @@
 -- template.lua was generated on: 
--- Dec. 6, 2024 - 04:28AM UTC 
+-- Dec. 6, 2024 - 05:56AM UTC 
 workspace "TEMPLATENAME"
 	architecture "x86_64"
 	configurations
@@ -107,7 +107,8 @@ workspace "TEMPLATENAME"
 		}
 		defines
 		{
-			"FMT_UNICODE=0"
+			"FMT_UNICODE=0",
+			"GLM_ENABLE_EXPERIMENTAL"
 		}
 		filter "system:windows"
 			systemversion "latest"

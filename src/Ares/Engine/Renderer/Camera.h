@@ -23,6 +23,11 @@ namespace Ares {
 		void Serialize(std::ostream& os) const;
 		void Deserialize(std::istream& is);
 
+		inline void SetPosition(const glm::vec3& position) { m_Position = position; }
+		inline void SetOrientation(const glm::vec3 orientation) { m_Orientation = orientation; }
+		inline void SetMovementSpeed(float speed) { m_MovementSpeed = speed; }
+		inline void SetRotationSpeed(float speed) { m_RotationSpeed = speed; }
+
 	protected:
 		Camera(
 			const glm::vec3& position = glm::vec3(0.0f, 0.0f, 3.0f),
