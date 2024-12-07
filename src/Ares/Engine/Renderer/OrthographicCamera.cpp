@@ -1,8 +1,9 @@
 #include <arespch.h>
-#include <glm/ext/matrix_clip_space.hpp>
+//#include <glm/ext/matrix_clip_space.hpp>
 
 #include "Engine/Renderer/OrthographicCamera.h"
 
+/*
 namespace Ares {
 
 	OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top, float nearPlane, float farPlane)
@@ -37,3 +38,4 @@ namespace Ares {
 	}
 
 }
+*/

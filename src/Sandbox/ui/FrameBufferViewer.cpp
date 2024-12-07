@@ -46,16 +46,12 @@ void FrameBufferViewerElement::Draw()
 		float frameBufferWidth = static_cast<float>(m_FrameBuffer->GetWidth());
 		float frameBufferHeight = static_cast<float>(m_FrameBuffer->GetHeight());
 
-		ImVec2 uv0 = ImVec2(0.0f, 0.0f);
-		ImVec2 uv1 = ImVec2(
-			m_ContentRegionAvailable.x / frameBufferWidth,
-			m_ContentRegionAvailable.y / frameBufferHeight
-		);
+		// UV coordinates flipping the texture vertically
 		ImGui::Image(
 			static_cast<ImTextureID>(m_FrameBuffer->GetColorAttachmentHandle()),
 			m_ContentRegionAvailable,
-			uv0,
-			uv1
+			{0.0f, 1.0f},
+			{1.0f, 0.0f}
 		);
 	}
 

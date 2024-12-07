@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "Engine/Core/Timestep.h"
 #include "Engine/Events/Event.h"
@@ -11,40 +12,40 @@ namespace Ares {
 	public:
 		virtual ~Camera() = default;
 
-		virtual glm::mat4 GetProjectionMatrix() const = 0;
-
-		glm::mat4 GetViewMatrix() const;
 		glm::mat4 GetViewProjectionMatrix() const;
 
 		virtual void OnUpdate(Timestep ts) = 0;
 		virtual void OnEvent(Event& e) = 0;
 
-		void SetViewportSize(uint32_t width, uint32_t height);
-		void Serialize(std::ostream& os) const;
-		void Deserialize(std::istream& is);
+		void RotateLocal(const glm::vec3& degrees);
+		void RotateGlobal(const glm::vec3& degrees);
 
-		inline void SetPosition(const glm::vec3& position) { m_Position = position; }
-		inline void SetOrientation(const glm::vec3 orientation) { m_Orientation = orientation; }
-		inline void SetMovementSpeed(float speed) { m_MovementSpeed = speed; }
-		inline void SetRotationSpeed(float speed) { m_RotationSpeed = speed; }
+		void SetViewportSize(float width, float height);
+		void SetPosition(const glm::vec3& position);
+		void SetRotation(const glm::vec3& degrees);
 
 	protected:
-		Camera(
-			const glm::vec3& position = glm::vec3(0.0f, 0.0f, 3.0f),
-			const glm::vec3& orientation = glm::vec3(0.0f, 0.0f, 0.0f),
-			float nearPlane = 0.1f, float farPlane = 100.0f,
-			float viewportWidth = 1280, float viewportHeight = 720
-		);
+		Camera() = default;
+
+		void CalculateViewMatrix();
+		void CalculateViewProjectionMatrix();
+		virtual void CalculateProjectionMatrix() {}
 
 	protected:
-		glm::vec3 m_Position;
-		glm::vec3 m_Orientation;
-		float m_MovementSpeed;
-		float m_RotationSpeed;
-		float m_NearPlane;
-		float m_FarPlane;
-		float m_ViewportWidth;
-		float m_ViewportHeight;
+		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
+		glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		float m_NearPlane = 0.1f;
+		float m_FarPlane = 100.0f;
+		float m_ViewportWidth = 1280.0f;
+		float m_ViewportHeight = 720.0f;
+
+		glm::mat4 m_ViewMatrix = glm::mat4(1.0f);
+		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
+		glm::mat4 m_ViewProjectionMatrix = glm::mat4(1.0f);
+
+		bool m_ViewMatrixDirty = true;
+		bool m_ProjectionMatrixDirty = true;
+		bool m_ViewProjectionMatrixDirty = true;
 	};
 
 }

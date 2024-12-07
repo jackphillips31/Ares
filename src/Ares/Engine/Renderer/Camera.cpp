@@ -1,54 +1,82 @@
 #include <arespch.h>
-#include <glm/gtx/euler_angles.hpp>
 
 #include "Engine/Renderer/Camera.h"
 
 namespace Ares {
 
-	Camera::Camera(
-		const glm::vec3& position,
-		const glm::vec3& orientation,
-		float nearPlane, float farPlane,
-		float viewportWidth, float viewportHeight
-	) : m_Position(position), m_Orientation(orientation),
-		m_NearPlane(nearPlane), m_FarPlane(farPlane),
-		m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight)
-	{
-	}
-
-	glm::mat4 Camera::GetViewMatrix() const
-	{
-		glm::vec3 radians = glm::radians(m_Orientation);
-		glm::mat4 rotationMatrix = glm::yawPitchRoll(radians.y, radians.x, radians.z);
-		glm::vec3 forward = glm::vec3(rotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-		glm::vec3 up = glm::vec3(rotationMatrix * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-
-		return glm::lookAt(m_Position, m_Position + forward, up);
-	}
-
 	glm::mat4 Camera::GetViewProjectionMatrix() const
 	{
-		return GetProjectionMatrix() * GetViewMatrix();
+		const_cast<Camera*>(this)->CalculateViewProjectionMatrix();
+
+		return m_ViewProjectionMatrix;
 	}
 
-	void Camera::SetViewportSize(uint32_t width, uint32_t height)
+	void Camera::RotateLocal(const glm::vec3& degrees)
 	{
-		m_ViewportWidth = static_cast<float>(width);
-		m_ViewportHeight = static_cast<float>(height);
+		glm::quat deltaRotation = glm::quat(glm::radians(degrees));
+		m_Rotation = glm::normalize(deltaRotation * m_Rotation);
+
+		m_ViewMatrixDirty = true;
 	}
 
-	void Camera::Serialize(std::ostream& os) const
+	void Camera::RotateGlobal(const glm::vec3& degrees)
 	{
-		os << m_Position.x << " " << m_Position.y << " " << m_Position.z << "\n";
-		os << m_Orientation.x << " " << m_Orientation.y << " " << m_Orientation.z << "\n";
-		os << m_MovementSpeed << " " << m_RotationSpeed << "\n";
+		glm::quat deltaRotation = glm::quat(glm::radians(degrees));
+		m_Rotation = glm::normalize(m_Rotation * deltaRotation);
+
+		m_ViewMatrixDirty = true;
 	}
 
-	void Camera::Deserialize(std::istream& is)
+	void Camera::SetViewportSize(float width, float height)
 	{
-		is >> m_Position.x >> m_Position.y >> m_Position.z;
-		is >> m_Orientation.x >> m_Orientation.y >> m_Orientation.z;
-		is >> m_MovementSpeed >> m_RotationSpeed;
+		m_ViewportWidth = width;
+		m_ViewportHeight = height;
+
+		m_ProjectionMatrixDirty = true;
+	}
+
+	void Camera::SetPosition(const glm::vec3& position)
+	{
+		m_Position = position;
+
+		m_ViewMatrixDirty = true;
+	}
+
+	void Camera::SetRotation(const glm::vec3& degrees)
+	{
+		m_Rotation = glm::quat(glm::radians(degrees));
+
+		m_ViewMatrixDirty = true;
+	}
+
+	void Camera::CalculateViewMatrix()
+	{
+		if (m_ViewMatrixDirty)
+		{
+			// Translate to the position
+			glm::mat4 translation = glm::translate(glm::mat4(1.0f), -m_Position);
+
+			// Rotate according to the quaternion
+			glm::mat4 rotation = glm::toMat4(glm::conjugate(m_Rotation));
+
+			// Combine rotation and translation
+			m_ViewMatrix = rotation * translation;
+
+			m_ViewMatrixDirty = false;
+			m_ViewProjectionMatrixDirty = true;
+		}
+	}
+
+	void Camera::CalculateViewProjectionMatrix()
+	{
+		CalculateViewMatrix();
+		CalculateProjectionMatrix();
+
+		if (m_ViewProjectionMatrixDirty)
+		{
+			m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+			m_ViewProjectionMatrixDirty = false;
+		}
 	}
 
 }

@@ -12,11 +12,8 @@ public:
 	void SetTempDimensions(float width, float height);
 
 private:
-	glm::vec3 GetForwardVector() const;
-	glm::vec3 GetRightVector() const;
-	glm::vec3 GetUpVector() const;
-
-private:
 	float m_TempViewportWidth;
 	float m_TempViewportHeight;
+	float m_MovementSpeed = 2.0f;
+	float m_RotationSpeed = 60.0f;
 };

@@ -1,6 +1,3 @@
-#include <glm/common.hpp>
-#include <glm/gtx/euler_angles.hpp>
-
 #include "scene/ViewportCamera.h"
 
 ViewportCamera::ViewportCamera(float width, float height)
@@ -14,36 +11,73 @@ void ViewportCamera::OnUpdate(Ares::Timestep ts)
 {
 	float timestep = static_cast<float>(ts);
 
-	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Left))
-		m_Orientation.y += m_RotationSpeed * timestep;
-	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Right))
-		m_Orientation.y -= m_RotationSpeed * timestep;
+	// Forward movement
 	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Up))
-		m_Orientation.x -= m_RotationSpeed * timestep;
+	{
+		glm::vec3 forward = glm::rotate(m_Rotation, { 0.0f, 0.0f, -1.0f });
+
+		// Constrain to X/Z plane
+		forward.y = 0.0f;
+		forward = glm::normalize(forward);
+		m_Position += forward * m_MovementSpeed * timestep;
+
+		m_ViewMatrixDirty = true;
+	}
+
+	// Backward movement
 	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Down))
-		m_Orientation.x += m_RotationSpeed * timestep;
+	{
+		glm::vec3 backward = glm::rotate(m_Rotation, { 0.0f, 0.0f, 1.0f });
 
-	if (Ares::Input::IsKeyPressed(Ares::KeyCode::A))
-		m_Position -= GetRightVector() * m_MovementSpeed * timestep;
+		// Constrain to X/Z plane
+		backward.y = 0.0f;
+		backward = glm::normalize(backward);
+		m_Position += backward * m_MovementSpeed * timestep;
+
+		m_ViewMatrixDirty = true;
+	}
+
+	// Left movement
+	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Left))
+	{
+		glm::vec3 left = glm::rotate(m_Rotation, { -1.0f, 0.0f, 0.0f });
+
+		// Constrain to X/Z plane
+		left.y = 0.0f;
+		left = glm::normalize(left);
+		m_Position += left * m_MovementSpeed * timestep;
+
+		m_ViewMatrixDirty = true;
+	}
+
+	// Right movement
+	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Right))
+	{
+		glm::vec3 right = glm::rotate(m_Rotation, { 1.0f, 0.0f, 0.0f });
+
+		// Constrain to X/Z plane
+		right.y = 0.0f;
+		right = glm::normalize(right);
+		m_Position += right * m_MovementSpeed * timestep;
+
+		m_ViewMatrixDirty = true;
+	}
+
+	// Rotate right
 	if (Ares::Input::IsKeyPressed(Ares::KeyCode::D))
-		m_Position += GetRightVector() * m_MovementSpeed * timestep;
+	{
+		RotateLocal(glm::vec3(0.0f, -m_RotationSpeed * timestep, 0.0f));
+	}
 
-	if (Ares::Input::IsKeyPressed(Ares::KeyCode::W))
-		m_Position.z += m_MovementSpeed * timestep;
-	if (Ares::Input::IsKeyPressed(Ares::KeyCode::S))
-		m_Position.z -= m_MovementSpeed * timestep;
-
-	// Clamp pitch to prevent flipping
-	m_Orientation.x = glm::clamp(m_Orientation.x, -89.0f, 89.0f);
-
-	// Wrap yaw and roll to keep them within 0-360 degrees
-	m_Orientation.y = fmod(m_Orientation.y, 360.0f);
-	m_Orientation.z = fmod(m_Orientation.z, 360.0f);
+	// Rotate left
+	if (Ares::Input::IsKeyPressed(Ares::KeyCode::A))
+	{
+		RotateLocal(glm::vec3(0.0f, m_RotationSpeed * timestep, 0.0f));
+	}
 
 	// Update viewport size if changed
 	if (m_ViewportWidth != m_TempViewportWidth || m_ViewportHeight != m_TempViewportHeight)
 	{
-		AR_TRACE("VIEWPORT CHANGED SIZE!");
 		if (m_TempViewportWidth && m_TempViewportHeight)
 			SetViewportSize(m_TempViewportWidth, m_TempViewportHeight);
 	}
@@ -58,25 +92,4 @@ void ViewportCamera::SetTempDimensions(float width, float height)
 {
 	m_TempViewportWidth = width;
 	m_TempViewportHeight = height;
-}
-
-glm::vec3 ViewportCamera::GetForwardVector() const
-{
-	glm::vec3 radians = glm::radians(m_Orientation);
-	glm::mat4 rotationMatrix = glm::yawPitchRoll(radians.y, radians.x, radians.z);
-	return glm::vec3(rotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-}
-
-glm::vec3 ViewportCamera::GetRightVector() const
-{
-	glm::vec3 radians = glm::radians(m_Orientation);
-	glm::mat4 rotationMatrix = glm::yawPitchRoll(radians.y, radians.x, radians.z);
-	return glm::vec3(rotationMatrix * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-}
-
-glm::vec3 ViewportCamera::GetUpVector() const
-{
-	glm::vec3 radians = glm::radians(m_Orientation);
-	glm::mat4 rotationMatrix = glm::yawPitchRoll(radians.y, radians.x, radians.z);
-	return glm::vec3(rotationMatrix * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 }

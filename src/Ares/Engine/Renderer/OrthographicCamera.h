@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/Renderer/Camera.h"
-
+/*
 namespace Ares {
 
 	class OrthographicCamera : public Camera
@@ -22,3 +22,4 @@ namespace Ares {
 	};
 
 }
+*/
