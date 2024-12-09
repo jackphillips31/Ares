@@ -1,6 +1,6 @@
 #include <arespch.h>
 
-#include "Engine/Renderer/PerspectiveCamera.h"
+#include "Engine/Renderer/Scene/PerspectiveCamera.h"
 
 namespace Ares {
 

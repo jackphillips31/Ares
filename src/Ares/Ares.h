@@ -32,7 +32,7 @@
 
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/FrameBuffer.h"
-#include "Engine/Renderer/OrthographicCamera.h"
-#include "Engine/Renderer/PerspectiveCamera.h"
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/VertexArray.h"
+#include "Engine/Renderer/Scene/OrthographicCamera.h"
+#include "Engine/Renderer/Scene/PerspectiveCamera.h"

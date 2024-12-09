@@ -32,12 +32,12 @@ namespace Ares {
 		virtual void CalculateProjectionMatrix() {}
 
 	protected:
-		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
-		glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-		float m_NearPlane = 0.1f;
-		float m_FarPlane = 100.0f;
-		float m_ViewportWidth = 1280.0f;
-		float m_ViewportHeight = 720.0f;
+		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };				// If changed, set m_ViewMatrixDirty = true
+		glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);	// v
+		float m_NearPlane = 0.1f;									// If changed, set m_ProjectionMatrixDirty = true
+		float m_FarPlane = 100.0f;									// v
+		float m_ViewportWidth = 1280.0f;							// v
+		float m_ViewportHeight = 720.0f;							// v
 
 		glm::mat4 m_ViewMatrix = glm::mat4(1.0f);
 		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);

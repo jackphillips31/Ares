@@ -1,7 +1,7 @@
 #include <arespch.h>
 //#include <glm/ext/matrix_clip_space.hpp>
 
-#include "Engine/Renderer/OrthographicCamera.h"
+#include "Engine/Renderer/Scene/OrthographicCamera.h"
 
 /*
 namespace Ares {

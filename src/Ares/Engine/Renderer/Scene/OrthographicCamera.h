@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Renderer/Camera.h"
+#include "Engine/Renderer/Scene/Camera.h"
 /*
 namespace Ares {
 
