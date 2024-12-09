@@ -95,7 +95,8 @@ void Sandbox2D::OnRender()
 	Ares::Ref<Ares::FrameBuffer> frameBuffer = m_FrameBufferElement.GetFrameBuffer();
 	ImVec2 availableSize = m_FrameBufferElement.GetContentRegionAvail();
 
-	m_Camera->SetTempDimensions(availableSize.x, availableSize.y);
+	if (availableSize.x && availableSize.y)
+		m_Camera->SetViewportSize({ availableSize.x, availableSize.y });
 
 	if (frameBuffer)
 	{

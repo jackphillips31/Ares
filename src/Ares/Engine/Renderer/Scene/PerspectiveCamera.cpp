@@ -7,10 +7,9 @@ namespace Ares {
 	PerspectiveCamera::PerspectiveCamera(float fov, float width, float height, float nearPlane, float farPlane)
 		: m_FieldOfView(fov)
 	{
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
-		m_NearPlane = nearPlane;
-		m_FarPlane = farPlane;
+		m_CameraSettings.ViewportDimensions = glm::vec2(width, height);
+		m_CameraSettings.NearPlane = nearPlane;
+		m_CameraSettings.FarPlane = farPlane;
 
 		m_ProjectionMatrixDirty = true;
 	}
@@ -21,8 +20,8 @@ namespace Ares {
 		{
 			m_ProjectionMatrix = glm::perspective(
 				glm::radians(m_FieldOfView),
-				m_ViewportWidth / m_ViewportHeight,
-				m_NearPlane, m_FarPlane
+				m_CameraSettings.ViewportDimensions.x / m_CameraSettings.ViewportDimensions.y,
+				m_CameraSettings.NearPlane, m_CameraSettings.FarPlane
 			);
 
 			m_ProjectionMatrixDirty = false;
