@@ -1,22 +1,29 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <memory>
-#include <utility>
-#include <algorithm>
-#include <functional>
-#include <bitset>
+// Standard Library
+#include <iostream>				// I/O streams
+#include <fstream>				// File operations
+#include <string>				// String handling
+#include <sstream>				// String streams
+#include <array>				// Fixed-size arrays
+#include <vector>				// Dynamic arrays
+#include <unordered_map>		// Hash map
+#include <unordered_set>		// Hash set
+#include <functional>			// Function objects
+#include <algorithm>			// Algorithms
+#include <bitset>				// Bit manipulation
 
-#include <string>
-#include <sstream>
-#include <array>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
+#include <future>				// Asynchronous programming
+#include <queue>				// Queue data structure
+#include <thread>				// Threading
+#include <mutex>				// Mutex for synchronization
+#include <condition_variable>	// Condition variables
+#include <atomic>				// Atomic operations
 
-#include "Engine/Debug/Log.h"
+// Internal headers (e.g., engine-specific)
+#include "Engine/Debug/Log.h"	// Logging functionality
 
+// Platform-specific includes (Windows)
 #ifdef AR_PLATFORM_WINDOWS
-#include <Windows.h>
+#include <Windows.h>			// Windows-specific functionality
 #endif

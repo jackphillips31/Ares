@@ -1,6 +1,7 @@
 #include <arespch.h>
 
 #include "Engine/Core/Input.h"
+#include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 #include "Engine/Renderer/Renderer.h"
 
@@ -30,16 +31,18 @@ namespace Ares {
 		m_Window = Window::Create(windowProps);
 		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 
+		ThreadPool::Init();
 		Renderer::Init();
 
 		m_ImGuiLayer = ImGuiLayer::Create();
-		PushOverlay(m_ImGuiLayer);	
+		PushOverlay(m_ImGuiLayer);
 	}
 
 	Application::~Application()
 	{
 		Renderer::Shutdown();
 		Input::Shutdown();
+		ThreadPool::Shutdown();
 	}
 
 	void Application::PushLayer(Ref<Layer> layer)
