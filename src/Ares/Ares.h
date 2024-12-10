@@ -10,6 +10,7 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/Layer.h"
+#include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 
 #include "Engine/Data/FileBuffer.h"
