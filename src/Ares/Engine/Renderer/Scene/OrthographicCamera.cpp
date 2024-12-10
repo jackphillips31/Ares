@@ -1,41 +1,37 @@
 #include <arespch.h>
-//#include <glm/ext/matrix_clip_space.hpp>
 
 #include "Engine/Renderer/Scene/OrthographicCamera.h"
 
-/*
 namespace Ares {
 
-	OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top, float nearPlane, float farPlane)
-		: Camera(glm::vec3(0.0f), glm::vec3(0.0f), nearPlane, farPlane, right - left, top - bottom),
-		m_Left(left), m_Right(right), m_Bottom(bottom), m_Top(top)
+	OrthographicCamera::OrthographicCamera(float width, float height, float nearPlane, float farPlane)
+		: m_Zoom(1.0f)
 	{
+		m_CameraSettings.ViewportDimensions = glm::vec2(width, height);
+		m_CameraSettings.NearPlane = nearPlane;
+		m_CameraSettings.FarPlane = farPlane;
+
+		m_ProjectionMatrixDirty = true;
 	}
 
-	glm::mat4 OrthographicCamera::GetProjectionMatrix() const
+	void OrthographicCamera::CalculateProjectionMatrix()
 	{
-		return glm::ortho(m_Left, m_Right, m_Bottom, m_Top, m_NearPlane, m_FarPlane);
-	}
+		if (m_ProjectionMatrixDirty)
+		{
+			float aspectRatio = m_CameraSettings.ViewportDimensions.x / m_CameraSettings.ViewportDimensions.y;
 
-	void OrthographicCamera::SetProjection(float left, float right, float bottom, float top)
-	{
-		m_Left = left;
-		m_Right = right;
-		m_Bottom = bottom;
-		m_Top = top;
-	}
+			m_ProjectionMatrix = glm::ortho(
+				-aspectRatio * m_Zoom,
+				aspectRatio * m_Zoom,
+				-m_Zoom,
+				m_Zoom,
+				m_CameraSettings.NearPlane,
+				m_CameraSettings.FarPlane
+			);
 
-	void OrthographicCamera::Serialize(std::ostream& os) const
-	{
-		Camera::Serialize(os);
-		os << m_Left << " " << m_Right << " " << m_Bottom << " " << m_Top << "\n";
-	}
-
-	void OrthographicCamera::Deserialize(std::istream& is)
-	{
-		Camera::Deserialize(is);
-		is >> m_Left >> m_Right >> m_Bottom >> m_Top;
+			m_ProjectionMatrixDirty = false;
+			m_ViewProjectionMatrixDirty = true;
+		}
 	}
 
 }
-*/
