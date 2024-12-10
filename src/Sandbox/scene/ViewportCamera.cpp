@@ -32,13 +32,13 @@ void ViewportCamera::OnUpdate(Ares::Timestep ts)
 	}
 
 	// Rotate up
-	if (Ares::Input::IsKeyPressed(AR_KEY_UP))
+	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Up))
 	{
 		RotateLocal({ 1.0f, 0.0f, 0.0f }, ts);
 	}
 
 	// Rotate down
-	if (Ares::Input::IsKeyPressed(AR_KEY_DOWN))
+	if (Ares::Input::IsKeyPressed(Ares::KeyCode::Down))
 	{
 		RotateLocal({ -1.0f, 0.0f, 0.0f }, ts);
 	}

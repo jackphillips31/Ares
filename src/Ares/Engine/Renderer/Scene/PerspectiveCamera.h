@@ -11,7 +11,7 @@ namespace Ares {
 
 		void CalculateProjectionMatrix() override;
 
-	private:
+	protected:
 		float m_FieldOfView;
 	};
 
