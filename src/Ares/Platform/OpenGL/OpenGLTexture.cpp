@@ -34,7 +34,7 @@ namespace Ares {
 
 		AR_CORE_ASSERT(internalFormat & dataFormat, "Fromat not supported!");
 
-		glCreateTextures(GL_TEXTURE_2D, 1 & m_RendererID);
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, internalFormat, width, height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
