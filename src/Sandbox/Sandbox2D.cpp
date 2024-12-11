@@ -53,8 +53,7 @@ Sandbox2D::Sandbox2D()
 	m_VAO->SetIndexBuffer(m_IBO);
 
 	Ares::FileBuffer shaderFile = Ares::FileIO::LoadFile("assets/shaders/FlatColorShader.shader");
-	std::string shaderSource(static_cast<const char*>(shaderFile.GetBuffer()), shaderFile.GetSize());
-	m_Shader = Ares::Shader::Create("FlatColorShader", shaderSource);
+	m_Shader = Ares::Shader::Create("FlatColorShader", shaderFile);
 	m_Shader->Bind();
 
 	m_Camera = Ares::CreateScope<ViewportCamera>(1280.0f, 720.0f);

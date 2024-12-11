@@ -2,39 +2,14 @@
 #include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Engine/Data/FileIO.h"
-
 #include "Platform/OpenGL/OpenGLShader.h"
 
 namespace Ares {
 
-	OpenGLShader::OpenGLShader(const std::string& filepath)
-	{
-		FileBuffer file = FileIO::LoadFile(filepath);
-		std::string source(static_cast<const char*>(file.GetBuffer()), file.GetSize());
-		std::unordered_map<uint32_t, std::string> shaderSource = PreProcess(source);
-		Compile(shaderSource);
-
-		// Extract name from filepath
-		size_t lastSlash = filepath.find_last_of("/\\");
-		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		size_t lastDot = filepath.rfind(".");
-		size_t count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;
-		m_Name = filepath.substr(lastSlash, count);
-	}
-
-	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+	OpenGLShader::OpenGLShader(const std::string& name, const FileBuffer& fileBuffer)
 		: m_Name(name)
 	{
-		std::unordered_map<uint32_t, std::string> sources;
-		sources[GL_VERTEX_SHADER] = vertexSrc;
-		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
-		Compile(sources);
-	}
-
-	OpenGLShader::OpenGLShader(const std::string& name, const std::string& shaderSource)
-		: m_Name(name)
-	{
+		std::string shaderSource(static_cast<const char*>(fileBuffer.GetBuffer()), fileBuffer.GetSize());
 		Compile(PreProcess(shaderSource));
 	}
 
