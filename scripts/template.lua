@@ -1,5 +1,5 @@
 -- template.lua was generated on: 
--- Dec. 6, 2024 - 05:56AM UTC 
+-- Dec. 11, 2024 - 04:36AM UTC 
 workspace "TEMPLATENAME"
 	architecture "x86_64"
 	configurations
@@ -17,6 +17,7 @@ workspace "TEMPLATENAME"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
 	IncludeDir["glm"] = "src/Vendor/glm"
 	IncludeDir["fmt"] = "src/Vendor/fmt/include"
+	IncludeDir["stb_image"] = "src/Vendor/stb_image"
 	group "Dependencies"
 		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
@@ -36,7 +37,9 @@ workspace "TEMPLATENAME"
 		files
 		{
 			"src/%{prj.name}/**.h",
-			"src/%{prj.name}/**.cpp"
+			"src/%{prj.name}/**.cpp",
+			"src/Vendor/stb_image/**.h",
+			"src/Vendor/stb_image/**.cpp"
 		}
 		includedirs
 		{
@@ -45,7 +48,8 @@ workspace "TEMPLATENAME"
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}",
-			"%{IncludeDir.fmt}"
+			"%{IncludeDir.fmt}",
+			"%{IncludeDir.stb_image}"
 		}
 		links
 		{

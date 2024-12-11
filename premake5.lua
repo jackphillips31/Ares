@@ -19,6 +19,7 @@ workspace "Ares"
 	IncludeDir["ImGui"] = "src/Vendor/imgui"
 	IncludeDir["glm"] = "src/Vendor/glm"
 	IncludeDir["fmt"] = "src/Vendor/fmt/include"
+	IncludeDir["stb_image"] = "src/Vendor/stb_image"
 
 	group "Dependencies"
 		include "src/Vendor/GLAD"
@@ -43,7 +44,9 @@ workspace "Ares"
 		files
 		{
 			"src/%{prj.name}/**.h",
-			"src/%{prj.name}/**.cpp"
+			"src/%{prj.name}/**.cpp",
+			"src/Vendor/stb_image/**.h",
+			"src/Vendor/stb_image/**.cpp"
 		}
 
 		includedirs
@@ -53,7 +56,8 @@ workspace "Ares"
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}",
-			"%{IncludeDir.fmt}"
+			"%{IncludeDir.fmt}",
+			"%{IncludeDir.stb_image}"
 		}
 
 		links
