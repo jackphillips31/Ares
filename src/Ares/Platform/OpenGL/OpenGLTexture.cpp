@@ -11,7 +11,7 @@ namespace Ares {
 		int32_t width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
 
-		stbi_uc* imageData = stbi_load_from_memory(static_cast<const uint8_t*>(data), size, &width, &height, &channels, 0);
+		stbi_uc* imageData = stbi_load_from_memory(static_cast<const uint8_t*>(data), static_cast<int32_t>(size), &width, &height, &channels, 0);
 		AR_CORE_ASSERT(imageData, "Failed to load image!");
 		m_Width = static_cast<uint32_t>(width);
 		m_Height = static_cast<uint32_t>(height);
