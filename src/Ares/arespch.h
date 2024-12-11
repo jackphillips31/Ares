@@ -12,6 +12,7 @@
 #include <functional>			// Function objects
 #include <algorithm>			// Algorithms
 #include <bitset>				// Bit manipulation
+#include <typeindex>			// Type information
 
 #include <future>				// Asynchronous programming
 #include <queue>				// Queue data structure

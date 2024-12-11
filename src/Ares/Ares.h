@@ -13,6 +13,8 @@
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 
+#include "Engine/Data/Asset.h"
+#include "Engine/Data/AssetManager.h"
 #include "Engine/Data/FileBuffer.h"
 #include "Engine/Data/FileIO.h"
 
