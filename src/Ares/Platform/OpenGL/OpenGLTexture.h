@@ -9,7 +9,7 @@ namespace Ares {
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(const std::string& name, const void* data, const size_t size);
+		OpenGLTexture2D(const std::string& name, const FileBuffer& fileBuffer);
 		virtual ~OpenGLTexture2D();
 
 		inline virtual uint32_t GetWidth() const override { return m_Width; }

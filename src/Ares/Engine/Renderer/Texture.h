@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Core.h"
+#include "Engine/Data/FileBuffer.h"
 
 namespace Ares {
 
@@ -22,7 +23,7 @@ namespace Ares {
 	class Texture2D : public Texture
 	{
 	public:
-		static Ref<Texture2D> Create(const std::string& name, const void* data, const size_t size);
+		static Ref<Texture2D> Create(const std::string& name, const FileBuffer& fileBuffer);
 	};
 
 }

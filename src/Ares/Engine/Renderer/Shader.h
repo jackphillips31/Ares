@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Core/Core.h"
 #include "Engine/Data/FileBuffer.h"
 
 namespace Ares {
