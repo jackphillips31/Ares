@@ -3,11 +3,12 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Data/Asset.h"
 #include "Engine/Data/FileBuffer.h"
 
 namespace Ares {
 
-	class Shader
+	class Shader : public Asset
 	{
 	public:
 		virtual ~Shader() = default;
@@ -23,8 +24,6 @@ namespace Ares {
 		virtual void SetFloat4(const std::string& name, const glm::vec4& values) = 0;
 		virtual void SetMat3(const std::string& name, const glm::mat3& matrix) = 0;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) = 0;
-
-		virtual const std::string& GetName() const = 0;
 
 		static Ref<Shader> Create(const std::string& name, const FileBuffer& fileBuffer);
 	};

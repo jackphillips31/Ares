@@ -22,7 +22,7 @@ namespace Ares {
 		virtual void SetMat3(const std::string& name, const glm::mat3& matrix) override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) override;
 
-		virtual const std::string& GetName() const override { return m_Name; }
+		inline virtual const std::string& GetName() const override { return m_Name; }
 
 		void UploadUniformInt(const std::string& name, int32_t value);
 		void UploadUniformIntArray(const std::string& name, int32_t* values, uint32_t count);
@@ -30,7 +30,6 @@ namespace Ares {
 		void UploadUniformFloat2(const std::string& name, const glm::vec2& values);
 		void UploadUniformFloat3(const std::string& name, const glm::vec3& values);
 		void UploadUniformFloat4(const std::string& name, const glm::vec4& values);
-
 		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 
