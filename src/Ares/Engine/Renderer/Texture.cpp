@@ -7,15 +7,15 @@
 
 namespace Ares {
 
-	Ref<Texture2D> Texture2D::Create(const std::string& name, uint32_t width, uint32_t height)
+	Ref<Texture2D> Texture2D::Create(const std::string& name, const void* data, const size_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None: AR_CORE_ASSERT(false, "Cannot create Texture2D if RendererAPI::None"); return nullptr;
-		case RendererAPI::API::OpenGL: return CreateRef<OpenGLTexture2D>(name, width, height);
+		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLTexture2D>(name, data, size);
 		}
 
-		AR_CORE_ASSERT(false, "Unknown API!");
+		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
