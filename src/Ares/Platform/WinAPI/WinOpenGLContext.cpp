@@ -84,4 +84,17 @@ namespace Ares {
 		::SwapBuffers(m_DeviceContext);
 	}
 
+	void WinOpenGLContext::MakeCurrent()
+	{
+		if (!wglMakeCurrent(m_DeviceContext, m_Context))
+		{
+			AR_CORE_ASSERT(false, "Failed to make OpenGL context current!");
+		}
+	}
+
+	const void* WinOpenGLContext::GetContextHandle() const
+	{
+		return static_cast<const void*>(m_Context);
+	}
+
 }

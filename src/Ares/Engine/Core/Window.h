@@ -3,6 +3,7 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Events/Event.h"
+#include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
 
@@ -59,6 +60,7 @@ namespace Ares {
 		virtual void SetWindowSettings(uint16_t flags) = 0;
 
 		virtual void* GetNativeWindow() const = 0;
+		virtual GraphicsContext* GetGraphicsContext() const = 0;
 
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	};

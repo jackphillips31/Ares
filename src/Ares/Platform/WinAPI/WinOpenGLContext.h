@@ -11,6 +11,9 @@ namespace Ares {
 
 		virtual void Init() override;
 		virtual void SwapBuffers() override;
+		virtual void MakeCurrent() override;
+
+		virtual const void* GetContextHandle() const override;
 
 	private:
 		HWND m_WindowHandle;

@@ -1,10 +1,13 @@
 #include <arespch.h>
 
+#include "Engine/Core/Application.h"
+
 #include "Engine/Core/ThreadPool.h"
 
 namespace Ares {
 
 	std::vector<std::thread> ThreadPool::s_Workers;
+	std::vector<Scope<SharedGraphicsContext>> ThreadPool::s_SharedContexts;
 	std::queue<std::function<void()>> ThreadPool::s_TaskQueue;
 	std::mutex ThreadPool::s_QueueMutex;
 	std::mutex ThreadPool::s_InitMutex;
@@ -21,12 +24,19 @@ namespace Ares {
 		AR_CORE_INFO("Initializing ThreadPool");
 		s_IsInitialized = true;
 
+		s_SharedContexts = std::vector<Scope<SharedGraphicsContext>>(threadCount);
+
 		s_ShutdownRequested = false;
 		s_Workers.reserve(threadCount);
 
+		Application& app = Application::Get();
+
 		for (size_t i = 0; i < threadCount; i++)
 		{
-			s_Workers.emplace_back([] {
+			s_SharedContexts[i] = SharedGraphicsContext::Create(app.GetWindow().GetGraphicsContext()->GetContextHandle());
+			s_Workers.emplace_back([i] {
+				SharedGraphicsContext& context = *s_SharedContexts[i];
+				Application& workerApp = Application::Get();
 				while (true)
 				{
 					std::function<void()> task;
@@ -42,7 +52,10 @@ namespace Ares {
 						task = std::move(s_TaskQueue.front());
 						s_TaskQueue.pop();
 					}
+					context.MakeCurrent();
 					task();
+					context.DetachCurrent();
+					workerApp.GetWindow().GetGraphicsContext()->MakeCurrent();
 				}
 			});
 		};

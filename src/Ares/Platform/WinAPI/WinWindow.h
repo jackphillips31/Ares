@@ -32,7 +32,8 @@ namespace Ares {
 		void SetClientSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) override;
 		void SetWindowSettings(uint16_t flags) override;
 
-		inline virtual void* GetNativeWindow() const { return m_Window; }
+		inline virtual void* GetNativeWindow() const override { return m_Window; }
+		inline virtual GraphicsContext* GetGraphicsContext() const override { return m_GraphicsContext.get(); }
 
 	private:
 		void Init(const WindowProps& props);

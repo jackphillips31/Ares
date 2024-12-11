@@ -1,7 +1,6 @@
 #include <arespch.h>
 
 #include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/RendererAPI.h"
 
 #ifdef AR_PLATFORM_WINDOWS
 #include "Platform/WinAPI/WinOpenGLContext.h"
