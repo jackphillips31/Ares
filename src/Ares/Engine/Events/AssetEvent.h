@@ -1,8 +1,5 @@
 #pragma once
-#include <arespch.h>
 
-#include "Engine/Core/Core.h"
-#include "Engine/Data/Asset.h"
 #include "Engine/Events/Event.h"
 
 namespace Ares {
@@ -10,7 +7,7 @@ namespace Ares {
 	class AssetLoadedEvent : public Event
 	{
 	public:
-		AssetLoadedEvent(const std::string& filepath, bool loaded, Ref<Asset> asset = nullptr, const std::string& message = "")
+		AssetLoadedEvent(const std::string& filepath, bool loaded, Ref<Asset> asset = nullptr, const std::string& message = "n/a")
 			: m_Filepath(filepath), m_Loaded(loaded), m_Asset(asset), m_Message(message)
 		{
 		}
@@ -19,6 +16,13 @@ namespace Ares {
 		inline const std::string& GetMessage() const { return m_Message; }
 		inline bool IsLoaded() const { return m_Loaded; }
 		inline Ref<Asset> GetAsset() const { return m_Asset; }
+
+		std::string ToString() const override
+		{
+			std::stringstream ss;
+			ss << "AssetLoadedEvent: Load Status - [" << IsLoaded() << "], Filepath - " << GetFilepath();
+			return ss.str();
+		}
 
 		EVENT_CLASS_TYPE(AssetLoaded)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)

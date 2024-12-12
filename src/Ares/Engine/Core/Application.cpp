@@ -3,6 +3,7 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
+#include "Engine/Data/AssetManager.h"
 #include "Engine/Renderer/Renderer.h"
 
 #include "Engine/Core/Application.h"
@@ -32,6 +33,7 @@ namespace Ares {
 		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 
 		ThreadPool::Init(settings.ThreadCount);
+		AssetManager::Init();
 		Renderer::Init();
 
 		m_ImGuiLayer = ImGuiLayer::Create();
@@ -42,6 +44,7 @@ namespace Ares {
 	{
 		Renderer::Shutdown();
 		Input::Shutdown();
+		AssetManager::Shutdown();
 		ThreadPool::Shutdown();
 	}
 
@@ -70,6 +73,7 @@ namespace Ares {
 				m_LastFrameTime = currentTime;
 
 				m_Window->OnUpdate();
+				AssetManager::OnUpdate();
 
 				if (!m_Minimized)
 				{
