@@ -14,34 +14,27 @@ namespace Ares {
 
 		m_Context = wglCreateContext(m_HDC);
 		if (!m_Context)
-		{
-			AR_CORE_ASSERT(false, "Failed to create OpenGL context!");
-		}
+			AR_CORE_ERROR("Failed to create shared OpenGL context!");
 		if (!wglShareLists(reinterpret_cast<HGLRC>(const_cast<void*>(primaryContext)), m_Context))
-		{
-			AR_CORE_ASSERT(false, "Failed to share OpenGL context!");
-		}
+			AR_CORE_WARN("Failed to share OpenGL context!");
 	}
 
 	WinOpenGLSharedContext::~WinOpenGLSharedContext()
 	{
 		if (m_Context)
-		{
 			wglDeleteContext(m_Context);
-		}
 	}
 
 	void WinOpenGLSharedContext::MakeCurrent()
 	{
 		if (!wglMakeCurrent(m_HDC, m_Context))
-		{
-			AR_CORE_ASSERT(false, "Failed to make OpenGL context current!");
-		}
+			AR_CORE_WARN("Failed to make shared OpenGL context current!");
 	}
 
 	void WinOpenGLSharedContext::DetachCurrent()
 	{
-		wglMakeCurrent(nullptr, nullptr);
+		if (!wglMakeCurrent(nullptr, nullptr))
+			AR_CORE_WARN("Failed to detach shared OpenGL context!");
 	}
 
 }

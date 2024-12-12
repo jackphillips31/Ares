@@ -88,7 +88,7 @@ namespace Ares {
 	{
 		if (!wglMakeCurrent(m_DeviceContext, m_Context))
 		{
-			AR_CORE_ASSERT(false, "Failed to make OpenGL context current!");
+			AR_CORE_WARN("Failed to make OpenGL context current!");
 		}
 	}
 
