@@ -12,10 +12,10 @@ namespace Ares {
 	Application* Application::s_Instance = nullptr;
 	
 	Application::Application(const ApplicationSettings& settings)
+		: m_Settings(settings)
 	{
 		s_Instance = this;
 
-		m_UpdatesPerSecond = static_cast<double>(settings.UpdatesPerSecond);
 		m_LastFrameTime = std::chrono::duration<float>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
 		WindowProps windowProps = WindowProps(
@@ -31,7 +31,7 @@ namespace Ares {
 		m_Window = Window::Create(windowProps);
 		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 
-		ThreadPool::Init();
+		ThreadPool::Init(settings.ThreadCount);
 		Renderer::Init();
 
 		m_ImGuiLayer = ImGuiLayer::Create();
@@ -64,7 +64,7 @@ namespace Ares {
 		{
 			double currentTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-			while (currentTime - m_LastFrameTime >= (1.0f / m_UpdatesPerSecond))
+			while (currentTime - m_LastFrameTime >= (1.0f / static_cast<double>(m_Settings.UpdatesPerSecond)))
 			{
 				Timestep timestep = currentTime - m_LastFrameTime;
 				m_LastFrameTime = currentTime;
@@ -104,7 +104,6 @@ namespace Ares {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
-		dispatcher.Dispatch<KeyPressedEvent>(AR_BIND_EVENT_FN(Application::OnKeyPressed));
 
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
@@ -131,11 +130,6 @@ namespace Ares {
 		m_Minimized = false;
 		Renderer::OnWindowResize(e.GetClientWidth(), e.GetClientHeight());
 
-		return false;
-	}
-
-	bool Application::OnKeyPressed(KeyPressedEvent& e)
-	{
 		return false;
 	}
 

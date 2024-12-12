@@ -18,6 +18,7 @@ namespace Ares {
 		uint32_t Width = 1280;
 		uint32_t Height = 720;
 		uint32_t UpdatesPerSecond = 120;
+		uint8_t ThreadCount = 4;
 
 		uint16_t WindowStyle = WindowSettings::DefaultWindow;
 		void* Icon = nullptr;
@@ -52,16 +53,14 @@ namespace Ares {
 		void Run();
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
-		bool OnKeyPressed(KeyPressedEvent& e);
 	
 	private:
+		ApplicationSettings m_Settings;
 		Scope<Window> m_Window;
 		Ref<ImGuiLayer> m_ImGuiLayer;
 		bool m_Running = true;
 		bool m_Minimized = false;
-		bool m_ShowConsole = false;
 		LayerStack m_LayerStack;
-		double m_UpdatesPerSecond = 0.0f;
 		double m_LastFrameTime = 0.0f;
 
 	private:
