@@ -24,6 +24,8 @@ public:
 	void OnEvent(Ares::Event& e) override;
 	virtual void OnImGuiRender() override;
 
+	void OnShaderLoad(Ares::AssetLoadedEvent& result);
+
 private:
 	Ares::Window& m_Window;
 	ImFont* myFont;

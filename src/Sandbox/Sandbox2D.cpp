@@ -52,12 +52,10 @@ Sandbox2D::Sandbox2D()
 	m_VAO->AddVertexBuffer(m_VBO);
 	m_VAO->SetIndexBuffer(m_IBO);
 
-	Ares::FileBuffer shaderFile = Ares::FileIO::LoadFile("assets/shaders/FlatColorShader.shader");
-	m_Shader = Ares::Shader::Create("FlatColorShader", shaderFile);
-	m_Shader->Bind();
-
 	m_Camera = Ares::CreateScope<ViewportCamera>(1280.0f, 720.0f);
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
+
+	Ares::AssetManager::LoadAsset<Ares::Shader>("assets/shaders/FlatColorShader.shader", AR_BIND_ASSET_FN(Sandbox2D::OnShaderLoad));
 }
 
 void Sandbox2D::OnAttach()
@@ -97,9 +95,8 @@ void Sandbox2D::OnRender()
 	if (availableSize.x && availableSize.y)
 		m_Camera->SetViewportSize({ availableSize.x, availableSize.y });
 
-	if (frameBuffer)
+	if (frameBuffer && m_Shader)
 	{
-		m_Shader->Bind();
 		m_Shader->SetMat4("u_ViewProjectionMatrix", m_Camera->GetViewProjectionMatrix());
 
 		frameBuffer->Bind();
@@ -136,4 +133,13 @@ void Sandbox2D::OnImGuiRender()
 	Ares::Log::GetConsole()->Draw("Console", true);
 
 	ImGui::PopFont();
+}
+
+void Sandbox2D::OnShaderLoad(Ares::AssetLoadedEvent& result)
+{
+	if (result.IsLoaded())
+	{
+		m_Shader = static_pointer_cast<Ares::Shader>(result.GetAsset());
+		m_Shader->Bind();
+	}
 }
