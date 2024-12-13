@@ -141,7 +141,7 @@ void Sandbox2D::OnShaderLoad(Ares::AssetLoadedEvent& result)
 {
 	if (result.IsLoaded())
 	{
-		m_Shader = static_pointer_cast<Ares::Shader>(result.GetAsset());
+		m_Shader = result.GetAsset<Ares::Shader>();
 		m_Shader->Bind();
 	}
 }

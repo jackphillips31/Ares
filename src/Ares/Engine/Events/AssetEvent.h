@@ -16,7 +16,8 @@ namespace Ares {
 		inline const std::string& GetFilepath() const { return m_Filepath; }
 		inline const std::string& GetMessage() const { return m_Message; }
 		inline bool IsLoaded() const { return m_Loaded; }
-		inline Ref<Asset> GetAsset() const { return m_Asset; }
+		template <typename T>
+		inline Ref<T> GetAsset() const { return static_pointer_cast<T>(m_Asset); }
 
 		std::string ToString() const override
 		{
