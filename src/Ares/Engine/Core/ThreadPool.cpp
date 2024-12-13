@@ -36,7 +36,7 @@ namespace Ares {
 			s_SharedContexts[i] = SharedGraphicsContext::Create(app.GetWindow().GetGraphicsContext()->GetContextHandle());
 			s_Workers.emplace_back([i] {
 				SharedGraphicsContext& context = *s_SharedContexts[i];
-				Application& workerApp = Application::Get();
+				context.MakeCurrent();
 				while (true)
 				{
 					std::function<void()> task;
@@ -52,10 +52,7 @@ namespace Ares {
 						task = std::move(s_TaskQueue.front());
 						s_TaskQueue.pop();
 					}
-					context.MakeCurrent();
 					task();
-					context.DetachCurrent();
-					workerApp.GetWindow().GetGraphicsContext()->MakeCurrent();
 				}
 			});
 		};
