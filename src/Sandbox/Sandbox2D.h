@@ -25,6 +25,7 @@ public:
 	virtual void OnImGuiRender() override;
 
 	void OnShaderLoad(Ares::AssetLoadedEvent& result);
+	bool OnWindowFocus(Ares::WindowFocusEvent& event);
 
 private:
 	Ares::Window& m_Window;

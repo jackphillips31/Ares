@@ -1,5 +1,8 @@
 #pragma once
 
+#include <fmt/core.h>
+#include <fmt/chrono.h>
+
 #include "Engine/Events/Event.h"
 
 namespace Ares {
@@ -61,6 +64,62 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(WindowClose)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
+	class WindowFocusEvent : public Event
+	{
+	public:
+		WindowFocusEvent()
+			: m_Timestamp(std::chrono::system_clock::now())
+		{
+		}
+
+		std::string ToString() const override
+		{
+			std::stringstream ss;
+			ss << "WindowFocusEvent: " << GetFormattedTimestamp();
+			return ss.str();
+		}
+
+		EVENT_CLASS_TYPE(WindowFocus)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+
+	private:
+		std::string GetFormattedTimestamp() const
+		{
+			return fmt::format("{:%Y-%m-%d %H:%M:%S}", m_Timestamp);
+		}
+
+	private:
+		std::chrono::system_clock::time_point m_Timestamp;
+	};
+
+	class WindowLostFocusEvent : public Event
+	{
+	public:
+		WindowLostFocusEvent()
+			: m_Timestamp(std::chrono::system_clock::now())
+		{
+		}
+
+		std::string ToString() const override
+		{
+			std::stringstream ss;
+			ss << "WindowLostFocusEvent: " << GetFormattedTimestamp();
+			return ss.str();
+		}
+
+		EVENT_CLASS_TYPE(WindowLostFocus)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+
+	private:
+		std::string GetFormattedTimestamp() const
+		{
+			return fmt::format("{:%Y-%m-%d %H:%M:%S}", m_Timestamp);
+		}
+
+	private:
+		std::chrono::system_clock::time_point m_Timestamp;
 	};
 
 	class AppTickEvent : public Event

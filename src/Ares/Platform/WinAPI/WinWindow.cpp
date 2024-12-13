@@ -309,6 +309,9 @@ namespace Ares {
 				{
 					ShowWindow(hwnd, SW_MINIMIZE);
 				}
+
+				WindowLostFocusEvent event;
+				EventQueue::Dispatch<WindowLostFocusEvent>(event);
 			}
 			else if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE)
 			{
@@ -319,6 +322,9 @@ namespace Ares {
 					devMode.dmPelsHeight = m_Data.ClientHeight;
 					ChangeDisplaySettings(&devMode, 0);
 				}
+
+				WindowFocusEvent event;
+				EventQueue::Dispatch<WindowFocusEvent>(event);
 			}
 			return 0;
 		}

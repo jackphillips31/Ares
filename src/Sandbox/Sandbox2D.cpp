@@ -56,6 +56,8 @@ Sandbox2D::Sandbox2D()
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
 
 	Ares::AssetManager::LoadAsset<Ares::Shader>("assets/shaders/FlatColorShader.shader", AR_BIND_ASSET_FN(Sandbox2D::OnShaderLoad));
+
+	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
 }
 
 void Sandbox2D::OnAttach()
@@ -142,4 +144,10 @@ void Sandbox2D::OnShaderLoad(Ares::AssetLoadedEvent& result)
 		m_Shader = static_pointer_cast<Ares::Shader>(result.GetAsset());
 		m_Shader->Bind();
 	}
+}
+
+bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
+{
+	AR_TRACE(event);
+	return false;
 }
