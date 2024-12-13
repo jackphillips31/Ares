@@ -22,7 +22,6 @@ namespace Ares {
 		inline std::pair<int32_t, int32_t> GetClientPos() const override { return std::pair<int32_t, int32_t>(m_Data.ClientXPos, m_Data.ClientYPos); }
 		inline uint16_t GetWindowSettings() const override { return m_Data.Flags; }
 
-		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
 		inline void SetWindowPosition(int32_t x, int32_t y) override { SetWindowSizePos(x, y, m_Data.Width, m_Data.Height); }
@@ -58,8 +57,6 @@ namespace Ares {
 			bool VSync;
 			uint16_t Flags;
 			DEVMODE OriginalDisplay;
-			
-			EventCallbackFn EventCallback;
 		};
 
 		WindowData m_Data;

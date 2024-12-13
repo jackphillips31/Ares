@@ -2,6 +2,7 @@
 #include <backends/imgui_impl_win32.h>
 #include <glad/wgl.h>
 
+#include "Engine/Events/EventQueue.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
@@ -93,7 +94,7 @@ namespace Ares {
 			if (msg.message == WM_QUIT)
 			{
 				WindowCloseEvent event;
-				m_Data.EventCallback(event);
+				EventQueue::Dispatch<WindowCloseEvent>(event);
 			}
 		}
 	}
@@ -234,7 +235,7 @@ namespace Ares {
 		{
 		case WM_QUIT: {
 			WindowCloseEvent event;
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<WindowCloseEvent>(event);
 			return wParam;
 		}
 		case WM_DESTROY: {
@@ -251,11 +252,8 @@ namespace Ares {
 
 			if (wParam == SIZE_MINIMIZED)
 			{
-				if (m_Data.EventCallback)
-				{
-					WindowResizeEvent event(0, 0, 0, 0);
-					m_Data.EventCallback(event);
-				}
+				WindowResizeEvent event(0, 0, 0, 0);
+				EventQueue::Dispatch<WindowResizeEvent>(event);
 			}
 			else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
 			{
@@ -271,11 +269,8 @@ namespace Ares {
 				m_Data.ClientWidth = clientWidth;
 				m_Data.ClientHeight = clientHeight;
 
-				if (m_Data.EventCallback)
-				{
-					WindowResizeEvent event(winWidth, winHeight, clientWidth, clientHeight);
-					m_Data.EventCallback(event);
-				}
+				WindowResizeEvent event(winWidth, winHeight, clientWidth, clientHeight);
+				EventQueue::Dispatch<WindowResizeEvent>(event);
 			}
 			return 0;
 		}
@@ -298,11 +293,8 @@ namespace Ares {
 			m_Data.ClientXPos = clientPos.x;
 			m_Data.ClientYPos = clientPos.y;
 
-			if (m_Data.EventCallback)
-			{
-				WindowMovedEvent event(xpos, ypos);
-				m_Data.EventCallback(event);
-			}
+			WindowMovedEvent event(xpos, ypos);
+			EventQueue::Dispatch<WindowMovedEvent>(event);
 
 			return 0;
 		}
@@ -334,61 +326,61 @@ namespace Ares {
 			KeyCode keyCode = WinAPIKeyToKeyCode(static_cast<uint32_t>(wParam));
 
 			KeyPressedEvent event(keyCode, 0);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<KeyPressedEvent>(event);
 			return 0;
 		}
 		case WM_KEYUP: {
 			KeyCode keyCode = WinAPIKeyToKeyCode(static_cast<uint32_t>(wParam));
 
 			KeyReleasedEvent event(keyCode);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<KeyReleasedEvent>(event);
 			return 0;
 		}
 		case WM_CHAR: {
 			KeyCode keyCode = WinAPIKeyToKeyCode(static_cast<uint32_t>(wParam));
 
 			KeyTypedEvent event(keyCode);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<KeyTypedEvent>(event);
 			return 0;
 		}
 		case WM_LBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button0);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
 		case WM_LBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button0);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
 			return 0;
 		}
 		case WM_RBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button1);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
 		case WM_RBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button1);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
 			return 0;
 		}
 		case WM_MBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button2);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
 		case WM_MBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button2);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
 			return 0;
 		}
 		case WM_XBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button3);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
 		case WM_XBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button3);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
 			return 0;
 		}
 		case WM_MOUSEWHEEL: {
@@ -396,7 +388,7 @@ namespace Ares {
 			float yOffset = static_cast<float>(zDelta) / WHEEL_DELTA;
 
 			MouseScrolledEvent event(0.0f, yOffset);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseScrolledEvent>(event);
 			return 0;
 		}
 		case WM_MOUSEMOVE: {
@@ -404,7 +396,7 @@ namespace Ares {
 			int32_t yPos = static_cast<int32_t>(HIWORD(lParam));
 
 			MouseMovedEvent event(xPos, yPos);
-			m_Data.EventCallback(event);
+			EventQueue::Dispatch<MouseMovedEvent>(event);
 			return 0;
 		}
 

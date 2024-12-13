@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Data/Asset.h"
 #include "Engine/Events/Event.h"
 
 namespace Ares {

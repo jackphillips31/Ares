@@ -4,6 +4,7 @@
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 #include "Engine/Data/AssetManager.h"
+#include "Engine/Events/EventQueue.h"
 #include "Engine/Renderer/Renderer.h"
 
 #include "Engine/Core/Application.h"
@@ -30,9 +31,9 @@ namespace Ares {
 		);
 
 		m_Window = Window::Create(windowProps);
-		m_Window->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 
 		ThreadPool::Init(settings.ThreadCount);
+		EventQueue::Init();
 		AssetManager::Init();
 		Renderer::Init();
 
@@ -45,6 +46,7 @@ namespace Ares {
 		Renderer::Shutdown();
 		Input::Shutdown();
 		AssetManager::Shutdown();
+		EventQueue::Shutdown();
 		ThreadPool::Shutdown();
 	}
 
@@ -80,6 +82,8 @@ namespace Ares {
 					for (Ref<Layer> layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
+
+				EventQueue::ProcessEvents();
 			}
 
 			if (m_Minimized)
