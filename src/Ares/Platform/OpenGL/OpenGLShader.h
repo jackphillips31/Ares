@@ -4,14 +4,54 @@
 
 namespace Ares {
 
-	class OpenGLShader : public Shader
+	class OpenGLVertexShader : public VertexShader
 	{
 	public:
-		OpenGLShader(const std::string& name, const FileBuffer& fileBuffer);
-		virtual ~OpenGLShader();
+		OpenGLVertexShader(const std::string& name, const FileBuffer& fileBuffer);
+		OpenGLVertexShader(const std::string& name, const std::string& shaderSource);
+		virtual ~OpenGLVertexShader();
 
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
+		inline virtual uint32_t GetId() const override { return m_ShaderId; }
+		inline virtual const std::string& GetName() const override { return m_Name; }
+
+	private:
+		inline virtual uint32_t GetShaderType() const;
+		virtual void Compile(const char* shaderSource, const int32_t shaderSize);
+
+	private:
+		std::string m_Name;
+		uint32_t m_ShaderId;
+	};
+
+	class OpenGLFragmentShader : public FragmentShader
+	{
+	public:
+		OpenGLFragmentShader(const std::string& name, const FileBuffer& fileBuffer);
+		OpenGLFragmentShader(const std::string& name, const std::string& shaderSource);
+		virtual ~OpenGLFragmentShader();
+
+		inline virtual uint32_t GetId() const override { return m_ShaderId; }
+		inline virtual const std::string& GetName() const override { return m_Name; }
+
+	private:
+		inline virtual uint32_t GetShaderType() const;
+		virtual void Compile(const char* shaderSource, const int32_t shaderSize);
+
+	private:
+		std::string m_Name;
+		uint32_t m_ShaderId;
+	};
+
+	class OpenGLShaderProgram : public ShaderProgram
+	{
+	public:
+		OpenGLShaderProgram(const std::string& name, const std::vector<Ref<Shader>>& shaders);
+		virtual ~OpenGLShaderProgram();
+
+		inline virtual const std::string& GetName() const override { return m_Name; }
+
+		void Bind() const override;
+		void Unbind() const override;
 
 		virtual void SetInt(const std::string& name, int32_t value) override;
 		virtual void SetIntArray(const std::string& name, int32_t* values, uint32_t count) override;
@@ -22,8 +62,8 @@ namespace Ares {
 		virtual void SetMat3(const std::string& name, const glm::mat3& matrix) override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) override;
 
-		inline virtual const std::string& GetName() const override { return m_Name; }
-
+	private:
+		void LinkShaders(const std::vector<Ref<Shader>>& shaders);
 		void UploadUniformInt(const std::string& name, int32_t value);
 		void UploadUniformIntArray(const std::string& name, int32_t* values, uint32_t count);
 		void UploadUniformFloat(const std::string& name, float value);
@@ -34,13 +74,8 @@ namespace Ares {
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 
 	private:
-		uint32_t ShaderTypeFromString(const std::string& type);
-		std::unordered_map<uint32_t, std::string> PreProcess(const std::string& source);
-		void Compile(const std::unordered_map<uint32_t, std::string>& shaderSources);
-
-	private:
-		uint32_t m_RendererID;
 		std::string m_Name;
+		int32_t m_ProgramId;
 	};
 
 }

@@ -1,5 +1,3 @@
-#include "assets/shaders/FlatColorShaderSource.h"
-
 #include "Sandbox2D.h"
 
 Sandbox2D::Sandbox2D()
@@ -56,11 +54,11 @@ Sandbox2D::Sandbox2D()
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
 
 	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnAssetLoaded));
-
-	Ares::AssetManager::LoadAsset<Ares::Shader>("assets/shaders/FlatColorShader.shader", AR_BIND_ASSET_FN(Sandbox2D::OnShaderLoad));
-	Ares::AssetManager::LoadAsset<Ares::Texture2D>("assets/textures/DefaultTexture.png");
-
 	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
+
+	Ares::AssetManager::LoadAsset<Ares::Texture2D>("DefaultTexture", "assets/textures/DefaultTexture.png");
+	Ares::AssetManager::LoadAsset<Ares::VertexShader>("FlatColorVertex", "assets/shaders/FlatColorVertex.glsl");
+	Ares::AssetManager::LoadAsset<Ares::FragmentShader>("FlatColorFragment", "assets/shaders/FlatColorFragment.glsl");
 }
 
 void Sandbox2D::OnAttach()
@@ -100,9 +98,9 @@ void Sandbox2D::OnRender()
 	if (availableSize.x && availableSize.y)
 		m_Camera->SetViewportSize({ availableSize.x, availableSize.y });
 
-	if (frameBuffer && m_Shader)
+	if (frameBuffer && m_ShaderProgram)
 	{
-		m_Shader->SetMat4("u_ViewProjectionMatrix", m_Camera->GetViewProjectionMatrix());
+		m_ShaderProgram->SetMat4("u_ViewProjectionMatrix", m_Camera->GetViewProjectionMatrix());
 
 		frameBuffer->Bind();
 
@@ -142,15 +140,6 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::PopFont();
 }
 
-void Sandbox2D::OnShaderLoad(Ares::AssetLoadedEvent& result)
-{
-	if (result.IsLoaded())
-	{
-		m_Shader = result.GetAsset<Ares::Shader>();
-		m_Shader->Bind();
-	}
-}
-
 bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
 {
 	AR_TRACE(event);
@@ -159,6 +148,22 @@ bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
 
 bool Sandbox2D::OnAssetLoaded(Ares::AssetLoadedEvent& event)
 {
+	if (event.GetStoreName() == "FlatColorVertex")
+		m_VertexShader = event.GetAsset<Ares::VertexShader>();
+	if (event.GetStoreName() == "FlatColorFragment")
+		m_FragmentShader = event.GetAsset<Ares::FragmentShader>();
+	if (event.GetStoreName() == "FlatColorShaderProgram")
+	{
+		m_ShaderProgram = event.GetAsset<Ares::ShaderProgram>();
+		m_ShaderProgram->Bind();
+	}
+
+	if (m_VertexShader && m_FragmentShader && !m_ShaderProgram)
+	{
+		Ares::AssetManager::LoadAsset<Ares::ShaderProgram>("FlatColorShaderProgram", { m_VertexShader, m_FragmentShader });
+	}
 	AR_TRACE(event);
+	if (!event.IsLoaded())
+		AR_TRACE("Message: {}", event.GetMessage());
 	return false;
 }

@@ -13,6 +13,32 @@ namespace Ares {
 	public:
 		virtual ~Shader() = default;
 
+		virtual uint32_t GetId() const = 0;
+	};
+
+	class VertexShader : public Shader
+	{
+	public:
+		virtual ~VertexShader() = default;
+
+		static Ref<VertexShader> Create(const std::string& name, const FileBuffer& fileBuffer);
+		static Ref<VertexShader> Create(const std::string& name, const std::string& shaderSource);
+	};
+
+	class FragmentShader : public Shader
+	{
+	public:
+		virtual ~FragmentShader() = default;
+
+		static Ref<FragmentShader> Create(const std::string& name, const FileBuffer& fileBuffer);
+		static Ref<FragmentShader> Create(const std::string& name, const std::string& shaderSource);
+	};
+
+	class ShaderProgram : public Asset
+	{
+	public:
+		virtual ~ShaderProgram() = default;
+
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
@@ -25,7 +51,7 @@ namespace Ares {
 		virtual void SetMat3(const std::string& name, const glm::mat3& matrix) = 0;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) = 0;
 
-		static Ref<Shader> Create(const std::string& name, const FileBuffer& fileBuffer);
+		static Ref<ShaderProgram> Create(const std::string& name, const std::vector<Ref<Shader>>& shaders);
 	};
 
 }

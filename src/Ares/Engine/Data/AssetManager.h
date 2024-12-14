@@ -18,80 +18,14 @@ namespace Ares {
 		static void Init();
 		static void Shutdown();
 
+		// Load asset functions
 		template <typename T>
-		static void LoadAsset(const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback = nullptr)
-		{
-			ThreadPool::SubmitTask([filepath, callback]()
-			{
-				Ref<T> asset = nullptr;
-				bool success = false;
-				std::string message;
+		static void LoadAsset(const std::string& name, const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback = nullptr);
 
-				// Check cache
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					auto& typeMap = s_AssetCache[typeid(T)];
-					if (typeMap.find(filepath) != typeMap.end())
-					{
-						// Asset exists - Get asset and call callback
-						asset = static_pointer_cast<T>(typeMap[filepath]);
-						AssetLoadedEvent event(filepath, true, asset);
-						if (callback)
-							QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
+		template <typename T>
+		static void LoadAsset(const std::string& name, const std::vector<Ref<Shader>>& shaders, std::function<void(AssetLoadedEvent&)> callback = nullptr);
 
-						return;
-					}
-				}
-
-				// Asset not in cache - Try loading asset
-				try
-				{
-					if constexpr (std::is_same<T, Shader>::value)
-					{
-						asset = LoadShader(filepath);
-					}
-					else if constexpr (std::is_same<T, Texture2D>::value)
-					{
-						asset = LoadTexture2D(filepath);
-					}
-					else
-					{
-						AR_CORE_WARN("Unsupported asset type!");
-						throw std::runtime_error("Unsupported asset type!");
-					}
-
-					success = true;
-
-					// Add to cache
-					{
-						std::lock_guard<std::mutex> lock(s_CacheMutex);
-						s_AssetCache[typeid(T)][filepath] = asset;
-					}
-				}
-				catch (const std::exception& e)
-				{
-					message = e.what();
-				}
-
-				AssetLoadedEvent event(filepath, success, asset, message);
-
-				// Notify all listeners
-				NotifyListeners(filepath, event);
-
-				// Dispatch event
-				EventQueue::Dispatch<AssetLoadedEvent>(event);
-
-				// Execute callback
-				if (callback)
-				{
-					QueueCallback([callback, event]()
-					{
-						callback(const_cast<AssetLoadedEvent&>(event));
-					});
-				}
-			});
-		}
-
+		// Getter functions
 		template <typename T>
 		static Ref<T> GetAsset(const std::string& filepath)
 		{
@@ -103,12 +37,12 @@ namespace Ares {
 			}
 			return nullptr;
 		}
+		static std::vector<std::pair<std::string, std::string>> GetCompleteList();
 
+		// Listener functions & OnUpdate
 		static void AddListener(const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback);
 		static void AddGlobalListener(std::function<void(AssetLoadedEvent&)> callback);
 		static void OnUpdate();
-
-		static std::vector<std::pair<std::string, std::string>> GetCompleteList();
 
 	private:
 		// Helpers for callback & listener system
@@ -121,8 +55,9 @@ namespace Ares {
 		static void ProcessCallbacks();
 
 		// Private loaders
-		static Ref<Shader> LoadShader(const std::string& filepath);
-		static Ref<Texture2D> LoadTexture2D(const std::string& filepath);
+		static Ref<VertexShader> LoadVertexShader(const std::string& name, const std::string& filepath);
+		static Ref<FragmentShader> LoadFragmentShader(const std::string& name, const std::string& filepath);
+		static Ref<Texture2D> LoadTexture2D(const std::string& name, const std::string& filepath);
 
 	private:
 		// Asset cache
