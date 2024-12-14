@@ -187,7 +187,6 @@ namespace Ares {
 		for (auto& shader : shaders)
 		{
 			glDetachShader(m_ProgramId, shader->GetId());
-			glDeleteShader(shader->GetId());
 		}
 	}
 

@@ -27,26 +27,26 @@ namespace Ares {
 
 		// Getter functions
 		template <typename T>
-		static Ref<T> GetAsset(const std::string& filepath)
+		static Ref<T> GetAsset(const std::string& name)
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
 			auto& typeMap = s_AssetCache[typeid(T)];
-			if (typeMap.find(filepath) != typeMap.end())
+			if (typeMap.find(name) != typeMap.end())
 			{
-				return static_pointer_cast<T>(typeMap[filepath]);
+				return static_pointer_cast<T>(typeMap[name]);
 			}
 			return nullptr;
 		}
 		static std::vector<std::pair<std::string, std::string>> GetCompleteList();
 
 		// Listener functions & OnUpdate
-		static void AddListener(const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback);
+		static void AddListener(const std::string& name, std::function<void(AssetLoadedEvent&)> callback);
 		static void AddGlobalListener(std::function<void(AssetLoadedEvent&)> callback);
 		static void OnUpdate();
 
 	private:
 		// Helpers for callback & listener system
-		static void NotifyListeners(const std::string& filepath, AssetLoadedEvent event);
+		static void NotifyListeners(const std::string& name, AssetLoadedEvent event);
 		static void QueueListenerCallback(std::function<void()> callback);
 		static void QueueCallback(std::function<void()> callback);
 

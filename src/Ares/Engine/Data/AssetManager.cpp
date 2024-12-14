@@ -122,7 +122,7 @@ namespace Ares {
 			AssetLoadedEvent event(name, success, asset, filepath, message);
 
 			// Notify all listeners
-			NotifyListeners(filepath, event);
+			NotifyListeners(name, event);
 
 			// Dispatch event
 			EventQueue::Dispatch<AssetLoadedEvent>(event);
@@ -130,10 +130,7 @@ namespace Ares {
 			// Execute callback
 			if (callback)
 			{
-				QueueCallback([callback, event]()
-					{
-						callback(const_cast<AssetLoadedEvent&>(event));
-					});
+				QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
 			}
 		});
 	}
@@ -142,107 +139,104 @@ namespace Ares {
 	void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback)
 	{
 		ThreadPool::SubmitTask([name, filepath, callback]()
-			{
-				Ref<ShaderProgram> asset = nullptr;
-				bool success = false;
-				std::string message;
+		{
+			Ref<ShaderProgram> asset = nullptr;
+			bool success = false;
+			std::string message;
 
-				// Check cache
+			// Check cache
+			{
+				std::lock_guard<std::mutex> lock(s_CacheMutex);
+				auto& typeMap = s_AssetCache[typeid(ShaderProgram)];
+				if (typeMap.find(name) != typeMap.end())
+				{
+					// Asset exists - Get asset and call callback
+					asset = static_pointer_cast<ShaderProgram>(typeMap[name]);
+					AssetLoadedEvent event(name, true, asset);
+					if (callback)
+						QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
+
+					return;
+				}
+			}
+
+			// Asset not in cache - Try loading asset
+			try
+			{
+				FileBuffer shaderSourceFile = FileIO::LoadFile(filepath);
+				std::string shaderSource(static_cast<const char*>(shaderSourceFile.GetBuffer()), shaderSourceFile.GetSize());
+				std::string vertexSource = "";
+				std::string fragmentSource = "";
+
+				const char* typeToken = "#type";
+				size_t typeTokenLength = strlen(typeToken);
+
+				size_t pos = shaderSource.find(typeToken, 0);
+				while (pos != std::string::npos)
+				{
+					size_t eol = shaderSource.find_first_of("\r\n", pos);
+					if (eol == std::string::npos)
+						throw std::runtime_error("Shader Syntax Error!");
+
+					size_t begin = pos + typeTokenLength + 1;
+					std::string type = shaderSource.substr(begin, eol - begin);
+					if (type != "vertex" && type != "fragment" && type != "pixel")
+						throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
+
+					size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
+					if (nextLinePos == std::string::npos)
+						throw std::runtime_error("Shader Syntax Error!");
+
+					pos = shaderSource.find(typeToken, nextLinePos);
+
+					if (type == "vertex")
+					{
+						vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+					}
+					else if (type == "fragment" || type == "pixel")
+					{
+						fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+					}
+				}
+
+				if (vertexSource == "" || fragmentSource == "")
+					throw std::runtime_error("One or more shaders are missing!");
+
+				asset = ShaderProgram::Create(name, {
+					VertexShader::Create(name + "_Vertex", vertexSource),
+					FragmentShader::Create(name + "_Fragment", fragmentSource)
+				});
+
+				if (asset == nullptr)
+					throw std::runtime_error("Some error occurred when creating Shader Program!");
+
+				success = true;
+
+				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					auto& typeMap = s_AssetCache[typeid(ShaderProgram)];
-					if (typeMap.find(name) != typeMap.end())
-					{
-						// Asset exists - Get asset and call callback
-						asset = static_pointer_cast<ShaderProgram>(typeMap[name]);
-						AssetLoadedEvent event(name, true, asset);
-						if (callback)
-							QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
-
-						return;
-					}
+					s_AssetCache[typeid(ShaderProgram)][name] = asset;
 				}
+			}
+			catch (const std::exception& e)
+			{
+				message = e.what();
+			}
 
-				// Asset not in cache - Try loading asset
-				try
-				{
-					FileBuffer shaderSourceFile = FileIO::LoadFile(filepath);
-					std::string shaderSource(static_cast<const char*>(shaderSourceFile.GetBuffer()), shaderSourceFile.GetSize());
-					std::string vertexSource = "";
-					std::string fragmentSource = "";
+			AssetLoadedEvent event(name, success, asset, "n/a", message);
 
-					const char* typeToken = "#type";
-					size_t typeTokenLength = strlen(typeToken);
+			// Notify all listeners
+			NotifyListeners(name, event);
 
-					size_t pos = shaderSource.find(typeToken, 0);
-					while (pos != std::string::npos)
-					{
-						size_t eol = shaderSource.find_first_of("\r\n", pos);
-						if (eol == std::string::npos)
-							throw std::runtime_error("Shader Syntax Error!");
+			// Dispatch event
+			EventQueue::Dispatch<AssetLoadedEvent>(event);
 
-						size_t begin = pos + typeTokenLength + 1;
-						std::string type = shaderSource.substr(begin, eol - begin);
-						if (type != "vertex" && type != "fragment" && type != "pixel")
-							throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
-
-						size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
-						if (nextLinePos == std::string::npos)
-							throw std::runtime_error("Shader Syntax Error!");
-
-						pos = shaderSource.find(typeToken, nextLinePos);
-
-						if (type == "vertex")
-						{
-							vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-						}
-						else if (type == "fragment" || type == "pixel")
-						{
-							fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-						}
-					}
-
-					if (vertexSource == "" || fragmentSource == "")
-						throw std::runtime_error("One or more shaders are missing!");
-
-					asset = ShaderProgram::Create(name, {
-						VertexShader::Create(name + "_Vertex", vertexSource),
-						FragmentShader::Create(name + "_Fragment", fragmentSource)
-						});
-
-					if (asset == nullptr)
-						throw std::runtime_error("Some error occurred when creating Shader Program!");
-
-					success = true;
-
-					// Add to cache
-					{
-						std::lock_guard<std::mutex> lock(s_CacheMutex);
-						s_AssetCache[typeid(ShaderProgram)][name] = asset;
-					}
-				}
-				catch (const std::exception& e)
-				{
-					message = e.what();
-				}
-
-				AssetLoadedEvent event(name, success, asset, "n/a", message);
-
-				// Notify all listeners
-				NotifyListeners(name, event);
-
-				// Dispatch event
-				EventQueue::Dispatch<AssetLoadedEvent>(event);
-
-				// Execute callback
-				if (callback)
-				{
-					QueueCallback([callback, event]()
-						{
-							callback(const_cast<AssetLoadedEvent&>(event));
-						});
-				}
-			});
+			// Execute callback
+			if (callback)
+			{
+				QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
+			}
+		});
 	}
 
 	template<>
@@ -299,10 +293,7 @@ namespace Ares {
 			// Execute callback
 			if (callback)
 			{
-				QueueCallback([callback, event]()
-					{
-						callback(const_cast<AssetLoadedEvent&>(event));
-					});
+				QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
 			}
 		});
 	}
@@ -330,10 +321,10 @@ namespace Ares {
 		return result;
 	}
 
-	void AssetManager::AddListener(const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback)
+	void AssetManager::AddListener(const std::string& name, std::function<void(AssetLoadedEvent&)> callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-		s_Listeners[filepath].emplace_back(std::move(callback));
+		s_Listeners[name].emplace_back(std::move(callback));
 	}
 
 	void AssetManager::AddGlobalListener(std::function<void(AssetLoadedEvent&)> callback)
@@ -348,15 +339,14 @@ namespace Ares {
 		ProcessListenerCallbacks();
 	}
 
-
-	void AssetManager::NotifyListeners(const std::string& filepath, AssetLoadedEvent event)
+	void AssetManager::NotifyListeners(const std::string& name, AssetLoadedEvent event)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
 
 		// Queue file-specific listener callbacks
-		if (s_Listeners.find(filepath) != s_Listeners.end())
+		if (s_Listeners.find(name) != s_Listeners.end())
 		{
-			for (auto& listener : s_Listeners[filepath])
+			for (auto& listener : s_Listeners[name])
 			{
 				QueueListenerCallback([listener, event]() { listener(const_cast<AssetLoadedEvent&>(event)); });
 			}
