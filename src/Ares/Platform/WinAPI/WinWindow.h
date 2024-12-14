@@ -16,10 +16,12 @@ namespace Ares {
 
 		inline uint32_t GetWidth() const override { return m_Data.Width; }
 		inline uint32_t GetHeight() const override { return m_Data.Height; }
+		inline glm::uvec2 GetWindowDimensions() const override{ return {m_Data.Width, m_Data.Height}; }
 		inline uint32_t GetClientWidth() const override { return m_Data.ClientWidth; }
 		inline uint32_t GetClientHeight() const override { return m_Data.ClientHeight; }
-		inline std::pair<int32_t, int32_t> GetWindowPos() const override { return std::pair<int32_t, int32_t>(m_Data.XPos, m_Data.YPos); }
-		inline std::pair<int32_t, int32_t> GetClientPos() const override { return std::pair<int32_t, int32_t>(m_Data.ClientXPos, m_Data.ClientYPos); }
+		inline glm::uvec2 GetClientDimensions() const override{ return {m_Data.ClientWidth, m_Data.ClientHeight}; }
+		inline glm::ivec2 GetWindowPos() const override { return glm::ivec2(m_Data.XPos, m_Data.YPos); }
+		inline glm::ivec2 GetClientPos() const override { return glm::ivec2(m_Data.ClientXPos, m_Data.ClientYPos); }
 		inline uint16_t GetWindowSettings() const override { return m_Data.Flags; }
 
 		void SetVSync(bool enabled) override;

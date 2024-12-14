@@ -50,8 +50,8 @@ void FrameBufferViewerElement::Draw()
 		ImGui::Image(
 			static_cast<ImTextureID>(m_FrameBuffer->GetColorAttachmentHandle()),
 			m_ContentRegionAvailable,
-			{0.0f, 1.0f},
-			{1.0f, 0.0f}
+			{ 0.0f, 1.0f },
+			{ 1.0f, 0.0f }
 		);
 	}
 

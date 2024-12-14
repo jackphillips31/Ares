@@ -26,7 +26,7 @@ namespace Ares {
 		return (state & 0x8000) != 0;
 	}
 
-	std::pair<int32_t, int32_t> WinInput::GetMousePositionImpl()
+	glm::ivec2 WinInput::GetMousePositionImpl()
 	{
 		POINT p;
 
@@ -43,17 +43,17 @@ namespace Ares {
 
 	int32_t WinInput::GetMouseXImpl()
 	{
-		auto [x, y] = GetMousePositionImpl();
-		return x;
+		glm::ivec2 pos = GetMousePositionImpl();
+		return pos.x;
 	}
 
 	int32_t WinInput::GetMouseYImpl()
 	{
-		auto [x, y] = GetMousePositionImpl();
-		return y;
+		glm::ivec2 pos = GetMousePositionImpl();
+		return pos.y;
 	}
 
-	std::pair<int32_t, int32_t> WinInput::GetMouseClientPositionImpl()
+	glm::ivec2 WinInput::GetMouseClientPositionImpl()
 	{
 		HWND window = static_cast<HWND>(Application::Get().GetWindow().GetNativeWindow());
 		POINT p;
@@ -72,14 +72,14 @@ namespace Ares {
 
 	int32_t WinInput::GetMouseClientXImpl()
 	{
-		auto [x, y] = GetMouseClientPositionImpl();
-		return x;
+		glm::ivec2 pos = GetMouseClientPositionImpl();
+		return pos.x;
 	}
 
 	int32_t WinInput::GetMouseClientYImpl()
 	{
-		auto [x, y] = GetMouseClientPositionImpl();
-		return y;
+		glm::ivec2 pos = GetMouseClientPositionImpl();
+		return pos.y;
 	}
 
 }

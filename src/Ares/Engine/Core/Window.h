@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "Engine/Core/Core.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Events/Event.h"
@@ -42,10 +44,12 @@ namespace Ares {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
+		virtual glm::uvec2 GetWindowDimensions() const = 0;
 		virtual uint32_t GetClientWidth() const = 0;
 		virtual uint32_t GetClientHeight() const = 0;
-		virtual std::pair<int32_t, int32_t> GetWindowPos() const = 0;
-		virtual std::pair<int32_t, int32_t> GetClientPos() const = 0;
+		virtual glm::uvec2 GetClientDimensions() const = 0;
+		virtual glm::ivec2 GetWindowPos() const = 0;
+		virtual glm::ivec2 GetClientPos() const = 0;
 		virtual uint16_t GetWindowSettings() const = 0;
 
 		// Window attributes

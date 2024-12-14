@@ -1,22 +1,14 @@
 #include <imgui.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "ui/WindowSettings.h"
 
 WindowSettingsElement::WindowSettingsElement()
 	: m_Window(Ares::Application::Get().GetWindow()),
 	m_WindowSettings(m_Window.GetWindowSettings()),
-	m_WindowDimensions{
-		static_cast<int32_t>(m_Window.GetWidth()),
-		static_cast<int32_t>(m_Window.GetHeight()) 
-	},
-	m_ClientDimensions{
-		static_cast<int32_t>(m_Window.GetClientWidth()),
-		static_cast<int32_t>(m_Window.GetClientHeight())
-	},
-	m_WindowPosition{
-		m_Window.GetWindowPos().first,
-		m_Window.GetWindowPos().second
-	}
+	m_WindowDimensions(m_Window.GetWindowDimensions()),
+	m_ClientDimensions(m_Window.GetClientDimensions()),
+	m_WindowPosition(m_Window.GetWindowPos())
 {
 }
 
@@ -25,13 +17,15 @@ void WindowSettingsElement::Draw()
 	ImGui::Begin("Window Settings");
 
 	std::bitset<16> binary(m_WindowSettings);
+	glm::uvec2 windowDimensions = m_Window.GetWindowDimensions();
+	glm::uvec2 clientDimensions = m_Window.GetClientDimensions();
 	ImGui::Text("Binary value: %s", binary.to_string().c_str());
-	ImGui::Text("Window Dimensions: %u x %u", m_Window.GetWidth(), m_Window.GetHeight());
-	ImGui::Text("Client Dimensions: %u x %u", m_Window.GetClientWidth(), m_Window.GetClientHeight());
-	std::pair<int32_t, int32_t> windowPos = m_Window.GetWindowPos();
-	std::pair<int32_t, int32_t> clientPos = m_Window.GetClientPos();
-	ImGui::Text("Window Position: %d x %d", windowPos.first, windowPos.second);
-	ImGui::Text("Client Position: %d x %d", clientPos.first, clientPos.second);
+	ImGui::Text("Window Dimensions: %u x %u", windowDimensions.x, windowDimensions.y);
+	ImGui::Text("Client Dimensions: %u x %u", clientDimensions.x, clientDimensions.y);
+	glm::ivec2 windowPos = m_Window.GetWindowPos();
+	glm::ivec2 clientPos = m_Window.GetClientPos();
+	ImGui::Text("Window Position: %d x %d", windowPos.x, windowPos.y);
+	ImGui::Text("Client Position: %d x %d", clientPos.x, clientPos.y);
 
 	ImGui::SeparatorText("Combined Flags");
 
@@ -100,9 +94,9 @@ void WindowSettingsElement::Draw()
 
 	ImGui::SeparatorText("Size & Position");
 
-	ImGui::InputInt2("Window", m_WindowDimensions);
-	ImGui::InputInt2("Client", m_ClientDimensions);
-	ImGui::InputInt2("Position", m_WindowPosition);
+	ImGui::InputInt2("Window", reinterpret_cast<int*>(glm::value_ptr(m_WindowDimensions)));
+	ImGui::InputInt2("Client", reinterpret_cast<int*>(glm::value_ptr(m_ClientDimensions)));
+	ImGui::InputInt2("Position", glm::value_ptr(m_WindowPosition));
 
 	if (ImGui::Button("Apply Window Size", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
 	{
@@ -129,18 +123,15 @@ void WindowSettingsElement::OnEvent(Ares::Event& e)
 
 bool WindowSettingsElement::OnWindowMoved(Ares::WindowMovedEvent& e)
 {
-	m_WindowPosition[0] = e.GetXPos();
-	m_WindowPosition[1] = e.GetYPos();
+	m_WindowPosition = glm::ivec2(e.GetXPos(), e.GetYPos());
 
 	return false;
 }
 
 bool WindowSettingsElement::OnWindowResize(Ares::WindowResizeEvent& e)
 {
-	m_WindowDimensions[0] = static_cast<int32_t>(e.GetWidth());
-	m_WindowDimensions[1] = static_cast<int32_t>(e.GetHeight());
-	m_ClientDimensions[0] = static_cast<int32_t>(e.GetClientWidth());
-	m_ClientDimensions[1] = static_cast<int32_t>(e.GetClientHeight());
+	m_WindowDimensions = glm::uvec2(e.GetWidth(), e.GetHeight());
+	m_ClientDimensions = glm::uvec2(e.GetClientWidth(), e.GetClientHeight());
 
 	return false;
 }

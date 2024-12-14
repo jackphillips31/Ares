@@ -17,7 +17,7 @@ private:
 private:
 	Ares::Window& m_Window;
 	uint16_t m_WindowSettings;
-	int32_t m_WindowDimensions[2];
-	int32_t m_ClientDimensions[2];
-	int32_t m_WindowPosition[2];
+	glm::uvec2 m_WindowDimensions;
+	glm::uvec2 m_ClientDimensions;
+	glm::ivec2 m_WindowPosition;
 };
