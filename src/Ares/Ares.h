@@ -29,6 +29,8 @@
 #include "Engine/ImGui/ImGuiElement.h"
 #include "Engine/Layers/ImGuiLayer.h"
 
+#include "Engine/Utility/File.h"
+
 //----------------- RENDERER ------------------
 //---------------------------------------------
 #include "Engine/Renderer/Renderer.h"

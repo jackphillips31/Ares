@@ -114,9 +114,6 @@ namespace Ares {
 		static void ProcessListenerCallbacks();
 		static void ProcessCallbacks();
 
-		// Helper to check file extension
-		static std::string GetFileExtension(const std::string& filepath);
-
 		// Private loaders
 		static Ref<Shader> LoadShader(const std::string& filepath);
 		static Ref<Texture2D> LoadTexture2D(const std::string& filepath);

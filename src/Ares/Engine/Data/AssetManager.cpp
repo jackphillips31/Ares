@@ -2,6 +2,7 @@
 
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Data/FileIO.h"
+#include "Engine/Utility/File.h"
 
 #include "Engine/Data/AssetManager.h"
 
@@ -135,8 +136,10 @@ namespace Ares {
 			AR_CORE_ERROR(error);
 			throw std::runtime_error(error);
 		}
-
-		return Shader::Create(filepath, fileBuffer);
+		return Shader::Create(
+			Utility::File::GetFilenameNoExt(filepath),
+			fileBuffer
+		);
 	}
 
 	Ref<Texture2D> AssetManager::LoadTexture2D(const std::string& filepath)
@@ -149,17 +152,10 @@ namespace Ares {
 			throw std::runtime_error(error);
 		}
 
-		return Texture2D::Create(filepath, fileBuffer);
-	}
-
-	std::string AssetManager::GetFileExtension(const std::string& filepath)
-	{
-		size_t dotPos = filepath.find_last_of(".");
-		if (dotPos == std::string::npos)
-		{
-			return "";
-		}
-		return filepath.substr(dotPos);
+		return Texture2D::Create(
+			Utility::File::GetFilenameNoExt(filepath),
+			fileBuffer
+		);
 	}
 
 }
