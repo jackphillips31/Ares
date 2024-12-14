@@ -55,7 +55,10 @@ Sandbox2D::Sandbox2D()
 	m_Camera = Ares::CreateScope<ViewportCamera>(1280.0f, 720.0f);
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
 
+	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnAssetLoaded));
+
 	Ares::AssetManager::LoadAsset<Ares::Shader>("assets/shaders/FlatColorShader.shader", AR_BIND_ASSET_FN(Sandbox2D::OnShaderLoad));
+	Ares::AssetManager::LoadAsset<Ares::Texture2D>("assets/textures/DefaultTexture.png");
 
 	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
 }
@@ -130,6 +133,8 @@ void Sandbox2D::OnImGuiRender()
 
 	m_FrameBufferElement.Draw();
 
+	m_AssetListElement.Draw();
+
 	ImGui::ShowDemoWindow();
 
 	Ares::Log::GetConsole()->Draw("Console", true);
@@ -147,6 +152,12 @@ void Sandbox2D::OnShaderLoad(Ares::AssetLoadedEvent& result)
 }
 
 bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
+{
+	AR_TRACE(event);
+	return false;
+}
+
+bool Sandbox2D::OnAssetLoaded(Ares::AssetLoadedEvent& event)
 {
 	AR_TRACE(event);
 	return false;

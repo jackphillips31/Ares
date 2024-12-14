@@ -2,6 +2,7 @@
 
 #include "Engine/Data/Asset.h"
 #include "Engine/Events/AssetEvent.h"
+#include "Engine/Events/EventQueue.h"
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/Texture.h"
 
@@ -77,6 +78,9 @@ namespace Ares {
 				// Notify all listeners
 				NotifyListeners(filepath, event);
 
+				// Dispatch event
+				EventQueue::Dispatch<AssetLoadedEvent>(event);
+
 				// Execute callback
 				if (callback)
 				{
@@ -103,6 +107,8 @@ namespace Ares {
 		static void AddListener(const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback);
 		static void AddGlobalListener(std::function<void(AssetLoadedEvent&)> callback);
 		static void OnUpdate();
+
+		static std::vector<std::pair<std::string, std::string>> GetCompleteList();
 
 	private:
 		// Helpers for callback & listener system

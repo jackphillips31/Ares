@@ -7,6 +7,7 @@
 #include "ui/Performance.h"
 #include "ui/WindowSettings.h"
 #include "ui/FrameBufferViewer.h"
+#include "ui/AssetList.h"
 
 #include "scene/ViewportCamera.h"
 
@@ -26,6 +27,7 @@ public:
 
 	void OnShaderLoad(Ares::AssetLoadedEvent& result);
 	bool OnWindowFocus(Ares::WindowFocusEvent& event);
+	bool OnAssetLoaded(Ares::AssetLoadedEvent& event);
 
 private:
 	Ares::Window& m_Window;
@@ -36,6 +38,7 @@ private:
 	PerformanceElement m_PerformanceElement;
 	WindowSettingsElement m_WindowSettingsElement;
 	FrameBufferViewerElement m_FrameBufferElement;
+	AssetListElement m_AssetListElement;
 
 	Ares::Ref<Ares::VertexBuffer> m_VBO;
 	Ares::Ref<Ares::IndexBuffer> m_IBO;

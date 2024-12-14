@@ -73,6 +73,29 @@ namespace Ares {
 		ProcessListenerCallbacks();
 	}
 
+	std::vector<std::pair<std::string, std::string>> AssetManager::GetCompleteList()
+	{
+		std::vector<std::pair<std::string, std::string>> result;
+		std::unordered_map<std::type_index, std::unordered_map<std::string, Ref<Asset>>> assetCacheCopy;
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			assetCacheCopy = s_AssetCache;
+		}
+
+		for (auto& entry : assetCacheCopy)
+		{
+			std::string typeString = entry.first.name();
+			typeString.erase(0, 12);
+			for (auto& nextEntry : entry.second)
+			{
+				std::string filename = Utility::File::GetFilename(nextEntry.first);
+				result.emplace_back(std::pair(nextEntry.first, typeString + " - " + filename));
+			}
+		}
+
+		return result;
+	}
+
 	void AssetManager::NotifyListeners(const std::string& filepath, AssetLoadedEvent event)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
