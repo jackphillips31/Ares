@@ -23,8 +23,20 @@ namespace Ares {
 		{
 			// Clear Event Queue
 			{
-				std::lock_guard<std::mutex> lock(s_EventQueueMutex);
-				while (!s_EventQueue.empty()) s_EventQueue.pop();
+				//std::lock_guard<std::mutex> lock(s_EventQueueMutex);
+				//while (!s_EventQueue.empty()) s_EventQueue.pop();
+			}
+
+			// Clear Read Event Queue
+			{
+				std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
+				while (!s_ReadEventQueue.empty()) s_ReadEventQueue.pop();
+			}
+
+			// Clear Write Event Queue
+			{
+				std::lock_guard<std::mutex> lock(s_WriteQueueMutex);
+				while (!s_WriteEventQueue.empty()) s_WriteEventQueue.pop();
 			}
 
 			// Clear all listeners
@@ -38,22 +50,22 @@ namespace Ares {
 			s_NextListenerId = 1;
 		}
 
-		template <typename T>
-		static void Dispatch(T e)
+		template <typename EventTypeTemplate>
+		static void Dispatch(EventTypeTemplate e)
 		{
-			std::lock_guard<std::mutex> lock(s_EventQueueMutex);
-			s_EventQueue.emplace(CreateScope<T>(e));
+			std::lock_guard<std::mutex> lock(s_WriteQueueMutex);
+			s_WriteEventQueue.emplace(CreateScope<EventTypeTemplate>(e));
 		}
 
-		template<typename T>
-		static uint32_t AddListener(std::function<bool(T&)> func)
+		template<typename EventTypeTemplate>
+		static uint32_t AddListener(std::function<bool(EventTypeTemplate&)> func)
 		{
 			std::lock_guard<std::mutex> lock(s_ListenerMutex);
 			uint32_t currentId = s_NextListenerId++;
-			EventListenerEntry currentEntry({ currentId, [func](Event& e) { return func(static_cast<T&>(e)); } });
+			EventListenerEntry currentEntry({ currentId, [func](Event& e) { return func(static_cast<EventTypeTemplate&>(e)); } });
 
-			s_Listeners[T::GetStaticType()].emplace_back(currentEntry);
-			s_ListenerTypeMap[currentId] = T::GetStaticType();
+			s_Listeners[EventTypeTemplate::GetStaticType()].emplace_back(currentEntry);
+			s_ListenerTypeMap[currentId] = EventTypeTemplate::GetStaticType();
 			return currentId;
 		}
 
@@ -88,12 +100,14 @@ namespace Ares {
 
 		static void ProcessEvents()
 		{
+			SwapQueues();
+
 			Application& app = Application::Get();
-			std::lock_guard<std::mutex> lock(s_EventQueueMutex);
-			while (!s_EventQueue.empty())
+			std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
+			while (!s_ReadEventQueue.empty())
 			{
-				Scope<Event> event = std::move(s_EventQueue.front());
-				s_EventQueue.pop();
+				Scope<Event> event = std::move(s_ReadEventQueue.front());
+				s_ReadEventQueue.pop();
 				app.OnEvent(*event);
 				NotifyListeners(*event);
 			}
@@ -121,9 +135,19 @@ namespace Ares {
 			}
 		}
 
+		static void SwapQueues()
+		{
+			std::lock_guard<std::mutex> writeLock(s_WriteQueueMutex);
+			std::lock_guard<std::mutex> readLock(s_ReadQueueMutex);
+
+			std::swap(s_WriteEventQueue, s_ReadEventQueue);
+		}
+
 	private:
-		static inline std::queue<Scope<Event>> s_EventQueue;
-		static inline std::mutex s_EventQueueMutex;
+		static inline std::queue<Scope<Event>> s_ReadEventQueue;
+		static inline std::queue<Scope<Event>> s_WriteEventQueue;
+		static inline std::mutex s_ReadQueueMutex;
+		static inline std::mutex s_WriteQueueMutex;
 
 		static inline std::atomic<uint32_t> s_NextListenerId{ 1 };
 		static inline std::unordered_map<EventType, std::vector<EventListenerEntry>> s_Listeners;
