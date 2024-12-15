@@ -30,14 +30,19 @@ namespace Ares {
 		static Ref<T> GetAsset(const std::string& name)
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			auto& typeMap = s_AssetCache[typeid(T)];
-			if (typeMap.find(name) != typeMap.end())
+			auto it = s_AssetCache.find(typeid(T));
+			if (it != s_AssetCache.end())
 			{
-				return static_pointer_cast<T>(typeMap[name]);
+				auto& typeMap = it->second;
+				for (auto& typeIndex : typeMap)
+				{
+					if (typeIndex.second.Name == name)
+						return static_pointer_cast<T>(typeIndex.second.Asset);
+				}
 			}
 			return nullptr;
 		}
-		static std::vector<std::pair<std::string, std::string>> GetCompleteList();
+		static std::vector<Ref<AssetInfo>> GetCompleteList();
 
 		// Listener functions & OnUpdate
 		static void AddListener(const std::string& name, std::function<void(AssetLoadedEvent&)> callback);
@@ -61,8 +66,9 @@ namespace Ares {
 
 	private:
 		// Asset cache
-		static std::unordered_map<std::type_index, std::unordered_map<std::string, Ref<Asset>>> s_AssetCache;
+		static std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<AssetInfo>>> s_AssetCache;
 		static std::mutex s_CacheMutex;
+		static std::atomic<uint32_t> s_NextAssetId;
 
 		// Callback queue
 		static std::queue<std::function<void()>> s_CallbackQueue;

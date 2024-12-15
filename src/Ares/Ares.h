@@ -30,6 +30,7 @@
 #include "Engine/Layers/ImGuiLayer.h"
 
 #include "Engine/Utility/File.h"
+#include "Engine/Utility/Type.h"
 
 //----------------- RENDERER ------------------
 //---------------------------------------------

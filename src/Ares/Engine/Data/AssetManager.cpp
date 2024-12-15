@@ -8,8 +8,9 @@
 
 namespace Ares {
 
-	std::unordered_map<std::type_index, std::unordered_map<std::string, Ref<Asset>>> AssetManager::s_AssetCache;
+	std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<AssetInfo>>> AssetManager::s_AssetCache;
 	std::mutex AssetManager::s_CacheMutex;
+	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
 
 	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
 	std::mutex AssetManager::s_CallbackQueueMutex;
@@ -38,6 +39,7 @@ namespace Ares {
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
 			s_AssetCache.clear();
+			s_NextAssetId = 1;
 		}
 
 		// Clear callback queue
@@ -68,20 +70,27 @@ namespace Ares {
 			Ref<T> asset = nullptr;
 			bool success = false;
 			std::string message;
+			uint32_t currentId = 0;
 
 			// Check cache
 			{
 				std::lock_guard<std::mutex> lock(s_CacheMutex);
-				auto& typeMap = s_AssetCache[typeid(T)];
-				if (typeMap.find(name) != typeMap.end())
+				auto it = s_AssetCache.find(typeid(T));
+				if (it != s_AssetCache.end())
 				{
-					// Asset exists - Get asset and call callback
-					asset = static_pointer_cast<T>(typeMap[name]);
-					AssetLoadedEvent event(name, true, asset, filepath);
-					if (callback)
-						QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
+					auto& typeMap = it->second;
+					for (const auto& typeIndex : typeMap)
+					{
+						if (typeIndex.second->Name == name)
+						{
+							// Asset exists - Get asset and call callback
+							AssetLoadedEvent event(typeIndex.second, message);
+							if (callback)
+								QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
 
-					return;
+							return;
+						}
+					}
 				}
 			}
 
@@ -107,11 +116,13 @@ namespace Ares {
 				}
 
 				success = true;
+				currentId = s_NextAssetId++;
+				asset->SetAssetId(currentId);
 
 				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(T)][name] = asset;
+					s_AssetCache[typeid(T)][currentId] = CreateRef<AssetInfo>(asset, typeid(T).name(), AssetState::Loaded, filepath);
 				}
 			}
 			catch (const std::exception& e)
@@ -119,7 +130,7 @@ namespace Ares {
 				message = e.what();
 			}
 
-			AssetLoadedEvent event(name, success, asset, filepath, message);
+			AssetLoadedEvent event(s_AssetCache[typeid(T)][currentId], message);
 
 			// Notify all listeners
 			NotifyListeners(name, event);
@@ -143,20 +154,27 @@ namespace Ares {
 			Ref<ShaderProgram> asset = nullptr;
 			bool success = false;
 			std::string message;
+			uint32_t currentId = 0;
 
 			// Check cache
 			{
 				std::lock_guard<std::mutex> lock(s_CacheMutex);
-				auto& typeMap = s_AssetCache[typeid(ShaderProgram)];
-				if (typeMap.find(name) != typeMap.end())
+				auto it = s_AssetCache.find(typeid(ShaderProgram));
+				if (it != s_AssetCache.end())
 				{
-					// Asset exists - Get asset and call callback
-					asset = static_pointer_cast<ShaderProgram>(typeMap[name]);
-					AssetLoadedEvent event(name, true, asset);
-					if (callback)
-						QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
+					auto& typeMap = it->second;
+					for (const auto& typeIndex : typeMap)
+					{
+						if (typeIndex.second->Name == name)
+						{
+							// Asset exists - Get asset and call callback
+							AssetLoadedEvent event(typeIndex.second, message);
+							if (callback)
+								QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
 
-					return;
+							return;
+						}
+					}
 				}
 			}
 
@@ -211,11 +229,13 @@ namespace Ares {
 					throw std::runtime_error("Some error occurred when creating Shader Program!");
 
 				success = true;
+				currentId = s_NextAssetId++;
+				asset->SetAssetId(currentId);
 
 				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(ShaderProgram)][name] = asset;
+					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<AssetInfo>(asset, typeid(ShaderProgram).name(), AssetState::Loaded, filepath);
 				}
 			}
 			catch (const std::exception& e)
@@ -223,7 +243,7 @@ namespace Ares {
 				message = e.what();
 			}
 
-			AssetLoadedEvent event(name, success, asset, "n/a", message);
+			AssetLoadedEvent event(s_AssetCache[typeid(ShaderProgram)][currentId], message);
 
 			// Notify all listeners
 			NotifyListeners(name, event);
@@ -247,20 +267,27 @@ namespace Ares {
 			Ref<ShaderProgram> asset = nullptr;
 			bool success = false;
 			std::string message;
+			uint32_t currentId = 0;
 
 			// Check cache
 			{
 				std::lock_guard<std::mutex> lock(s_CacheMutex);
-				auto& typeMap = s_AssetCache[typeid(ShaderProgram)];
-				if (typeMap.find(name) != typeMap.end())
+				auto it = s_AssetCache.find(typeid(ShaderProgram));
+				if (it != s_AssetCache.end())
 				{
-					// Asset exists - Get asset and call callback
-					asset = static_pointer_cast<ShaderProgram>(typeMap[name]);
-					AssetLoadedEvent event(name, true, asset);
-					if (callback)
-						QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
+					auto& typeMap = it->second;
+					for (const auto& typeIndex : typeMap)
+					{
+						if (typeIndex.second->Name == name)
+						{
+							// Asset exists - Get asset and call callback
+							AssetLoadedEvent event(typeIndex.second, message);
+							if (callback)
+								QueueCallback([callback, event]() { callback(const_cast<AssetLoadedEvent&>(event)); });
 
-					return;
+							return;
+						}
+					}
 				}
 			}
 
@@ -270,11 +297,13 @@ namespace Ares {
 				asset = ShaderProgram::Create(name, shaders);
 
 				success = true;
+				currentId = s_NextAssetId++;
+				asset->SetAssetId(currentId);
 
 				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(ShaderProgram)][name] = asset;
+					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<AssetInfo>(asset, typeid(ShaderProgram).name(), AssetState::Loaded);
 				}
 			}
 			catch (const std::exception& e)
@@ -282,7 +311,7 @@ namespace Ares {
 				message = e.what();
 			}
 
-			AssetLoadedEvent event(name, success, asset, "n/a", message);
+			AssetLoadedEvent event(s_AssetCache[typeid(ShaderProgram)][currentId], message);
 
 			// Notify all listeners
 			NotifyListeners(name, event);
@@ -298,26 +327,21 @@ namespace Ares {
 		});
 	}
 
-	std::vector<std::pair<std::string, std::string>> AssetManager::GetCompleteList()
+	std::vector<Ref<AssetInfo>> AssetManager::GetCompleteList()
 	{
-		std::vector<std::pair<std::string, std::string>> result;
-		std::unordered_map<std::type_index, std::unordered_map<std::string, Ref<Asset>>> assetCacheCopy;
+		std::vector<Ref<AssetInfo>> result;
+		std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<AssetInfo>>> assetCacheCopy;
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
 			assetCacheCopy = s_AssetCache;
 		}
-
 		for (auto& entry : assetCacheCopy)
 		{
-			std::string typeString = entry.first.name();
-			typeString.erase(0, 12);
 			for (auto& nextEntry : entry.second)
 			{
-				std::string filename = Utility::File::GetFilename(nextEntry.first);
-				result.emplace_back(std::pair(nextEntry.first, typeString + " - " + filename));
+				result.emplace_back(nextEntry.second);
 			}
 		}
-
 		return result;
 	}
 
