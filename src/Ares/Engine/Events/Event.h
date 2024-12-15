@@ -9,7 +9,7 @@ namespace Ares {
 		AppTick, AppUpdate, AppRender,
 		KeyPressed, KeyReleased, KeyTyped,
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
-		AssetLoaded
+		AssetUpdate
 	};
 
 	enum EventCategory : uint16_t

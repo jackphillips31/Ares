@@ -20,10 +20,10 @@ namespace Ares {
 
 		// Load asset functions
 		template <typename T>
-		static void LoadAsset(const std::string& name, const std::string& filepath, std::function<void(AssetLoadedEvent&)> callback = nullptr);
+		static void LoadAsset(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback = nullptr);
 
 		template <typename T>
-		static void LoadAsset(const std::string& name, const std::vector<Ref<Shader>>& shaders, std::function<void(AssetLoadedEvent&)> callback = nullptr);
+		static void LoadAsset(const std::string& name, const std::vector<Ref<Shader>>& shaders, std::function<void(Event&)> callback = nullptr);
 
 		// Getter functions
 		template <typename T>
@@ -45,13 +45,13 @@ namespace Ares {
 		static std::vector<Ref<AssetInfo>> GetCompleteList();
 
 		// Listener functions & OnUpdate
-		static void AddListener(const std::string& name, std::function<void(AssetLoadedEvent&)> callback);
-		static void AddGlobalListener(std::function<void(AssetLoadedEvent&)> callback);
+		static void AddListener(const std::string& name, std::function<void(Event&)> callback);
+		static void AddGlobalListener(std::function<void(Event&)> callback);
 		static void OnUpdate();
 
 	private:
 		// Helpers for callback & listener system
-		static void NotifyListeners(const std::string& name, AssetLoadedEvent event);
+		static void NotifyListeners(const std::string& name, AssetEvent event);
 		static void QueueListenerCallback(std::function<void()> callback);
 		static void QueueCallback(std::function<void()> callback);
 
@@ -70,13 +70,17 @@ namespace Ares {
 		static std::mutex s_CacheMutex;
 		static std::atomic<uint32_t> s_NextAssetId;
 
+		// Asset cache maps
+		static std::unordered_map<std::string, uint32_t> s_CacheNameIdMap;
+		static std::mutex s_CacheNameIdMutex;
+
 		// Callback queue
 		static std::queue<std::function<void()>> s_CallbackQueue;
 		static std::mutex s_CallbackQueueMutex;
 
 		// Event listeners
-		static std::unordered_map<std::string, std::vector<std::function<void(AssetLoadedEvent&)>>> s_Listeners;
-		static std::vector<std::function<void(AssetLoadedEvent&)>> s_GlobalListeners;
+		static std::unordered_map<std::string, std::vector<std::function<void(AssetEvent&)>>> s_Listeners;
+		static std::vector<std::function<void(AssetEvent&)>> s_GlobalListeners;
 		static std::mutex s_ListenerMutex;
 
 		// Event listener callback queue

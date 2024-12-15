@@ -53,7 +53,7 @@ Sandbox2D::Sandbox2D()
 	m_Camera = Ares::CreateScope<ViewportCamera>(1280.0f, 720.0f);
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
 
-	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnAssetLoaded));
+	Ares::EventQueue::AddListener<Ares::AssetEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnAssetLoaded));
 	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
 
 	Ares::AssetManager::LoadAsset<Ares::Texture2D>("DefaultTexture", "assets/textures/DefaultTexture.png");
@@ -146,7 +146,7 @@ bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
 	return false;
 }
 
-bool Sandbox2D::OnAssetLoaded(Ares::AssetLoadedEvent& event)
+bool Sandbox2D::OnAssetLoaded(Ares::AssetEvent& event)
 {
 	if (event.GetStoreName() == "FlatColorVertex")
 		m_VertexShader = event.GetAsset<Ares::VertexShader>();

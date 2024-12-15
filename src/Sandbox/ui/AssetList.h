@@ -11,7 +11,7 @@ public:
 	void Draw() override;
 
 private:
-	bool OnAssetLoaded(Ares::AssetLoadedEvent& result);
+	bool OnAssetLoaded(Ares::AssetEvent& result);
 
 private:
 	std::vector<Ares::Ref<Ares::AssetInfo>> m_AssetList;
