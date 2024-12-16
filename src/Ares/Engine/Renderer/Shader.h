@@ -8,7 +8,7 @@
 
 namespace Ares {
 
-	class Shader : public Asset
+	class Shader : public AssetBase
 	{
 	public:
 		virtual ~Shader() = default;
@@ -34,7 +34,7 @@ namespace Ares {
 		static Ref<FragmentShader> Create(const std::string& name, const std::string& shaderSource);
 	};
 
-	class ShaderProgram : public Asset
+	class ShaderProgram : public AssetBase
 	{
 	public:
 		virtual ~ShaderProgram() = default;

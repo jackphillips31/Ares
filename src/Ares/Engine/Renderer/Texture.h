@@ -6,7 +6,7 @@
 
 namespace Ares {
 
-	class Texture : public Asset
+	class Texture : public AssetBase
 	{
 	public:
 		virtual ~Texture() = default;

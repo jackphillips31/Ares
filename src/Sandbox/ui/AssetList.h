@@ -14,6 +14,6 @@ private:
 	bool OnAssetLoaded(Ares::AssetEvent& result);
 
 private:
-	std::vector<Ares::Ref<Ares::AssetInfo>> m_AssetList;
+	std::vector<Ares::Ref<Ares::Asset>> m_AssetList;
 	int32_t m_ActiveTooltipIndex = -1;
 };

@@ -29,20 +29,34 @@ namespace Ares {
 		template <typename T>
 		static Ref<T> GetAsset(const std::string& name)
 		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			auto it = s_AssetCache.find(typeid(T));
-			if (it != s_AssetCache.end())
+			std::unordered_map<uint32_t, Ref<Asset>> typeCache;
+			uint32_t cachedId = 0;
 			{
-				auto& typeMap = it->second;
-				for (auto& typeIndex : typeMap)
-				{
-					if (typeIndex.second.Name == name)
-						return static_pointer_cast<T>(typeIndex.second.Asset);
-				}
+				std::lock_guard<std::mutex> lock(s_CacheMutex);
+				auto it = s_AssetCache.find(typeid(T));
+				if (it != s_AssetCache.end())
+					typeCache = it->second;
+				else
+					return nullptr;
 			}
-			return nullptr;
+			{
+				std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
+				auto it = s_CacheNameIdMap.find(name);
+				if (it != s_CacheNameIdMap.end())
+					cachedId = it->second;
+				else
+					return nullptr;
+			}
+			auto it = typeCache.find(cachedId);
+			if (it != typeCache.end())
+			{
+				// Asset found
+				return static_pointer_cast<T>(it->second);
+			}
+			else
+				return nullptr;
 		}
-		static std::vector<Ref<AssetInfo>> GetCompleteList();
+		static std::vector<Ref<Asset>> GetCompleteList();
 
 		// Listener functions & OnUpdate
 		static void AddListener(const std::string& name, std::function<void(Event&)> callback);
@@ -66,7 +80,7 @@ namespace Ares {
 
 	private:
 		// Asset cache
-		static std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<AssetInfo>>> s_AssetCache;
+		static std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<Asset>>> s_AssetCache;
 		static std::mutex s_CacheMutex;
 		static std::atomic<uint32_t> s_NextAssetId;
 

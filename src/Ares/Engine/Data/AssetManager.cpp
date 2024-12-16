@@ -8,7 +8,7 @@
 
 namespace Ares {
 
-	std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<AssetInfo>>> AssetManager::s_AssetCache;
+	std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<Asset>>> AssetManager::s_AssetCache;
 	std::mutex AssetManager::s_CacheMutex;
 	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
 
@@ -81,7 +81,7 @@ namespace Ares {
 			//		 right asset. If it isn't the same, then perhaps we'll
 			//		 edit the name given and add a number.
 			{
-				std::unordered_map<uint32_t, Ref<AssetInfo>> typeCache;
+				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
 				uint32_t cachedId = 0;
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
@@ -138,7 +138,7 @@ namespace Ares {
 				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(T)][currentId] = CreateRef<AssetInfo>(asset, typeid(T).name(), AssetState::Loaded, filepath);
+					s_AssetCache[typeid(T)][currentId] = CreateRef<Asset>(asset, typeid(T), AssetState::Loaded, filepath);
 				}
 
 				// Add to cache name/id map
@@ -180,7 +180,7 @@ namespace Ares {
 
 			// Check cache
 			{
-				std::unordered_map<uint32_t, Ref<AssetInfo>> typeCache;
+				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
 				uint32_t cachedId = 0;
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
@@ -266,7 +266,7 @@ namespace Ares {
 				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<AssetInfo>(asset, typeid(ShaderProgram).name(), AssetState::Loaded, filepath);
+					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<Asset>(asset, typeid(ShaderProgram), AssetState::Loaded, filepath);
 				}
 
 				// Add to cache name/id map
@@ -308,7 +308,7 @@ namespace Ares {
 
 			// Check cache
 			{
-				std::unordered_map<uint32_t, Ref<AssetInfo>> typeCache;
+				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
 				uint32_t cachedId = 0;
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
@@ -349,7 +349,7 @@ namespace Ares {
 				// Add to cache
 				{
 					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<AssetInfo>(asset, typeid(ShaderProgram).name(), AssetState::Loaded);
+					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<Asset>(asset, typeid(ShaderProgram), AssetState::Loaded);
 				}
 
 				// Add to cache name/id map
@@ -379,10 +379,10 @@ namespace Ares {
 		});
 	}
 
-	std::vector<Ref<AssetInfo>> AssetManager::GetCompleteList()
+	std::vector<Ref<Asset>> AssetManager::GetCompleteList()
 	{
-		std::vector<Ref<AssetInfo>> result;
-		std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<AssetInfo>>> assetCacheCopy;
+		std::vector<Ref<Asset>> result;
+		std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<Asset>>> assetCacheCopy;
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
 			assetCacheCopy = s_AssetCache;
