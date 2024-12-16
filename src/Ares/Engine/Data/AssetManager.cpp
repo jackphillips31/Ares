@@ -8,12 +8,16 @@
 
 namespace Ares {
 
-	std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<Asset>>> AssetManager::s_AssetCache;
+	std::unordered_map<uint32_t, Ref<Asset>> AssetManager::s_AssetCache;
 	std::mutex AssetManager::s_CacheMutex;
 	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
 
 	std::unordered_map<std::string, uint32_t> AssetManager::s_NameIdMap;
-	std::mutex AssetManager::s_MapMutex;
+	std::mutex AssetManager::s_NameIdMutex;
+	std::unordered_map<size_t, uint32_t> AssetManager::s_HashIdMap;
+	std::mutex AssetManager::s_HashIdMutex;
+	std::unordered_map<std::type_index, uint32_t> AssetManager::s_TypeIdMap;
+	std::mutex AssetManager::s_TypeIdMutex;
 
 	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
 	std::mutex AssetManager::s_CallbackQueueMutex;
@@ -25,10 +29,18 @@ namespace Ares {
 	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
 	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
 
+	// Explicit instantiations for StageAsset types
+	template Ref<Asset> AssetManager::StageAsset<VertexShader>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+	template Ref<Asset> AssetManager::StageAsset<FragmentShader>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+	template Ref<Asset> AssetManager::StageAsset<Texture2D>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+	template Ref<Asset> AssetManager::StageAsset<ShaderProgram>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+
 	// Explicit instantiations for LoadAsset types
 	template void AssetManager::LoadAsset<VertexShader>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
 	template void AssetManager::LoadAsset<FragmentShader>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
 	template void AssetManager::LoadAsset<Texture2D>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
+	template void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
+	template void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::vector<Ref<Asset>>& shaders, std::function<void(Event&)> callback);
 
 	void AssetManager::Init()
 	{
@@ -43,6 +55,20 @@ namespace Ares {
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
 			s_AssetCache.clear();
 			s_NextAssetId = 1;
+		}
+
+		// Clear secondary maps
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			s_NameIdMap.clear();
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_HashIdMutex);
+			s_HashIdMap.clear();
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
+			s_TypeIdMap.clear();
 		}
 
 		// Clear callback queue
@@ -66,65 +92,90 @@ namespace Ares {
 	}
 
 	template <typename T>
+	Ref<Asset> AssetManager::StageAsset(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	{
+		Ref<Asset> asset = nullptr;
+		const size_t contentHash = GetHash(typeid(T), filepath, dependencies);
+
+		// Check Cache
+		asset = FindExistingAsset(contentHash);
+		if (asset)
+			return asset;
+
+		// Check for duplicate names
+		std::string assetName = name;
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			while (s_NameIdMap[assetName] != 0)
+				assetName = Utility::String::IncrementStringSuffix(assetName);
+		}
+
+		// Create empty asset
+		const uint32_t currentId = s_NextAssetId++;
+		asset = CreateRef<Asset>(typeid(T), AssetState::Staged, filepath);
+
+		// Insert data into secondary maps
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			s_NameIdMap[assetName] = currentId;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_HashIdMutex);
+			s_HashIdMap[contentHash] = currentId;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
+			s_TypeIdMap[typeid(T)] = currentId;
+		}
+
+		// Insert empty asset into cache
+		asset->SetNameAndFilepath(assetName, filepath);
+		asset->SetAssetId(currentId);
+		s_AssetCache[currentId] = asset;
+		return asset;
+	}
+
+	template <typename T>
 	void AssetManager::LoadAsset(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback)
 	{
-		ThreadPool::SubmitTask([name, filepath, callback]()
+		Ref<Asset> asset = StageAsset<T>(name, filepath, {});
+
+		// Check if asset is already loaded
+		if (asset->GetState() == AssetState::Loaded)
 		{
-			Ref<T> asset = nullptr;
-			bool success = false;
-			std::string message;
-			uint32_t currentId = 0;
-
-			// Check cache
-			// TODO: Check that the retrieved asset has the same filepath
-			//		 as the one given as an argument to make sure its the
-			//		 right asset. If it isn't the same, then perhaps we'll
-			//		 edit the name given and add a number.
-			// Check cache
+			if (callback)
 			{
-				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
-				uint32_t cachedId = 0;
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					auto it = s_AssetCache.find(typeid(T));
-					if (it != s_AssetCache.end())
-						typeCache = it->second;
-				}
-				{
-					std::lock_guard<std::mutex> lock(s_MapMutex);
-					auto it = s_NameIdMap.find(name);
-					if (it != s_NameIdMap.end())
-						cachedId = it->second;
-				}
-				if (cachedId != 0 && typeCache.size() != 0)
-				{
-					auto it = typeCache.find(cachedId);
-					if (it != typeCache.end())
-					{
-						// Asset Found - Get asset and call callback
-						AssetEvent event(it->second, message);
-						if (callback)
-							QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-
-						return;
-					}
-				}
+				AssetEvent event(asset, "");
+				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
 			}
+			return;
+		}
 
-			// Asset not in cache - Try loading asset
+		// Load asset
+		ThreadPool::SubmitTask([asset, callback]() {
+			Ref<T> rawAsset = nullptr;
+			std::string eventMessage;
+			std::string assetName = asset->GetName();
+			std::string filepath = asset->GetFilepath();
+			const uint32_t currentId = asset->GetAssetId();
 			try
 			{
+				asset->SetState(AssetState::Loading);
 				if constexpr (std::is_same<T, VertexShader>::value)
 				{
-					asset = LoadVertexShader(name, filepath);
+					rawAsset = LoadVertexShader(assetName, filepath);
 				}
 				else if constexpr (std::is_same<T, FragmentShader>::value)
 				{
-					asset = LoadFragmentShader(name, filepath);
+					rawAsset = LoadFragmentShader(assetName, filepath);
 				}
 				else if constexpr (std::is_same<T, Texture2D>::value)
 				{
-					asset = LoadTexture2D(name, filepath);
+					rawAsset = LoadTexture2D(assetName, filepath);
+				}
+				else if constexpr (std::is_same<T, ShaderProgram>::value)
+				{
+					rawAsset = LoadShaderProgram(assetName, filepath);
 				}
 				else
 				{
@@ -132,268 +183,121 @@ namespace Ares {
 					throw std::runtime_error("Unsupported asset type!");
 				}
 
-				success = true;
-				currentId = s_NextAssetId++;
-				asset->SetAssetId(currentId);
-
-				// Add to cache
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(T)][currentId] = CreateRef<Asset>(asset, typeid(T), AssetState::Loaded, filepath);
-				}
-
-				// Add to cache name/id map
-				{
-					std::lock_guard<std::mutex> lock(s_MapMutex);
-					s_NameIdMap[asset->GetName()] = currentId;
-				}
+				rawAsset->SetAssetId(currentId);
+				asset->SetAsset(rawAsset);
+				asset->SetState(AssetState::Loaded);
 			}
-			catch (const std::exception& e)
+			catch (std::exception& e)
 			{
-				message = e.what();
+				asset->SetState(AssetState::Failed);
+				eventMessage = e.what();
 			}
 
-			AssetEvent event(s_AssetCache[typeid(T)][currentId], message);
+			AssetEvent event(asset, eventMessage);
 
 			// Notify all listeners
-			NotifyListeners(name, event);
+			NotifyListeners(assetName, event);
 
-			// Dispatch event
+			// Dispatch Event
 			EventQueue::Dispatch<AssetEvent>(event);
 
 			// Execute callback
 			if (callback)
-			{
 				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-			}
 		});
 	}
 
-	template<>
-	void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback)
+	template <typename T>
+	void AssetManager::LoadAsset(const std::string& name, const std::vector<Ref<Asset>>& shaders, std::function<void(Event&)> callback)
 	{
-		ThreadPool::SubmitTask([name, filepath, callback]()
+		// Prepare shaders & dependencies
+		std::vector<Ref<Shader>> tempShaders;
+		std::vector<uint32_t> tempDependencies;
+		for (auto shader : shaders)
 		{
-			Ref<ShaderProgram> asset = nullptr;
-			bool success = false;
-			std::string message;
-			uint32_t currentId = 0;
+			tempShaders.push_back(shader->GetAsset<Shader>());
+			tempDependencies.push_back(shader->GetAssetId());
+		}
 
-			// Check cache
+		Ref<Asset> asset = StageAsset<T>(name, "", tempDependencies);
+
+		// Check if asset is already loaded
+		if (asset->GetState() == AssetState::Loaded)
+		{
+			if (callback)
 			{
-				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
-				uint32_t cachedId = 0;
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					auto it = s_AssetCache.find(typeid(ShaderProgram));
-					if (it != s_AssetCache.end())
-						typeCache = it->second;
-				}
-				{
-					std::lock_guard<std::mutex> lock(s_MapMutex);
-					auto it = s_NameIdMap.find(name);
-					if (it != s_NameIdMap.end())
-						cachedId = it->second;
-				}
-				if (cachedId != 0 && typeCache.size() != 0)
-				{
-					auto it = typeCache.find(cachedId);
-					if (it != typeCache.end())
-					{
-						// Asset Found - Get asset and call callback
-						AssetEvent event(it->second, message);
-						if (callback)
-							QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-
-						return;
-					}
-				}
+				AssetEvent event(asset, "");
+				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
 			}
+			return;
+		}
 
-			// Asset not in cache - Try loading asset
+		// Load asset
+		ThreadPool::SubmitTask([asset, tempShaders, callback]() {
+			Ref<ShaderProgram> rawAsset = nullptr;
+			std::string eventMessage;
+			std::string assetName = asset->GetName();
+			const uint32_t currentId = asset->GetAssetId();
 			try
 			{
-				FileBuffer shaderSourceFile = FileIO::LoadFile(filepath);
-				std::string shaderSource(static_cast<const char*>(shaderSourceFile.GetBuffer()), shaderSourceFile.GetSize());
-				std::string vertexSource = "";
-				std::string fragmentSource = "";
-
-				const char* typeToken = "#type";
-				size_t typeTokenLength = strlen(typeToken);
-
-				size_t pos = shaderSource.find(typeToken, 0);
-				while (pos != std::string::npos)
-				{
-					size_t eol = shaderSource.find_first_of("\r\n", pos);
-					if (eol == std::string::npos)
-						throw std::runtime_error("Shader Syntax Error!");
-
-					size_t begin = pos + typeTokenLength + 1;
-					std::string type = shaderSource.substr(begin, eol - begin);
-					if (type != "vertex" && type != "fragment" && type != "pixel")
-						throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
-
-					size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
-					if (nextLinePos == std::string::npos)
-						throw std::runtime_error("Shader Syntax Error!");
-
-					pos = shaderSource.find(typeToken, nextLinePos);
-
-					if (type == "vertex")
-					{
-						vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-					}
-					else if (type == "fragment" || type == "pixel")
-					{
-						fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-					}
-				}
-
-				if (vertexSource == "" || fragmentSource == "")
-					throw std::runtime_error("One or more shaders are missing!");
-
-				asset = ShaderProgram::Create(name, {
-					VertexShader::Create(name + "_Vertex", vertexSource),
-					FragmentShader::Create(name + "_Fragment", fragmentSource)
-				});
-
-				if (asset == nullptr)
-					throw std::runtime_error("Some error occurred when creating Shader Program!");
-
-				success = true;
-				currentId = s_NextAssetId++;
-				asset->SetAssetId(currentId);
-
-				// Add to cache
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<Asset>(asset, typeid(ShaderProgram), AssetState::Loaded, filepath);
-				}
-
-				// Add to cache name/id map
-				{
-					std::lock_guard<std::mutex> lock(s_MapMutex);
-					s_NameIdMap[asset->GetName()] = currentId;
-				}
+				asset->SetState(AssetState::Loading);
+				rawAsset = ShaderProgram::Create(assetName, tempShaders);
+				rawAsset->SetAssetId(currentId);
+				asset->SetAsset(rawAsset);
+				asset->SetState(AssetState::Loaded);
 			}
 			catch (const std::exception& e)
 			{
-				message = e.what();
+				asset->SetState(AssetState::Failed);
+				eventMessage = e.what();
 			}
 
-			AssetEvent event(s_AssetCache[typeid(ShaderProgram)][currentId], message);
+			AssetEvent event(asset, eventMessage);
 
 			// Notify all listeners
-			NotifyListeners(name, event);
+			NotifyListeners(assetName, event);
 
 			// Dispatch event
 			EventQueue::Dispatch<AssetEvent>(event);
 
 			// Execute callback
 			if (callback)
-			{
 				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-			}
 		});
 	}
 
-	template<>
-	void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::vector<Ref<Shader>>& shaders, std::function<void(Event&)> callback)
+	Ref<Asset> AssetManager::GetAsset(const std::string& name)
 	{
-		ThreadPool::SubmitTask([name, shaders, callback]()
+		uint32_t cachedId = 0;
 		{
-			Ref<ShaderProgram> asset = nullptr;
-			bool success = false;
-			std::string message;
-			uint32_t currentId = 0;
-
-			// Check cache
-			{
-				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
-				uint32_t cachedId = 0;
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					auto it = s_AssetCache.find(typeid(ShaderProgram));
-					if (it != s_AssetCache.end())
-						typeCache = it->second;
-				}
-				{
-					std::lock_guard<std::mutex> lock(s_MapMutex);
-					auto it = s_NameIdMap.find(name);
-					if (it != s_NameIdMap.end())
-						cachedId = it->second;
-				}
-				if (cachedId != 0 && typeCache.size() != 0)
-				{
-					auto it = typeCache.find(cachedId);
-					if (it != typeCache.end())
-					{
-						// Asset Found - Get asset and call callback
-						AssetEvent event(it->second, message);
-						if (callback)
-							QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-
-						return;
-					}
-				}
-			}
-
-			// Asset not in cache - Try loading asset
-			try
-			{
-				asset = ShaderProgram::Create(name, shaders);
-
-				success = true;
-				currentId = s_NextAssetId++;
-				asset->SetAssetId(currentId);
-
-				// Add to cache
-				{
-					std::lock_guard<std::mutex> lock(s_CacheMutex);
-					s_AssetCache[typeid(ShaderProgram)][currentId] = CreateRef<Asset>(asset, typeid(ShaderProgram), AssetState::Loaded);
-				}
-
-				// Add to cache name/id map
-				{
-					std::lock_guard<std::mutex> lock(s_MapMutex);
-					s_NameIdMap[asset->GetName()] = currentId;
-				}
-			}
-			catch (const std::exception& e)
-			{
-				message = e.what();
-			}
-
-			AssetEvent event(s_AssetCache[typeid(ShaderProgram)][currentId], message);
-
-			// Notify all listeners
-			NotifyListeners(name, event);
-
-			// Dispatch event
-			EventQueue::Dispatch<AssetEvent>(event);
-
-			// Execute callback
-			if (callback)
-			{
-				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-			}
-		});
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			auto it = s_NameIdMap.find(name);
+			if (it != s_NameIdMap.end())
+				cachedId = it->second;
+			else
+				return nullptr;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			auto it = s_AssetCache.find(cachedId);
+			if (it != s_AssetCache.end())
+				return it->second;
+			else
+				return nullptr;
+		}
 	}
-
+	
 	std::vector<Ref<Asset>> AssetManager::GetCompleteList()
 	{
 		std::vector<Ref<Asset>> result;
-		std::unordered_map<std::type_index, std::unordered_map<uint32_t, Ref<Asset>>> assetCacheCopy;
+		std::unordered_map<uint32_t, Ref<Asset>> tempCache;
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			assetCacheCopy = s_AssetCache;
+			tempCache = s_AssetCache;
 		}
-		for (auto& entry : assetCacheCopy)
+		for (auto& entry : tempCache)
 		{
-			for (auto& nextEntry : entry.second)
-			{
-				result.emplace_back(nextEntry.second);
-			}
+			result.emplace_back(entry.second);
 		}
 		return result;
 	}
@@ -475,7 +379,7 @@ namespace Ares {
 		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
 		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
 		{
-			std::string error = "Failed to load vertex shader file: '" + filepath + "'";
+			std::string error = "Failed to load Vertex Shader file: '" + filepath + "'";
 			AR_CORE_ERROR(error);
 			throw std::runtime_error(error);
 		}
@@ -488,7 +392,7 @@ namespace Ares {
 		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
 		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
 		{
-			std::string error = "Failed to load fragment shader file: '" + filepath + "'";
+			std::string error = "Failed to load Fragment Shader file: '" + filepath + "'";
 			AR_CORE_ERROR(error);
 			throw std::runtime_error(error);
 		}
@@ -500,12 +404,118 @@ namespace Ares {
 		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
 		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
 		{
-			std::string error = "Failed to load texture2D file: '" + filepath + "'";
+			std::string error = "Failed to load Texture2D file: '" + filepath + "'";
 			AR_CORE_ERROR(error);
 			throw std::runtime_error(error);
 		}
 
 		return Texture2D::Create(name, fileBuffer);
+	}
+
+	Ref<ShaderProgram> AssetManager::LoadShaderProgram(const std::string& name, const std::string& filepath)
+	{
+		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
+		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
+		{
+			std::string error = "Failed to load Shader Program file: '" + filepath + "'";
+			AR_CORE_ERROR(error);
+			throw std::runtime_error(error);
+		}
+
+		std::string shaderSource(static_cast<const char*>(fileBuffer.GetBuffer()), fileBuffer.GetSize());
+		std::string vertexSource = "";
+		std::string fragmentSource = "";
+
+		const char* typeToken = "#type";
+		size_t typeTokenLength = strlen(typeToken);
+		size_t pos = shaderSource.find(typeToken, 0);
+		while (pos != std::string::npos)
+		{
+			size_t eol = shaderSource.find_first_of("\r\n", pos);
+			if (eol == std::string::npos)
+				throw std::runtime_error("Shader Syntax Error!");
+
+			size_t begin = pos + typeTokenLength + 1;
+			std::string type = shaderSource.substr(begin, eol - begin);
+			if (type != "vertex" && type != "fragment" && type != "pixel")
+				throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
+
+			size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
+			if (nextLinePos == std::string::npos)
+				throw std::runtime_error("Shader Syntax Error!");
+
+			pos = shaderSource.find(typeToken, nextLinePos);
+
+			if (type == "vertex")
+			{
+				vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+			}
+			else if (type == "fragment" || type == "pixel")
+			{
+				fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+			}
+		}
+
+		if (vertexSource == "" || fragmentSource == "")
+			throw std::runtime_error("One or more shaders are missing!");
+
+		Ref<ShaderProgram> asset = ShaderProgram::Create(name, {
+			VertexShader::Create(name + "_Vertex", vertexSource),
+			FragmentShader::Create(name + "_Fragment", fragmentSource)
+		});
+
+		if (asset == nullptr)
+			throw std::runtime_error("Some error occurred when created Shader Program!");
+		else
+			return asset;
+	}
+
+	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	{
+		size_t hash = 0;
+
+		// Hash filepath (if not empty)
+		if (!filepath.empty())
+		{
+			CombineHash<std::string>(hash, filepath);
+		}
+
+		// Hash dependency ids (if not empty)
+		for (uint32_t id : dependencies)
+		{
+			CombineHash<uint32_t>(hash, id);
+		}
+
+		// Hash type
+		CombineHash<std::type_index>(hash, type);
+
+		return hash;
+	}
+
+	Ref<Asset> AssetManager::FindExistingAsset(const size_t& contentHash)
+	{
+		std::unordered_map<size_t, uint32_t> tempHashIdMap;
+		std::unordered_map<uint32_t, Ref<Asset>> tempAssetCache;
+		{
+			std::lock_guard<std::mutex> lock(s_HashIdMutex);
+			tempHashIdMap = s_HashIdMap;
+		}
+
+		auto it = tempHashIdMap.find(contentHash);
+		if (it != tempHashIdMap.end())
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			auto assetIt = s_AssetCache.find(it->second);
+			if (assetIt != s_AssetCache.end())
+			{
+				if (assetIt->second->GetHash() == contentHash)
+				{
+					return assetIt->second;
+				}
+			}
+		}
+
+		return nullptr;
 	}
 
 }

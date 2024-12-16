@@ -34,7 +34,8 @@ namespace Ares {
 	class Asset
 	{
 	public:
-		Asset(const Ref<AssetBase>& asset, const std::type_index& type, const AssetState& state = AssetState::None, const std::string& filepath = "");
+		Asset(const std::type_index& type, const AssetState& state, const std::string& filepath);
+		Asset(const std::type_index& type, const AssetState& state, const std::vector<uint32_t>& dependencies);
 		Asset();
 
 		~Asset();
@@ -48,9 +49,11 @@ namespace Ares {
 		const std::string& GetFilepath() const;
 		const std::string& GetTypeName() const;
 		const std::type_index& GetType() const;
+		const std::vector<uint32_t>& GetDependencies() const;
 		const uint32_t& GetAssetId() const;
 		const bool& HasFilepath() const;
 		const AssetState& GetState() const;
+		const size_t GetHash() const;
 
 		template <typename T>
 		inline const Ref<T> GetAsset() const
@@ -69,6 +72,7 @@ namespace Ares {
 		// Private setters for AssetManager to use
 		void SetNameAndFilepath(const std::string& name, const std::string& filepath);
 		void SetState(const AssetState& state);
+		void SetAssetId(const uint32_t& id);
 		void SetAsset(const Ref<AssetBase>& asset);
 
 	private:
@@ -76,6 +80,7 @@ namespace Ares {
 		std::string m_Filepath;
 		std::string m_TypeName;
 		std::type_index m_Type;
+		std::vector<uint32_t> m_Dependencies;
 		bool m_HasFilepath;
 		uint32_t m_AssetId;
 		Ref<AssetBase> m_Asset;

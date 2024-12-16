@@ -42,8 +42,8 @@ private:
 	Ares::Ref<Ares::VertexBuffer> m_VBO;
 	Ares::Ref<Ares::IndexBuffer> m_IBO;
 	Ares::Ref<Ares::VertexArray> m_VAO;
-	Ares::Ref<Ares::VertexShader> m_VertexShader;
-	Ares::Ref<Ares::FragmentShader> m_FragmentShader;
+	Ares::Ref<Ares::Asset> m_VertexShader;
+	Ares::Ref<Ares::Asset> m_FragmentShader;
 	Ares::Ref<Ares::ShaderProgram> m_ShaderProgram;
 	Ares::Ref<Ares::FrameBuffer> m_FBO;
 

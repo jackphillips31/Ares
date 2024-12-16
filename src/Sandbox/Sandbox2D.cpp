@@ -149,18 +149,22 @@ bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
 bool Sandbox2D::OnAssetLoaded(Ares::AssetEvent& event)
 {
 	if (event.GetStoreName() == "FlatColorVertex")
-		m_VertexShader = event.GetAsset<Ares::VertexShader>();
+		m_VertexShader = event.GetAssetWrapper();
 	if (event.GetStoreName() == "FlatColorFragment")
-		m_FragmentShader = event.GetAsset<Ares::FragmentShader>();
+		m_FragmentShader = event.GetAssetWrapper();
 	if (event.GetStoreName() == "FlatColorShaderProgram")
 	{
 		m_ShaderProgram = event.GetAsset<Ares::ShaderProgram>();
 		m_ShaderProgram->Bind();
+		m_VertexShader = nullptr;
+		m_FragmentShader = nullptr;
 	}
 
 	if (m_VertexShader && m_FragmentShader && !m_ShaderProgram)
 	{
-		Ares::AssetManager::LoadAsset<Ares::ShaderProgram>("FlatColorShaderProgram", { m_VertexShader, m_FragmentShader });
+		Ares::AssetManager::LoadAsset<Ares::ShaderProgram>("FlatColorShaderProgram",
+			{ m_VertexShader, m_FragmentShader }
+		);
 	}
 	AR_TRACE(event);
 	if (!event.IsLoaded())

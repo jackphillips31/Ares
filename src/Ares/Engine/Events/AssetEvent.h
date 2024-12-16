@@ -46,6 +46,7 @@ namespace Ares {
 		inline const std::string& GetLoadedStatus() const { return m_LoadedStatus; }
 		inline const AssetState& GetAssetState() const { return m_AssetState; }
 		inline bool IsLoaded() const { return m_IsLoaded; }
+		inline const Ref<Asset>& GetAssetWrapper() const { return m_Asset; }
 		template <typename T>
 		inline Ref<T> GetAsset() const {
 			if (m_IsLoaded && m_Asset)
