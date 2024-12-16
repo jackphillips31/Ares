@@ -13,6 +13,7 @@
 #include <algorithm>			// Algorithms
 #include <bitset>				// Bit manipulation
 #include <typeindex>			// Type information
+#include <regex>				// Regular expressions
 
 #include <future>				// Asynchronous programming
 #include <queue>				// Queue data structure

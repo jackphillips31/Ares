@@ -1,8 +1,8 @@
 #include <arespch.h>
 
 #include "Engine/Core/ThreadPool.h"
+#include "Engine/Core/Utility.h"
 #include "Engine/Data/FileIO.h"
-#include "Engine/Utility/File.h"
 
 #include "Engine/Data/AssetManager.h"
 
@@ -12,8 +12,8 @@ namespace Ares {
 	std::mutex AssetManager::s_CacheMutex;
 	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
 
-	std::unordered_map<std::string, uint32_t> AssetManager::s_CacheNameIdMap;
-	std::mutex AssetManager::s_CacheNameIdMutex;
+	std::unordered_map<std::string, uint32_t> AssetManager::s_NameIdMap;
+	std::mutex AssetManager::s_MapMutex;
 
 	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
 	std::mutex AssetManager::s_CallbackQueueMutex;
@@ -80,6 +80,7 @@ namespace Ares {
 			//		 as the one given as an argument to make sure its the
 			//		 right asset. If it isn't the same, then perhaps we'll
 			//		 edit the name given and add a number.
+			// Check cache
 			{
 				std::unordered_map<uint32_t, Ref<Asset>> typeCache;
 				uint32_t cachedId = 0;
@@ -90,9 +91,9 @@ namespace Ares {
 						typeCache = it->second;
 				}
 				{
-					std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-					auto it = s_CacheNameIdMap.find(name);
-					if (it != s_CacheNameIdMap.end())
+					std::lock_guard<std::mutex> lock(s_MapMutex);
+					auto it = s_NameIdMap.find(name);
+					if (it != s_NameIdMap.end())
 						cachedId = it->second;
 				}
 				if (cachedId != 0 && typeCache.size() != 0)
@@ -143,8 +144,8 @@ namespace Ares {
 
 				// Add to cache name/id map
 				{
-					std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-					s_CacheNameIdMap[asset->GetName()] = currentId;
+					std::lock_guard<std::mutex> lock(s_MapMutex);
+					s_NameIdMap[asset->GetName()] = currentId;
 				}
 			}
 			catch (const std::exception& e)
@@ -189,9 +190,9 @@ namespace Ares {
 						typeCache = it->second;
 				}
 				{
-					std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-					auto it = s_CacheNameIdMap.find(name);
-					if (it != s_CacheNameIdMap.end())
+					std::lock_guard<std::mutex> lock(s_MapMutex);
+					auto it = s_NameIdMap.find(name);
+					if (it != s_NameIdMap.end())
 						cachedId = it->second;
 				}
 				if (cachedId != 0 && typeCache.size() != 0)
@@ -271,8 +272,8 @@ namespace Ares {
 
 				// Add to cache name/id map
 				{
-					std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-					s_CacheNameIdMap[asset->GetName()] = currentId;
+					std::lock_guard<std::mutex> lock(s_MapMutex);
+					s_NameIdMap[asset->GetName()] = currentId;
 				}
 			}
 			catch (const std::exception& e)
@@ -317,9 +318,9 @@ namespace Ares {
 						typeCache = it->second;
 				}
 				{
-					std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-					auto it = s_CacheNameIdMap.find(name);
-					if (it != s_CacheNameIdMap.end())
+					std::lock_guard<std::mutex> lock(s_MapMutex);
+					auto it = s_NameIdMap.find(name);
+					if (it != s_NameIdMap.end())
 						cachedId = it->second;
 				}
 				if (cachedId != 0 && typeCache.size() != 0)
@@ -354,8 +355,8 @@ namespace Ares {
 
 				// Add to cache name/id map
 				{
-					std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-					s_CacheNameIdMap[asset->GetName()] = currentId;
+					std::lock_guard<std::mutex> lock(s_MapMutex);
+					s_NameIdMap[asset->GetName()] = currentId;
 				}
 			}
 			catch (const std::exception& e)

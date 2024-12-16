@@ -40,9 +40,9 @@ namespace Ares {
 					return nullptr;
 			}
 			{
-				std::lock_guard<std::mutex> lock(s_CacheNameIdMutex);
-				auto it = s_CacheNameIdMap.find(name);
-				if (it != s_CacheNameIdMap.end())
+				std::lock_guard<std::mutex> lock(s_MapMutex);
+				auto it = s_NameIdMap.find(name);
+				if (it != s_NameIdMap.end())
 					cachedId = it->second;
 				else
 					return nullptr;
@@ -85,8 +85,8 @@ namespace Ares {
 		static std::atomic<uint32_t> s_NextAssetId;
 
 		// Asset cache maps
-		static std::unordered_map<std::string, uint32_t> s_CacheNameIdMap;
-		static std::mutex s_CacheNameIdMutex;
+		static std::unordered_map<std::string, uint32_t> s_NameIdMap;
+		static std::mutex s_MapMutex;
 
 		// Callback queue
 		static std::queue<std::function<void()>> s_CallbackQueue;

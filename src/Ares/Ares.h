@@ -12,6 +12,7 @@
 #include "Engine/Core/Layer.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
+#include "Engine/Core/Utility.h"
 
 #include "Engine/Data/Asset.h"
 #include "Engine/Data/AssetManager.h"
@@ -28,9 +29,6 @@
 
 #include "Engine/ImGui/ImGuiElement.h"
 #include "Engine/Layers/ImGuiLayer.h"
-
-#include "Engine/Utility/File.h"
-#include "Engine/Utility/Type.h"
 
 //----------------- RENDERER ------------------
 //---------------------------------------------
