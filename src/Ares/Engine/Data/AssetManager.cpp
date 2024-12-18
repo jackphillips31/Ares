@@ -22,8 +22,10 @@ namespace Ares {
 	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
 	std::mutex AssetManager::s_CallbackQueueMutex;
 
-	std::unordered_map<std::string, std::vector<std::function<void(Event&)>>> AssetManager::s_Listeners;
-	std::vector<std::function<void(Event&)>> AssetManager::s_GlobalListeners;
+	std::atomic<uint32_t> AssetManager::s_NextListenerId{ 1 };
+	std::unordered_map<std::string, std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn>> AssetManager::s_Listeners;
+	std::unordered_map<uint32_t, std::string> AssetManager::s_ListenerNameMap;
+	std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn> AssetManager::s_GlobalListeners;
 	std::mutex AssetManager::s_ListenerMutex;
 
 	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
@@ -296,16 +298,60 @@ namespace Ares {
 		return result;
 	}
 
-	void AssetManager::AddListener(const std::string& name, std::function<void(Event&)> callback)
+	const AssetListener AssetManager::AddListener(const std::string& name, std::function<void(Event&)> callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-		s_Listeners[name].emplace_back(std::move(callback));
+		uint32_t currentId = s_NextListenerId++;
+		s_Listeners[name][currentId] = std::move(callback);
+		s_ListenerNameMap[currentId] = name;
+		return currentId;
 	}
 
-	void AssetManager::AddGlobalListener(std::function<void(Event&)> callback)
+	const AssetListener AssetManager::AddListener(std::function<void(Event&)> callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-		s_GlobalListeners.emplace_back(std::move(callback));
+		uint32_t currentId = s_NextListenerId++;
+		s_GlobalListeners[currentId] = std::move(callback);
+		return currentId;
+	}
+
+	void AssetManager::RemoveListener(AssetListener& listenerId)
+	{
+		// Check to see if Listener is valid
+		if (!listenerId)
+		{
+			AR_CORE_WARN("Listener has already been removed!");
+			return;
+		}
+
+		// Remove listener
+		{
+			size_t listenersRemoved = 0;
+			std::lock_guard<std::mutex> lock(s_ListenerMutex);
+
+			// Find asset name for this listener if not global
+			auto nameIt = s_ListenerNameMap.find(listenerId);
+			if (nameIt != s_ListenerNameMap.end())
+			{
+				// Erase name based listener
+				s_ListenerNameMap.erase(nameIt);
+				auto& listeners = s_Listeners[nameIt->second];
+				listenersRemoved += listeners.erase(listenerId);
+			}
+			else
+			{
+				// Erase global listener
+				listenersRemoved += s_GlobalListeners.erase(listenerId);
+			}
+
+			// Check to see if a listener was removed
+			if (!listenersRemoved)
+			{
+				AR_CORE_WARN("Did not find any listeners with id: {}", listenerId);
+			}
+			else
+				listenerId = 0;
+		}
 	}
 
 	void AssetManager::OnUpdate()
@@ -355,12 +401,12 @@ namespace Ares {
 			if (s_Listeners.find(asset->GetName()) != s_Listeners.end())
 			{
 				for (auto& listener : s_Listeners[asset->GetName()])
-					QueueListenerCallback([listener, event]() { listener(*event); });
+					QueueListenerCallback([func = listener.second, event]() { func(*event); });
 			}
 
 			// Queue global listeners
 			for (auto& globalListener : s_GlobalListeners)
-				QueueListenerCallback([globalListener, event]() { globalListener(*event); });
+				QueueListenerCallback([func = globalListener.second, event]() { func(*event); });
 		}
 	}
 

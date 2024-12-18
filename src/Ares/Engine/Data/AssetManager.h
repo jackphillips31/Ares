@@ -11,10 +11,13 @@
 
 namespace Ares {
 
+	using AssetListener = uint32_t;
+
 	class AssetManager
 	{
-	public:
+	private:
 		using AssetCallbackFn = std::function<void(Ref<Asset>)>;
+		using ListenerCallbackFn = std::function<void(Event&)>;
 	public:
 		// Public API
 		static void Init();
@@ -39,8 +42,9 @@ namespace Ares {
 		static std::vector<Ref<Asset>> GetCompleteList();
 
 		// Listener functions & OnUpdate
-		static void AddListener(const std::string& name, std::function<void(Event&)> callback);
-		static void AddGlobalListener(std::function<void(Event&)> callback);
+		static const AssetListener AddListener(const std::string& name, std::function<void(Event&)> callback);
+		static const AssetListener AddListener(std::function<void(Event&)> callback);
+		static void RemoveListener(AssetListener& listenerId);
 		static void OnUpdate();
 
 	private:
@@ -81,9 +85,10 @@ namespace Ares {
 		static std::queue<std::function<void()>> s_CallbackQueue;
 		static std::mutex s_CallbackQueueMutex;
 
-		// Event listeners
-		static std::unordered_map<std::string, std::vector<std::function<void(Event&)>>> s_Listeners;
-		static std::vector<std::function<void(Event&)>> s_GlobalListeners;
+		static std::atomic<uint32_t> s_NextListenerId;
+		static std::unordered_map<std::string, std::unordered_map<uint32_t, ListenerCallbackFn>> s_Listeners;
+		static std::unordered_map<uint32_t, std::string> s_ListenerNameMap;
+		static std::unordered_map<uint32_t, ListenerCallbackFn> s_GlobalListeners;
 		static std::mutex s_ListenerMutex;
 
 		// Event listener callback queue
