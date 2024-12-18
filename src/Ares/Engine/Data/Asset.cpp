@@ -4,29 +4,20 @@
 
 namespace Ares {
 
-	Asset::Asset(const std::type_index& type, const AssetState& state, const std::string& filepath)
+	Ref<Asset> Asset::Create(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	{
+		// CreateRef (std::make_shared) doesn't have access to private
+		// constructors, so we wrap a raw pointer with a smart pointer
+		// instead.
+		return Ref<Asset>(new Asset(type, state, filepath, dependencies));
+	}
+
+	Asset::Asset(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies)
 		: m_Name(""),
 		m_Filepath(filepath),
 		m_TypeName(Utility::Type::ExtractClassName(type.name())),
 		m_Type(type),
-		m_Dependencies({}),
-		m_AssetId(0),
-		m_Asset(nullptr),
-		m_State(state)
-	{
-		if (!filepath.empty())
-			m_HasFilepath = true;
-		else
-			m_HasFilepath = false;
-	}
-
-	Asset::Asset(const std::type_index& type, const AssetState& state, const std::vector<uint32_t>& dependencies)
-		: m_Name(""),
-		m_Filepath(""),
-		m_TypeName(Utility::Type::ExtractClassName(type.name())),
-		m_Type(type),
 		m_Dependencies(dependencies),
-		m_HasFilepath(false),
 		m_AssetId(0),
 		m_Asset(nullptr),
 		m_State(state)
@@ -51,44 +42,18 @@ namespace Ares {
 		m_Asset = nullptr;
 	}
 
-	const std::string& Asset::GetName() const
+	const std::string Asset::GetStateString() const
 	{
-		return m_Name;
-	}
+		switch (m_State)
+		{
+		case AssetState::None: return "None";
+		case AssetState::Staged: return "Staged";
+		case AssetState::Loading: return "Loading";
+		case AssetState::Loaded: return "Loaded";
+		case AssetState::Failed: return "Failed";
+		}
 
-	const std::string& Asset::GetFilepath() const
-	{
-		return m_Filepath;
-	}
-
-	const std::string& Asset::GetTypeName() const
-	{
-		return m_TypeName;
-	}
-
-	const std::type_index& Asset::GetType() const
-	{
-		return m_Type;
-	}
-
-	const std::vector<uint32_t>& Asset::GetDependencies() const
-	{
-		return m_Dependencies;
-	}
-
-	const uint32_t& Asset::GetAssetId() const
-	{
-		return m_AssetId;
-	}
-
-	const bool& Asset::HasFilepath() const
-	{
-		return m_HasFilepath;
-	}
-
-	const AssetState& Asset::GetState() const
-	{
-		return m_State;
+		return "Unknown Asset State!";
 	}
 
 	const size_t Asset::GetHash() const
@@ -113,10 +78,9 @@ namespace Ares {
 		return hash;
 	}
 
-	void Asset::SetNameAndFilepath(const std::string& name, const std::string& filepath)
+	void Asset::SetName(const std::string& name)
 	{
 		m_Name = name;
-		m_Filepath = filepath;
 	}
 
 	void Asset::SetState(const AssetState& state)
@@ -132,8 +96,6 @@ namespace Ares {
 	void Asset::SetAsset(const Ref<AssetBase>& asset)
 	{
 		m_Asset = asset;
-		m_Name = asset->GetName();
-		m_AssetId = asset->GetAssetId();
 	}
 
 }

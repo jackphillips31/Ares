@@ -174,11 +174,6 @@ namespace Ares {
 
 			glDeleteProgram(m_ProgramId);
 
-			for (auto& shader : shaders)
-			{
-				glDeleteShader(shader->GetId());
-			}
-
 			AR_CORE_ERROR("Shader Program Error: {}", infoLog.data());
 			AR_CORE_ASSERT(false, "Shader Program Link Failure!");
 			return;

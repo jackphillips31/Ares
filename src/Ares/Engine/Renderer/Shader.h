@@ -14,6 +14,7 @@ namespace Ares {
 		virtual ~Shader() = default;
 
 		virtual uint32_t GetId() const = 0;
+		virtual const std::string& GetName() const = 0;
 	};
 
 	class VertexShader : public Shader
@@ -38,6 +39,8 @@ namespace Ares {
 	{
 	public:
 		virtual ~ShaderProgram() = default;
+
+		virtual const std::string& GetName() const = 0;
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;

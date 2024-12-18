@@ -26,7 +26,7 @@ public:
 	virtual void OnImGuiRender() override;
 
 	bool OnWindowFocus(Ares::WindowFocusEvent& event);
-	bool OnAssetLoaded(Ares::AssetEvent& event);
+	bool LoadShaderProgram(Ares::AssetLoadedEvent& event);
 
 private:
 	Ares::Window& m_Window;
@@ -46,6 +46,8 @@ private:
 	Ares::Ref<Ares::Asset> m_FragmentShader;
 	Ares::Ref<Ares::ShaderProgram> m_ShaderProgram;
 	Ares::Ref<Ares::FrameBuffer> m_FBO;
+
+	uint32_t m_ShaderListener;
 
 	Ares::Scope<ViewportCamera> m_Camera;
 };

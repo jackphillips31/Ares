@@ -17,60 +17,51 @@ namespace Ares {
 	{
 	public:
 		virtual ~AssetBase() = default;
-		virtual const std::string& GetName() const = 0;
-
-		inline const uint32_t GetAssetId() const { return m_AssetId; }
-
-	public:
-		friend class AssetManager;
-
-	private:
-		inline void SetAssetId(uint32_t id) { m_AssetId = id; }
-
-	private:
-		uint32_t m_AssetId;
 	};
+
+	class AssetManager;
 
 	class Asset
 	{
-	public:
-		Asset(const std::type_index& type, const AssetState& state, const std::string& filepath);
-		Asset(const std::type_index& type, const AssetState& state, const std::vector<uint32_t>& dependencies);
+	private:
+		static Ref<Asset> Create(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+		Asset(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies);
 		Asset();
 
-		~Asset();
+		friend class AssetManager;
 
+	public:
 		// Delete copy constructor and copy assignment operator
 		Asset(const Asset&) = delete;
 		Asset& operator=(const Asset&) = delete;
+		~Asset();
 
 		// Getters
-		const std::string& GetName() const;
-		const std::string& GetFilepath() const;
-		const std::string& GetTypeName() const;
-		const std::type_index& GetType() const;
-		const std::vector<uint32_t>& GetDependencies() const;
-		const uint32_t& GetAssetId() const;
-		const bool& HasFilepath() const;
-		const AssetState& GetState() const;
+		inline const std::string& GetName() const { return m_Name; }
+		inline const std::string& GetFilepath() const { return m_Filepath; }
+		inline const std::string& GetTypeName() const { return m_TypeName; }
+		inline const std::type_index& GetType() const { return m_Type; }
+		inline const std::vector<uint32_t>& GetDependencies() const { return m_Dependencies; }
+		inline const uint32_t& GetAssetId() const { return m_AssetId; }
+		inline const bool HasFilepath() const { return !m_Filepath.empty(); }
+		inline const bool IsLoaded() const { return m_State == AssetState::Loaded; }
+		inline const AssetState& GetState() const { return m_State; }
+		const std::string GetStateString() const;
 		const size_t GetHash() const;
 
-		template <typename T>
-		inline const Ref<T> GetAsset() const
+		template <typename AssetType>
+		inline const Ref<AssetType> GetAsset() const
 		{
-			return static_pointer_cast<T>(m_Asset);
+			return static_pointer_cast<AssetType>(m_Asset);
 		}
 		inline const Ref<AssetBase>& GetAsset() const
 		{
 			return m_Asset;
 		}
 
-	public:
-		friend class AssetManager;
-
 	private:
 		// Private setters for AssetManager to use
-		void SetNameAndFilepath(const std::string& name, const std::string& filepath);
+		void SetName(const std::string& name);
 		void SetState(const AssetState& state);
 		void SetAssetId(const uint32_t& id);
 		void SetAsset(const Ref<AssetBase>& asset);

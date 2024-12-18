@@ -11,6 +11,7 @@ namespace Ares {
 	public:
 		virtual ~Texture() = default;
 
+		virtual const std::string& GetName() const = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 

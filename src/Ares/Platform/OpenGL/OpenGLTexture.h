@@ -12,6 +12,7 @@ namespace Ares {
 		OpenGLTexture2D(const std::string& name, const FileBuffer& fileBuffer);
 		virtual ~OpenGLTexture2D();
 
+		inline virtual const std::string& GetName() const override { return m_Name; }
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
 		inline virtual uint32_t GetHeight() const override { return m_Height; }
 
@@ -22,7 +23,6 @@ namespace Ares {
 			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
 		}
 
-		inline virtual const std::string& GetName() const override { return m_Name; }
 
 	private:
 		std::string m_Path;

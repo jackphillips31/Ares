@@ -48,7 +48,7 @@ namespace Ares {
 		OpenGLShaderProgram(const std::string& name, const std::vector<Ref<Shader>>& shaders);
 		virtual ~OpenGLShaderProgram();
 
-		inline virtual const std::string& GetName() const override { return m_Name; }
+		inline const std::string& GetName() const override { return m_Name; }
 
 		void Bind() const override;
 		void Unbind() const override;

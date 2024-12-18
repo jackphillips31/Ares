@@ -5,70 +5,40 @@
 
 namespace Ares {
 
-	class AssetEvent : public Event
+	class AssetBaseEvent : public Event
 	{
 	public:
-		AssetEvent(const Ref<Asset>& asset, const std::string& message)
-			: m_Asset(asset), m_Message(message)
-		{
-			if (asset != nullptr)
-			{
-				m_Name = asset->GetName();
-
-				if (asset->HasFilepath())
-					m_Filepath = asset->GetFilepath();
-				else
-					m_Filepath = "N/A";
-
-				m_AssetState = asset->GetState();
-				m_IsLoaded = asset->GetState() == AssetState::Loaded ? true : false;
-				m_LoadedStatus = LoadedStatus();
-			}
-			else
-			{
-				m_Name = "N/A";
-				m_Filepath = "N/A";
-				m_AssetState = AssetState::None;
-				m_IsLoaded = false;
-				m_LoadedStatus = "Failed";
-			}
-		}
-		~AssetEvent()
-		{
-			m_Asset = nullptr;
-		}
-
-		AssetEvent& operator=(const AssetEvent&) = delete;
-
-		inline const std::string& GetStoreName() const { return m_Name; }
-		inline const std::string& GetFilepath() const { return m_Filepath; }
-		inline const std::string& GetMessage() const { return m_Message; }
-		inline const std::string& GetLoadedStatus() const { return m_LoadedStatus; }
+		inline const std::string& GetEventMessage() const { return m_Message; }
+		inline const std::string& GetAssetName() const { return m_AssetName; }
+		inline const std::string& GetAssetFilepath() const { return m_AssetFilepath; }
+		inline const std::string& GetAssetStateString() const { return m_AssetStateString; }
 		inline const AssetState& GetAssetState() const { return m_AssetState; }
-		inline bool IsLoaded() const { return m_IsLoaded; }
-		inline const Ref<Asset>& GetAssetWrapper() const { return m_Asset; }
-		template <typename T>
-		inline Ref<T> GetAsset() const {
-			if (m_IsLoaded && m_Asset)
-				return m_Asset->GetAsset<T>();
+		inline const Ref<Asset>& GetAsset() const { return m_Asset; }
+		template <typename AssetType>
+		inline const Ref<AssetType> GetAsset() const
+		{
+			if (m_AssetState == AssetState::Loaded)
+				return m_Asset->GetAsset<AssetType>();
 			else
 				return nullptr;
-		}
-
-		std::string ToString() const override
-		{
-			std::stringstream ss;
-			ss << "AssetLoadedEvent: " << m_Name << " Load Status - [" << m_LoadedStatus << "]";
-			return ss.str();
 		}
 
 		EVENT_CLASS_TYPE(AssetUpdate)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 
-	private:
-		std::string LoadedStatus() const
+	protected:
+		inline void Initialize(const Ref<Asset>& asset, const std::string& message)
 		{
-			switch (m_Asset->GetState())
+			m_Asset = asset;
+			m_Message = message;
+			m_AssetName = asset->GetName();
+			m_AssetFilepath = asset->GetFilepath();
+			m_AssetStateString = ToStateString(asset->GetState());
+			m_AssetState = asset->GetState();
+		}
+		inline const std::string ToStateString(AssetState state) const
+		{
+			switch (state)
 			{
 			case AssetState::None: return "None";
 			case AssetState::Staged: return "Staged";
@@ -80,14 +50,61 @@ namespace Ares {
 			return "Unknown Asset State!";
 		}
 
-	private:
-		Ref<Asset> m_Asset;
+	protected:
 		std::string m_Message;
-		std::string m_Name;
-		std::string m_Filepath;
-		std::string m_LoadedStatus;
+		std::string m_AssetName;
+		std::string m_AssetFilepath;
+		std::string m_AssetStateString;
 		AssetState m_AssetState;
-		bool m_IsLoaded;
+		Ref<Asset> m_Asset;
+	};
+
+	class AssetStagedEvent : public AssetBaseEvent
+	{
+	public:
+		AssetStagedEvent(const Ref<Asset>& asset, const std::string& message = "")
+		{
+			Initialize(asset, message);
+		}
+
+		EVENT_CLASS_TYPE(AssetStaged)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
+	class AssetLoadingEvent : public AssetBaseEvent
+	{
+	public:
+		AssetLoadingEvent(const Ref<Asset>& asset, const std::string& message = "")
+		{
+			Initialize(asset, message);
+		}
+
+		EVENT_CLASS_TYPE(AssetLoading)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
+	class AssetLoadedEvent : public AssetBaseEvent
+	{
+	public:
+		AssetLoadedEvent(const Ref<Asset>& asset, const std::string& message = "")
+		{
+			Initialize(asset, message);
+		}
+
+		EVENT_CLASS_TYPE(AssetLoaded)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
+	class AssetFailedEvent : public AssetBaseEvent
+	{
+	public:
+		AssetFailedEvent(const Ref<Asset>& asset, const std::string& message = "")
+		{
+			Initialize(asset, message);
+		}
+
+		EVENT_CLASS_TYPE(AssetFailed)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
 }

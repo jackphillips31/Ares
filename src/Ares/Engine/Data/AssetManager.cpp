@@ -22,8 +22,8 @@ namespace Ares {
 	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
 	std::mutex AssetManager::s_CallbackQueueMutex;
 
-	std::unordered_map<std::string, std::vector<std::function<void(AssetEvent&)>>> AssetManager::s_Listeners;
-	std::vector<std::function<void(AssetEvent&)>> AssetManager::s_GlobalListeners;
+	std::unordered_map<std::string, std::vector<std::function<void(Event&)>>> AssetManager::s_Listeners;
+	std::vector<std::function<void(Event&)>> AssetManager::s_GlobalListeners;
 	std::mutex AssetManager::s_ListenerMutex;
 
 	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
@@ -36,11 +36,10 @@ namespace Ares {
 	template Ref<Asset> AssetManager::StageAsset<ShaderProgram>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
 
 	// Explicit instantiations for LoadAsset types
-	template void AssetManager::LoadAsset<VertexShader>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
-	template void AssetManager::LoadAsset<FragmentShader>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
-	template void AssetManager::LoadAsset<Texture2D>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
-	template void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback);
-	template void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::vector<Ref<Asset>>& shaders, std::function<void(Event&)> callback);
+	template void AssetManager::LoadAsset<VertexShader>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
+	template void AssetManager::LoadAsset<FragmentShader>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
+	template void AssetManager::LoadAsset<Texture2D>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
+	template void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
 
 	void AssetManager::Init()
 	{
@@ -91,11 +90,16 @@ namespace Ares {
 		}
 	}
 
-	template <typename T>
+	template <typename AssetType>
 	Ref<Asset> AssetManager::StageAsset(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies)
 	{
+		if (filepath.empty() && dependencies.size() == 0)
+		{
+			AR_CORE_ASSERT(false, "Asset needs either filepath or dependencies to be staged!");
+		}
+
 		Ref<Asset> asset = nullptr;
-		const size_t contentHash = GetHash(typeid(T), filepath, dependencies);
+		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencies);
 
 		// Check Cache
 		asset = FindExistingAsset(contentHash);
@@ -110,9 +114,11 @@ namespace Ares {
 				assetName = Utility::String::IncrementStringSuffix(assetName);
 		}
 
-		// Create empty asset
+		// Create asset
 		const uint32_t currentId = s_NextAssetId++;
-		asset = CreateRef<Asset>(typeid(T), AssetState::Staged, filepath);
+		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencies);
+		asset->SetName(assetName);
+		asset->SetAssetId(currentId);
 
 		// Insert data into secondary maps
 		{
@@ -125,35 +131,36 @@ namespace Ares {
 		}
 		{
 			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
-			s_TypeIdMap[typeid(T)] = currentId;
+			s_TypeIdMap[typeid(AssetType)] = currentId;
 		}
 
 		// Insert empty asset into cache
-		asset->SetNameAndFilepath(assetName, filepath);
-		asset->SetAssetId(currentId);
-		s_AssetCache[currentId] = asset;
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			s_AssetCache[currentId] = asset;
+		}
+
+		// Dispatch Event, notify listeners, and return
+		DispatchAssetEvent(asset);
 		return asset;
 	}
 
-	template <typename T>
-	void AssetManager::LoadAsset(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback)
+	template <typename AssetType>
+	void AssetManager::LoadAsset(const std::string& name, const std::string& filepath, const AssetCallbackFn callback)
 	{
-		Ref<Asset> asset = StageAsset<T>(name, filepath, {});
+		Ref<Asset> asset = StageAsset<AssetType>(name, filepath, {});
 
 		// Check if asset is already loaded
 		if (asset->GetState() == AssetState::Loaded)
 		{
 			if (callback)
-			{
-				AssetEvent event(asset, "");
-				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-			}
+				QueueCallback([callback, asset]() { callback(asset); });
 			return;
 		}
 
 		// Load asset
 		ThreadPool::SubmitTask([asset, callback]() {
-			Ref<T> rawAsset = nullptr;
+			Ref<AssetType> rawAsset = nullptr;
 			std::string eventMessage;
 			std::string assetName = asset->GetName();
 			std::string filepath = asset->GetFilepath();
@@ -161,19 +168,20 @@ namespace Ares {
 			try
 			{
 				asset->SetState(AssetState::Loading);
-				if constexpr (std::is_same<T, VertexShader>::value)
+				DispatchAssetEvent(asset);
+				if constexpr (std::is_same<AssetType, VertexShader>::value)
 				{
 					rawAsset = LoadVertexShader(assetName, filepath);
 				}
-				else if constexpr (std::is_same<T, FragmentShader>::value)
+				else if constexpr (std::is_same<AssetType, FragmentShader>::value)
 				{
 					rawAsset = LoadFragmentShader(assetName, filepath);
 				}
-				else if constexpr (std::is_same<T, Texture2D>::value)
+				else if constexpr (std::is_same<AssetType, Texture2D>::value)
 				{
 					rawAsset = LoadTexture2D(assetName, filepath);
 				}
-				else if constexpr (std::is_same<T, ShaderProgram>::value)
+				else if constexpr (std::is_same<AssetType, ShaderProgram>::value)
 				{
 					rawAsset = LoadShaderProgram(assetName, filepath);
 				}
@@ -183,7 +191,6 @@ namespace Ares {
 					throw std::runtime_error("Unsupported asset type!");
 				}
 
-				rawAsset->SetAssetId(currentId);
 				asset->SetAsset(rawAsset);
 				asset->SetState(AssetState::Loaded);
 			}
@@ -193,22 +200,17 @@ namespace Ares {
 				eventMessage = e.what();
 			}
 
-			AssetEvent event(asset, eventMessage);
-
-			// Notify all listeners
-			NotifyListeners(assetName, event);
-
-			// Dispatch Event
-			EventQueue::Dispatch<AssetEvent>(event);
+			// Dispatch event and notify listeners
+			DispatchAssetEvent(asset, eventMessage);
 
 			// Execute callback
 			if (callback)
-				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
+				QueueCallback([callback, asset]() { callback(asset); });
 		});
 	}
 
-	template <typename T>
-	void AssetManager::LoadAsset(const std::string& name, const std::vector<Ref<Asset>>& shaders, std::function<void(Event&)> callback)
+	template <>
+	void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::vector<Ref<Asset>>& shaders, const AssetCallbackFn callback)
 	{
 		// Prepare shaders & dependencies
 		std::vector<Ref<Shader>> tempShaders;
@@ -219,16 +221,13 @@ namespace Ares {
 			tempDependencies.push_back(shader->GetAssetId());
 		}
 
-		Ref<Asset> asset = StageAsset<T>(name, "", tempDependencies);
+		Ref<Asset> asset = StageAsset<ShaderProgram>(name, "", tempDependencies);
 
 		// Check if asset is already loaded
 		if (asset->GetState() == AssetState::Loaded)
 		{
 			if (callback)
-			{
-				AssetEvent event(asset, "");
-				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
-			}
+				QueueCallback([callback, asset]() { callback(asset); });
 			return;
 		}
 
@@ -241,8 +240,8 @@ namespace Ares {
 			try
 			{
 				asset->SetState(AssetState::Loading);
+				DispatchAssetEvent(asset);
 				rawAsset = ShaderProgram::Create(assetName, tempShaders);
-				rawAsset->SetAssetId(currentId);
 				asset->SetAsset(rawAsset);
 				asset->SetState(AssetState::Loaded);
 			}
@@ -252,17 +251,12 @@ namespace Ares {
 				eventMessage = e.what();
 			}
 
-			AssetEvent event(asset, eventMessage);
-
-			// Notify all listeners
-			NotifyListeners(assetName, event);
-
-			// Dispatch event
-			EventQueue::Dispatch<AssetEvent>(event);
+			// Dispatch event and notify listeners
+			DispatchAssetEvent(asset, eventMessage);
 
 			// Execute callback
 			if (callback)
-				QueueCallback([callback, event]() { callback(const_cast<AssetEvent&>(event)); });
+				QueueCallback([callback, asset]() { callback(asset); });
 		});
 	}
 
@@ -320,23 +314,53 @@ namespace Ares {
 		ProcessListenerCallbacks();
 	}
 
-	void AssetManager::NotifyListeners(const std::string& name, AssetEvent event)
+	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message)
 	{
-		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-
-		// Queue file-specific listener callbacks
-		if (s_Listeners.find(name) != s_Listeners.end())
+		Ref<Event> event;
+		switch (asset->GetState())
 		{
-			for (auto& listener : s_Listeners[name])
-			{
-				QueueListenerCallback([listener, event]() { listener(const_cast<AssetEvent&>(event)); });
-			}
+		case AssetState::None: return;
+		case AssetState::Staged: {
+			AssetStagedEvent tempEvent(asset, message);
+			EventQueue::Dispatch<AssetStagedEvent>(tempEvent);
+			event = CreateRef<AssetStagedEvent>(tempEvent);
+			break;
+		}
+		case AssetState::Loading: {
+			AssetLoadingEvent tempEvent(asset, message);
+			EventQueue::Dispatch<AssetLoadingEvent>(tempEvent);
+			event = CreateRef<AssetLoadingEvent>(tempEvent);
+			break;
+		}
+		case AssetState::Loaded: {
+			AssetLoadedEvent tempEvent(asset, message);
+			EventQueue::Dispatch<AssetLoadedEvent>(tempEvent);
+			event = CreateRef<AssetLoadedEvent>(tempEvent);
+			break;
+		}
+		case AssetState::Failed: {
+			AssetFailedEvent tempEvent(asset, message);
+			EventQueue::Dispatch<AssetFailedEvent>(tempEvent);
+			event = CreateRef<AssetFailedEvent>(tempEvent);
+			break;
+		}
+		default: return;
 		}
 
-		// Queue global listener callbacks
-		for (auto& globalListener : s_GlobalListeners)
+		// Dispatch event to listeners
 		{
-			QueueListenerCallback([globalListener, event]() { globalListener(const_cast<AssetEvent&>(event)); });
+			std::lock_guard<std::mutex> lock(s_ListenerMutex);
+
+			// Queue file-specific listeners
+			if (s_Listeners.find(asset->GetName()) != s_Listeners.end())
+			{
+				for (auto& listener : s_Listeners[asset->GetName()])
+					QueueListenerCallback([listener, event]() { listener(*event); });
+			}
+
+			// Queue global listeners
+			for (auto& globalListener : s_GlobalListeners)
+				QueueListenerCallback([globalListener, event]() { globalListener(*event); });
 		}
 	}
 

@@ -14,19 +14,25 @@ namespace Ares {
 	class AssetManager
 	{
 	public:
+		using AssetCallbackFn = std::function<void(Ref<Asset>)>;
+	public:
 		// Public API
 		static void Init();
 		static void Shutdown();
 
 		// Stage asset function
-		template <typename T>
-		static Ref<Asset> StageAsset(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+		template <typename AssetType>
+		static Ref<Asset> StageAsset(const std::string& name, const std::string& filepath = "", const std::vector<uint32_t>& dependencies = {});
+		template <typename AssetType>
+		inline static Ref<Asset> StageAsset(const std::string& name, const std::string& filepath) { return StageAsset<AssetType>(name, filepath, {}); }
+		template <typename AssetType>
+		inline static Ref<Asset> StageAsset(const std::string& name, const std::vector<uint32_t>& dependencies) { return StageAsset<AssetType>(name, "", dependencies); }
 
 		// Load asset functions
-		template <typename T>
-		static void LoadAsset(const std::string& name, const std::string& filepath, std::function<void(Event&)> callback = nullptr);
-		template <typename T>
-		static void LoadAsset(const std::string& name, const std::vector<Ref<Asset>>& shaders, std::function<void(Event&)> callback = nullptr);
+		template <typename AssetType>
+		static void LoadAsset(const std::string& name, const std::string& filepath, const AssetCallbackFn = nullptr);
+		template <typename AssetType>
+		static void LoadAsset(const std::string& name, const std::vector<Ref<Asset>>& shaders, const AssetCallbackFn = nullptr);
 
 		// Getter functions
 		static Ref<Asset> GetAsset(const std::string& name);
@@ -39,7 +45,7 @@ namespace Ares {
 
 	private:
 		// Helpers for callback & listener system
-		static void NotifyListeners(const std::string& name, AssetEvent event);
+		static void DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message = "");
 		static void QueueListenerCallback(std::function<void()> callback);
 		static void QueueCallback(std::function<void()> callback);
 
@@ -76,8 +82,8 @@ namespace Ares {
 		static std::mutex s_CallbackQueueMutex;
 
 		// Event listeners
-		static std::unordered_map<std::string, std::vector<std::function<void(AssetEvent&)>>> s_Listeners;
-		static std::vector<std::function<void(AssetEvent&)>> s_GlobalListeners;
+		static std::unordered_map<std::string, std::vector<std::function<void(Event&)>>> s_Listeners;
+		static std::vector<std::function<void(Event&)>> s_GlobalListeners;
 		static std::mutex s_ListenerMutex;
 
 		// Event listener callback queue

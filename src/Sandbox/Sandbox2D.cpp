@@ -9,7 +9,7 @@ Sandbox2D::Sandbox2D()
 		{ Ares::ShaderDataType::Float4, "a_Color"}
 	});
 
-	float vertices[91] = {
+	float vertices[98] = {
 		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
@@ -17,34 +17,37 @@ Sandbox2D::Sandbox2D()
 		0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 
 		-1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // RED -X
-		-1.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-		-2.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+		-1.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+		-2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
 
 		1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // GREEN +X
-		1.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-		2.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f
+		1.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		2.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
 	};
 
-	uint32_t indices[24] = {
+	uint32_t indices[30] = {
 		0, 1, 2,
 		2, 1, 3,
 		1, 4, 3,
 		3, 4, 5,
 		5, 3, 2,
 		2, 6, 5,
+		7, 6, 2,
+		2, 0, 7,
 
-		7, 8, 9,
+		8, 9, 10,
 
-		10, 11, 12
+		11, 12, 13
 	};
 
 	m_VBO = Ares::VertexBuffer::Create(vertices, sizeof(vertices));
 	m_VBO->SetLayout(bufferLayout);
 
-	m_IBO = Ares::IndexBuffer::Create(24);
-	m_IBO->SetData(indices, 24);
+	m_IBO = Ares::IndexBuffer::Create(30);
+	m_IBO->SetData(indices, 30);
 
 	m_VAO = Ares::VertexArray::Create();
 	m_VAO->AddVertexBuffer(m_VBO);
@@ -53,9 +56,8 @@ Sandbox2D::Sandbox2D()
 	m_Camera = Ares::CreateScope<ViewportCamera>(1280.0f, 720.0f);
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
 
-	Ares::EventQueue::AddListener<Ares::AssetEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnAssetLoaded));
+	m_ShaderListener = Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(Sandbox2D::LoadShaderProgram));
 	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
-
 	Ares::AssetManager::LoadAsset<Ares::Texture2D>("DefaultTexture", "assets/textures/DefaultTexture.png");
 	Ares::AssetManager::LoadAsset<Ares::VertexShader>("FlatColorVertex", "assets/shaders/FlatColorVertex.glsl");
 	Ares::AssetManager::LoadAsset<Ares::FragmentShader>("FlatColorFragment", "assets/shaders/FlatColorFragment.glsl");
@@ -146,28 +148,30 @@ bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
 	return false;
 }
 
-bool Sandbox2D::OnAssetLoaded(Ares::AssetEvent& event)
+bool Sandbox2D::LoadShaderProgram(Ares::AssetLoadedEvent& event)
 {
-	if (event.GetStoreName() == "FlatColorVertex")
-		m_VertexShader = event.GetAssetWrapper();
-	if (event.GetStoreName() == "FlatColorFragment")
-		m_FragmentShader = event.GetAssetWrapper();
-	if (event.GetStoreName() == "FlatColorShaderProgram")
-	{
-		m_ShaderProgram = event.GetAsset<Ares::ShaderProgram>();
-		m_ShaderProgram->Bind();
-		m_VertexShader = nullptr;
-		m_FragmentShader = nullptr;
-	}
+	if (event.GetAssetName() == "FlatColorVertex")
+		m_VertexShader = event.GetAsset();
+	if (event.GetAssetName() == "FlatColorFragment")
+		m_FragmentShader = event.GetAsset();
 
 	if (m_VertexShader && m_FragmentShader && !m_ShaderProgram)
 	{
 		Ares::AssetManager::LoadAsset<Ares::ShaderProgram>("FlatColorShaderProgram",
-			{ m_VertexShader, m_FragmentShader }
+			{ m_VertexShader, m_FragmentShader },
+			[this](Ares::Ref<Ares::Asset> asset)
+			{
+				if (asset->IsLoaded())
+				{
+					m_ShaderProgram = asset->GetAsset<Ares::ShaderProgram>();
+					m_ShaderProgram->Bind();
+					m_VertexShader = nullptr;
+					m_FragmentShader = nullptr;
+					Ares::EventQueue::RemoveListener(m_ShaderListener);
+				}
+			}
 		);
 	}
-	AR_TRACE(event);
-	if (!event.IsLoaded())
-		AR_TRACE("Message: {}", event.GetMessage());
+
 	return false;
 }

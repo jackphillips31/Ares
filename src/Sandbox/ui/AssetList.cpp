@@ -3,7 +3,7 @@
 AssetListElement::AssetListElement()
 {
 	m_AssetList = Ares::AssetManager::GetCompleteList();
-	Ares::EventQueue::AddListener<Ares::AssetEvent>(AR_BIND_EVENT_FN(AssetListElement::OnAssetLoaded));
+	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(AssetListElement::OnAssetLoaded));
 }
 
 void AssetListElement::Draw()
@@ -57,7 +57,7 @@ void AssetListElement::Draw()
 	ImGui::End();
 }
 
-bool AssetListElement::OnAssetLoaded(Ares::AssetEvent& result)
+bool AssetListElement::OnAssetLoaded(Ares::AssetLoadedEvent& result)
 {
 	m_AssetList = Ares::AssetManager::GetCompleteList();
 	return false;
