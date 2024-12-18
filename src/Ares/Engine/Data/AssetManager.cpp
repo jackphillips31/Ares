@@ -320,7 +320,7 @@ namespace Ares {
 		// Check to see if Listener is valid
 		if (!listenerId)
 		{
-			AR_CORE_WARN("Listener has already been removed!");
+			AR_CORE_WARN("Asset listener has already been removed!");
 			return;
 		}
 
@@ -334,9 +334,9 @@ namespace Ares {
 			if (nameIt != s_ListenerNameMap.end())
 			{
 				// Erase name based listener
-				s_ListenerNameMap.erase(nameIt);
 				auto& listeners = s_Listeners[nameIt->second];
 				listenersRemoved += listeners.erase(listenerId);
+				s_ListenerNameMap.erase(nameIt);
 			}
 			else
 			{
@@ -347,7 +347,7 @@ namespace Ares {
 			// Check to see if a listener was removed
 			if (!listenersRemoved)
 			{
-				AR_CORE_WARN("Did not find any listeners with id: {}", listenerId);
+				AR_CORE_WARN("Did not find any asset listeners with id: {}", listenerId);
 			}
 			else
 				listenerId = 0;

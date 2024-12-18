@@ -8,8 +8,12 @@
 
 namespace Ares {
 
+	using EventListener = uint32_t;
+
 	class EventQueue
 	{
+	private:
+		using EventCallbackFn = std::function<bool(Event&)>;
 	public:
 		EventQueue() = delete;
 
@@ -58,44 +62,47 @@ namespace Ares {
 		}
 
 		template<typename EventTypeTemplate>
-		static uint32_t AddListener(std::function<bool(EventTypeTemplate&)> func)
+		static EventListener AddListener(std::function<bool(EventTypeTemplate&)> func)
 		{
 			std::lock_guard<std::mutex> lock(s_ListenerMutex);
 			uint32_t currentId = s_NextListenerId++;
-			EventListenerEntry currentEntry({ currentId, [func](Event& e) { return func(static_cast<EventTypeTemplate&>(e)); } });
-
-			s_Listeners[EventTypeTemplate::GetStaticType()].emplace_back(currentEntry);
+			s_Listeners[EventTypeTemplate::GetStaticType()][currentId] = [func](Event& e) { return func(static_cast<EventTypeTemplate&>(e)); };
 			s_ListenerTypeMap[currentId] = EventTypeTemplate::GetStaticType();
 			return currentId;
 		}
 
-		static void RemoveListener(uint32_t listenerId)
+		static void RemoveListener(EventListener& listenerId)
 		{
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
-
-			// Find EventType for this listener
-			auto typeIt = s_ListenerTypeMap.find(listenerId);
-			if (typeIt == s_ListenerTypeMap.end())
+			// Check to see if listener is valid
+			if (!listenerId)
 			{
-				AR_CORE_WARN("Event Listener not found!");
+				AR_CORE_WARN("Event listener has already been removed!");
 				return;
 			}
 
-			EventType type = typeIt->second;
+			// Remove listener
+			{
+				size_t listenersRemoved = 0;
+				std::lock_guard<std::mutex> lock(s_ListenerMutex);
 
-			// Remove the listener
-			auto& listeners = s_Listeners[type];
-			listeners.erase(
-				std::remove_if(
-					listeners.begin(),
-					listeners.end(),
-					[listenerId](const EventListenerEntry& entry)
-					{
-						return entry.Id == listenerId;
-					}
-				),
-				listeners.end()
-			);
+				// Find EventType for this listener
+				auto it = s_ListenerTypeMap.find(listenerId);
+				if (it != s_ListenerTypeMap.end())
+				{
+					// Erase event listener
+					auto& listeners = s_Listeners[it->second];
+					listenersRemoved += listeners.erase(listenerId);
+					s_ListenerTypeMap.erase(it);
+				}
+
+				// Check to see if a listener was removed
+				if (!listenersRemoved)
+				{
+					AR_CORE_WARN("Did not find any event listeners with id: {}", listenerId);
+				}
+				else
+					listenerId = 0;
+			}
 		}
 
 		static void ProcessEvents()
@@ -131,7 +138,7 @@ namespace Ares {
 				if (e.Handled)
 					break;
 
-				e.Handled = listenerEntry.Function(e);
+				e.Handled = listenerEntry.second(e);
 			}
 		}
 
@@ -150,7 +157,7 @@ namespace Ares {
 		static inline std::mutex s_WriteQueueMutex;
 
 		static inline std::atomic<uint32_t> s_NextListenerId{ 1 };
-		static inline std::unordered_map<EventType, std::vector<EventListenerEntry>> s_Listeners;
+		static inline std::unordered_map<EventType, std::unordered_map<uint32_t, EventCallbackFn>> s_Listeners;
 		static inline std::unordered_map<uint32_t, EventType> s_ListenerTypeMap;
 		static inline std::mutex s_ListenerMutex;
 	};
