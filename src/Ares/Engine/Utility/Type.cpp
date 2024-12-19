@@ -1,5 +1,8 @@
 #include <arespch.h>
 
+#include "Engine/Renderer/Shader.h"
+#include "Engine/Renderer/Texture.h"
+
 #include "Engine/Utility/Type.h"
 
 namespace Ares {
@@ -7,6 +10,22 @@ namespace Ares {
 	namespace Utility {
 
 		namespace Type {
+
+			const std::unordered_map<std::type_index, uint32_t> g_TypeMap{
+				{typeid(::Ares::VertexShader), Type::VertexShader},
+				{typeid(::Ares::FragmentShader), Type::FragmentShader},
+				{typeid(::Ares::ShaderProgram), Type::ShaderProgram},
+				{typeid(::Ares::Texture2D), Type::Texture2D}
+			};
+
+			const uint32_t GetTypeMapId(const std::type_index& type)
+			{
+				auto it = g_TypeMap.find(type);
+				if (it != g_TypeMap.end())
+					return it->second;
+				else
+					return 0;
+			}
 
 			std::string ExtractClassName(const std::string& typeName)
 			{

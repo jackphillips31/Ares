@@ -25,20 +25,18 @@ namespace Ares {
 
 		// Stage asset function
 		template <typename AssetType>
-		static Ref<Asset> StageAsset(const std::string& name, const std::string& filepath = "", const std::vector<uint32_t>& dependencies = {});
+		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 		template <typename AssetType>
-		inline static Ref<Asset> StageAsset(const std::string& name, const std::string& filepath) { return StageAsset<AssetType>(name, filepath, {}); }
+		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}); }
 		template <typename AssetType>
-		inline static Ref<Asset> StageAsset(const std::string& name, const std::vector<uint32_t>& dependencies) { return StageAsset<AssetType>(name, "", dependencies); }
+		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies); }
 
-		// Load asset functions
-		template <typename AssetType>
-		static void LoadAsset(const std::string& name, const std::string& filepath, const AssetCallbackFn = nullptr);
-		template <typename AssetType>
-		static void LoadAsset(const std::string& name, const std::vector<Ref<Asset>>& shaders, const AssetCallbackFn = nullptr);
+		static void Load(const Ref<Asset>& asset, const AssetCallbackFn = nullptr);
+		static void Load(const std::vector<Ref<Asset>>& assets, const AssetCallbackFn = nullptr);
 
 		// Getter functions
 		static Ref<Asset> GetAsset(const std::string& name);
+		static Ref<Asset> GetAsset(const uint32_t& assetId);
 		static std::vector<Ref<Asset>> GetCompleteList();
 
 		// Listener functions & OnUpdate
@@ -58,10 +56,11 @@ namespace Ares {
 		static void ProcessCallbacks();
 
 		// Private loaders
-		static Ref<VertexShader> LoadVertexShader(const std::string& name, const std::string& filepath);
-		static Ref<FragmentShader> LoadFragmentShader(const std::string& name, const std::string& filepath);
-		static Ref<Texture2D> LoadTexture2D(const std::string& name, const std::string& filepath);
-		static Ref<ShaderProgram> LoadShaderProgram(const std::string& name, const std::string& filepath);
+		static void LoadRawAsset(const Ref<Asset>& asset, const AssetCallbackFn callback = nullptr);
+		static Ref<VertexShader> LoadVertexShader(const Ref<Asset>& asset);
+		static Ref<FragmentShader> LoadFragmentShader(const Ref<Asset>& asset);
+		static Ref<Texture2D> LoadTexture2D(const Ref<Asset>& asset);
+		static Ref<ShaderProgram> LoadShaderProgram(const Ref<Asset>& asset);
 
 		// Private hash function
 		static const size_t GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies = {});

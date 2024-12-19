@@ -32,16 +32,10 @@ namespace Ares {
 	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
 
 	// Explicit instantiations for StageAsset types
-	template Ref<Asset> AssetManager::StageAsset<VertexShader>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
-	template Ref<Asset> AssetManager::StageAsset<FragmentShader>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
-	template Ref<Asset> AssetManager::StageAsset<Texture2D>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
-	template Ref<Asset> AssetManager::StageAsset<ShaderProgram>(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies);
-
-	// Explicit instantiations for LoadAsset types
-	template void AssetManager::LoadAsset<VertexShader>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
-	template void AssetManager::LoadAsset<FragmentShader>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
-	template void AssetManager::LoadAsset<Texture2D>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
-	template void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::string& filepath, const AssetCallbackFn callback);
+	template Ref<Asset> AssetManager::Stage<VertexShader>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
+	template Ref<Asset> AssetManager::Stage<FragmentShader>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
+	template Ref<Asset> AssetManager::Stage<Texture2D>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
+	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 
 	void AssetManager::Init()
 	{
@@ -93,22 +87,28 @@ namespace Ares {
 	}
 
 	template <typename AssetType>
-	Ref<Asset> AssetManager::StageAsset(const std::string& name, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies)
 	{
 		if (filepath.empty() && dependencies.size() == 0)
 		{
 			AR_CORE_ASSERT(false, "Asset needs either filepath or dependencies to be staged!");
 		}
 
-		Ref<Asset> asset = nullptr;
-		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencies);
+		// Convert dependencies into IDs
+		std::vector<uint32_t> dependencyIds;
+		for (const Ref<Asset>& dep : dependencies)
+		{
+			dependencyIds.push_back(dep->GetAssetId());
+		}
 
-		// Check Cache
+		// Compute content hash and check cache
+		Ref<Asset> asset = nullptr;
+		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds);
 		asset = FindExistingAsset(contentHash);
 		if (asset)
 			return asset;
 
-		// Check for duplicate names
+		// Ensure unique asset name
 		std::string assetName = name;
 		{
 			std::lock_guard<std::mutex> lock(s_NameIdMutex);
@@ -116,13 +116,13 @@ namespace Ares {
 				assetName = Utility::String::IncrementStringSuffix(assetName);
 		}
 
-		// Create asset
+		// Create and initialize the asset
 		const uint32_t currentId = s_NextAssetId++;
-		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencies);
+		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds);
 		asset->SetName(assetName);
 		asset->SetAssetId(currentId);
 
-		// Insert data into secondary maps
+		// Update maps for name, hash, and type associations
 		{
 			std::lock_guard<std::mutex> lock(s_NameIdMutex);
 			s_NameIdMap[assetName] = currentId;
@@ -136,7 +136,7 @@ namespace Ares {
 			s_TypeIdMap[typeid(AssetType)] = currentId;
 		}
 
-		// Insert empty asset into cache
+		// Add asset to cache
 		{
 			std::lock_guard<std::mutex> lock(s_CacheMutex);
 			s_AssetCache[currentId] = asset;
@@ -147,119 +147,47 @@ namespace Ares {
 		return asset;
 	}
 
-	template <typename AssetType>
-	void AssetManager::LoadAsset(const std::string& name, const std::string& filepath, const AssetCallbackFn callback)
+	void AssetManager::Load(const Ref<Asset>& asset, const AssetCallbackFn callback)
 	{
-		Ref<Asset> asset = StageAsset<AssetType>(name, filepath, {});
-
-		// Check if asset is already loaded
-		if (asset->GetState() == AssetState::Loaded)
-		{
-			if (callback)
-				QueueCallback([callback, asset]() { callback(asset); });
-			return;
-		}
-
-		// Load asset
-		ThreadPool::SubmitTask([asset, callback]() {
-			Ref<AssetType> rawAsset = nullptr;
-			std::string eventMessage;
-			std::string assetName = asset->GetName();
-			std::string filepath = asset->GetFilepath();
-			const uint32_t currentId = asset->GetAssetId();
-			try
-			{
-				asset->SetState(AssetState::Loading);
-				DispatchAssetEvent(asset);
-				if constexpr (std::is_same<AssetType, VertexShader>::value)
-				{
-					rawAsset = LoadVertexShader(assetName, filepath);
-				}
-				else if constexpr (std::is_same<AssetType, FragmentShader>::value)
-				{
-					rawAsset = LoadFragmentShader(assetName, filepath);
-				}
-				else if constexpr (std::is_same<AssetType, Texture2D>::value)
-				{
-					rawAsset = LoadTexture2D(assetName, filepath);
-				}
-				else if constexpr (std::is_same<AssetType, ShaderProgram>::value)
-				{
-					rawAsset = LoadShaderProgram(assetName, filepath);
-				}
-				else
-				{
-					AR_CORE_WARN("Unsupported asset type!");
-					throw std::runtime_error("Unsupported asset type!");
-				}
-
-				asset->SetAsset(rawAsset);
-				asset->SetState(AssetState::Loaded);
-			}
-			catch (std::exception& e)
-			{
-				asset->SetState(AssetState::Failed);
-				eventMessage = e.what();
-			}
-
-			// Dispatch event and notify listeners
-			DispatchAssetEvent(asset, eventMessage);
-
-			// Execute callback
-			if (callback)
-				QueueCallback([callback, asset]() { callback(asset); });
-		});
+		Load(std::vector<Ref<Asset>>({ asset }), callback);
 	}
 
-	template <>
-	void AssetManager::LoadAsset<ShaderProgram>(const std::string& name, const std::vector<Ref<Asset>>& shaders, const AssetCallbackFn callback)
+	void AssetManager::Load(const std::vector<Ref<Asset>>& assets, const AssetCallbackFn callback)
 	{
-		// Prepare shaders & dependencies
-		std::vector<Ref<Shader>> tempShaders;
-		std::vector<uint32_t> tempDependencies;
-		for (auto shader : shaders)
+		for (const Ref<Asset>& asset : assets)
 		{
-			tempShaders.push_back(shader->GetAsset<Shader>());
-			tempDependencies.push_back(shader->GetAssetId());
-		}
-
-		Ref<Asset> asset = StageAsset<ShaderProgram>(name, "", tempDependencies);
-
-		// Check if asset is already loaded
-		if (asset->GetState() == AssetState::Loaded)
-		{
-			if (callback)
-				QueueCallback([callback, asset]() { callback(asset); });
-			return;
-		}
-
-		// Load asset
-		ThreadPool::SubmitTask([asset, tempShaders, callback]() {
-			Ref<ShaderProgram> rawAsset = nullptr;
-			std::string eventMessage;
-			std::string assetName = asset->GetName();
-			const uint32_t currentId = asset->GetAssetId();
-			try
+			if (asset->GetState() == AssetState::Staged)
 			{
-				asset->SetState(AssetState::Loading);
-				DispatchAssetEvent(asset);
-				rawAsset = ShaderProgram::Create(assetName, tempShaders);
-				asset->SetAsset(rawAsset);
-				asset->SetState(AssetState::Loaded);
-			}
-			catch (const std::exception& e)
-			{
-				asset->SetState(AssetState::Failed);
-				eventMessage = e.what();
-			}
+				// Load standalone asset with no dependencies
+				if (asset->GetDependencies().size() == 0 && !asset->GetFilepath().empty())
+				{
+					LoadRawAsset(asset, callback);
+				}
+				// Load asset with dependencies
+				else if (asset->GetDependencies().size() > 0 && asset->GetFilepath().empty())
+				{
+					std::vector<uint32_t> assetDependencies = asset->GetDependencies();
+					for (uint32_t& currentDependency : assetDependencies)
+					{
+						Ref<Asset> currentDep = GetAsset(currentDependency);
 
-			// Dispatch event and notify listeners
-			DispatchAssetEvent(asset, eventMessage);
-
-			// Execute callback
-			if (callback)
-				QueueCallback([callback, asset]() { callback(asset); });
-		});
+						// Load staged dependency recursively
+						if (currentDep->GetState() == AssetState::Staged)
+						{
+							LoadRawAsset(currentDep, [assets, callback](Ares::Ref<Asset> asset) { Load(assets, callback); });
+							return;
+						}
+						// Log if dependency failed
+						else if (currentDep->GetState() == AssetState::Failed)
+						{
+							AR_CORE_ASSERT("Asset: {} failed to load!", currentDep->GetName());
+						}
+					}
+					// Load the asset after dependencies
+					LoadRawAsset(asset, callback);
+				}
+			}
+		}
 	}
 
 	Ref<Asset> AssetManager::GetAsset(const std::string& name)
@@ -281,6 +209,16 @@ namespace Ares {
 			else
 				return nullptr;
 		}
+	}
+
+	Ref<Asset> AssetManager::GetAsset(const uint32_t& assetId)
+	{
+		std::lock_guard<std::mutex> lock(s_CacheMutex);
+		auto it = s_AssetCache.find(assetId);
+		if (it != s_AssetCache.end())
+			return it->second;
+		else
+			return nullptr;
 	}
 	
 	std::vector<Ref<Asset>> AssetManager::GetCompleteList()
@@ -444,100 +382,211 @@ namespace Ares {
 		}
 	}
 
-	Ref<VertexShader> AssetManager::LoadVertexShader(const std::string& name, const std::string& filepath)
+	void AssetManager::LoadRawAsset(const Ref<Asset>& asset, const AssetCallbackFn callback)
 	{
-		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Vertex Shader file: '" + filepath + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-		return VertexShader::Create(name, fileBuffer);
-		return nullptr;
-	}
+		// Mark asset's state as "Loading"
+		asset->SetState(AssetState::Loading);
 
-	Ref<FragmentShader> AssetManager::LoadFragmentShader(const std::string& name, const std::string& filepath)
-	{
-		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Fragment Shader file: '" + filepath + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-		return FragmentShader::Create(name, fileBuffer);
-	}
-
-	Ref<Texture2D> AssetManager::LoadTexture2D(const std::string& name, const std::string& filepath)
-	{
-		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Texture2D file: '" + filepath + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-
-		return Texture2D::Create(name, fileBuffer);
-	}
-
-	Ref<ShaderProgram> AssetManager::LoadShaderProgram(const std::string& name, const std::string& filepath)
-	{
-		FileBuffer fileBuffer = FileIO::LoadFile(filepath);
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Shader Program file: '" + filepath + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-
-		std::string shaderSource(static_cast<const char*>(fileBuffer.GetBuffer()), fileBuffer.GetSize());
-		std::string vertexSource = "";
-		std::string fragmentSource = "";
-
-		const char* typeToken = "#type";
-		size_t typeTokenLength = strlen(typeToken);
-		size_t pos = shaderSource.find(typeToken, 0);
-		while (pos != std::string::npos)
-		{
-			size_t eol = shaderSource.find_first_of("\r\n", pos);
-			if (eol == std::string::npos)
-				throw std::runtime_error("Shader Syntax Error!");
-
-			size_t begin = pos + typeTokenLength + 1;
-			std::string type = shaderSource.substr(begin, eol - begin);
-			if (type != "vertex" && type != "fragment" && type != "pixel")
-				throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
-
-			size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
-			if (nextLinePos == std::string::npos)
-				throw std::runtime_error("Shader Syntax Error!");
-
-			pos = shaderSource.find(typeToken, nextLinePos);
-
-			if (type == "vertex")
+		// Submit the task to the ThreadPool for async loading
+		ThreadPool::SubmitTask([asset, callback]()
 			{
-				vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-			}
-			else if (type == "fragment" || type == "pixel")
-			{
-				fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-			}
+				Ref<AssetBase> rawAsset = nullptr;
+				std::string eventMessage;
+
+				// Retrieve the asset type ID to determine how to process the asset
+				const uint32_t assetTypeId = Utility::Type::GetTypeMapId(asset->GetType());
+				try
+				{
+					// Handle asset loading based on its type
+					switch (assetTypeId)
+					{
+					case Utility::Type::VertexShader: {
+						rawAsset = LoadVertexShader(asset);
+						break;
+					}
+					case Utility::Type::FragmentShader: {
+						rawAsset = LoadFragmentShader(asset);
+						break;
+					}
+					case Utility::Type::ShaderProgram: {
+						rawAsset = LoadShaderProgram(asset);
+						break;
+					}
+					case Utility::Type::Texture2D: {
+						rawAsset = LoadTexture2D(asset);
+						break;
+					}
+					default: {
+						// Log and throw an error for unsupported asset types
+						AR_CORE_ERROR("Unsupported asset type!");
+						throw std::runtime_error("Unsupported asset type!");
+					}
+					}
+
+					// If loading succeeds, assign the loaded asset and mark asset state as "Loaded"
+					asset->SetAsset(rawAsset);
+					asset->SetState(AssetState::Loaded);
+				}
+				catch (std::exception& e)
+				{
+					// If an exception occurs, mark the asset state as "Failed" and store error message
+					asset->SetState(AssetState::Failed);
+					eventMessage = e.what();
+				}
+
+				// Dispatch event and notify listeners of asset's loading status
+				DispatchAssetEvent(asset, eventMessage);
+
+				// If a callback function is provided, enqueue it for execution
+				if (callback)
+					QueueCallback([callback, asset]() { callback(asset); });
+			});
+	}
+
+	Ref<VertexShader> AssetManager::LoadVertexShader(const Ref<Asset>& asset)
+	{
+		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
+		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
+		{
+			std::string error = "Failed to load Vertex Shader file: '" + asset->GetFilepath() + "'";
+			AR_CORE_ERROR(error);
+			throw std::runtime_error(error);
 		}
+		return VertexShader::Create(asset->GetName(), fileBuffer);
+	}
 
-		if (vertexSource == "" || fragmentSource == "")
-			throw std::runtime_error("One or more shaders are missing!");
+	Ref<FragmentShader> AssetManager::LoadFragmentShader(const Ref<Asset>& asset)
+	{
+		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
+		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
+		{
+			std::string error = "Failed to load Fragment Shader file: '" + asset->GetFilepath() + "'";
+			AR_CORE_ERROR(error);
+			throw std::runtime_error(error);
+		}
+		return FragmentShader::Create(asset->GetName(), fileBuffer);
+	}
 
-		Ref<ShaderProgram> asset = ShaderProgram::Create(name, {
-			VertexShader::Create(name + "_Vertex", vertexSource),
-			FragmentShader::Create(name + "_Fragment", fragmentSource)
-		});
+	Ref<Texture2D> AssetManager::LoadTexture2D(const Ref<Asset>& asset)
+	{
+		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
+		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
+		{
+			std::string error = "Failed to load Texture2D file: '" + asset->GetFilepath() + "'";
+			AR_CORE_ERROR(error);
+			throw std::runtime_error(error);
+		}
+		return Texture2D::Create(asset->GetName(), fileBuffer);
+	}
 
-		if (asset == nullptr)
-			throw std::runtime_error("Some error occurred when created Shader Program!");
+	Ref<ShaderProgram> AssetManager::LoadShaderProgram(const Ref<Asset>& asset)
+	{
+		if (asset->GetDependencies().size() > 0 && asset->GetFilepath().empty())
+		{
+			// Load ShaderProgram using its dependencies
+			std::vector<uint32_t> depIds = asset->GetDependencies();
+			std::vector<Ref<Asset>> dependencies;
+			std::vector<Ref<Shader>> tempShaders;
+
+			for (uint32_t& dep : depIds)
+			{
+				dependencies.push_back(GetAsset(dep));
+			}
+
+			// Extract shaders from dependencies
+			for (Ref<Asset>& dep : dependencies)
+			{
+				if (dep->GetType() == typeid(VertexShader) || dep->GetType() == typeid(FragmentShader))
+					tempShaders.push_back(dep->GetAsset<Shader>());
+			}
+
+			if (tempShaders.size() == 0)
+			{
+				std::string error("None of this Shader Program's dependencies were shaders!");
+				AR_CORE_ERROR(error);
+				throw std::runtime_error(error);
+			}
+
+			// Create ShaderProgram from extracted shaders
+			Ref<ShaderProgram> rawAsset = ShaderProgram::Create(asset->GetName(), tempShaders);
+
+			if (rawAsset == nullptr)
+			{
+				std::string error("Some error occurred when creating Shader Program!");
+				AR_CORE_ERROR(error);
+				throw std::runtime_error(error);
+			}
+			else
+				return rawAsset;
+		}
+		else if (!asset->GetFilepath().empty() && asset->GetDependencies().size() == 0)
+		{
+			// Load ShaderProgram from a single file
+			FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
+			if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
+			{
+				std::string error = "Failed to load Shader Program file: '" + asset->GetFilepath() + "'";
+				AR_CORE_ERROR(error);
+				throw std::runtime_error(error);
+			}
+
+			std::string shaderSource(static_cast<const char*>(fileBuffer.GetBuffer()), fileBuffer.GetSize());
+			std::string vertexSource = "";
+			std::string fragmentSource = "";
+
+			// Parse shader types from source code
+			const char* typeToken = "#type";
+			size_t typeTokenLength = strlen(typeToken);
+			size_t pos = shaderSource.find(typeToken, 0);
+			while (pos != std::string::npos)
+			{
+				size_t eol = shaderSource.find_first_of("\r\n", pos);
+				if (eol == std::string::npos)
+					throw std::runtime_error("Shader Syntax Error!");
+
+				size_t begin = pos + typeTokenLength + 1;
+				std::string type = shaderSource.substr(begin, eol - begin);
+				if (type != "vertex" && type != "fragment" && type != "pixel")
+					throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
+
+				size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
+				if (nextLinePos == std::string::npos)
+					throw std::runtime_error("Shader Syntax Error!");
+
+				pos = shaderSource.find(typeToken, nextLinePos);
+
+				if (type == "vertex")
+				{
+					vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+				}
+				else if (type == "fragment" || type == "pixel")
+				{
+					fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+				}
+			}
+
+			// Ensure both vertex and fragment shaders exist
+			if (vertexSource == "" || fragmentSource == "")
+				throw std::runtime_error("One or more shaders are missing!");
+
+			// Create ShaderProgram using parsed shaders
+			Ref<ShaderProgram> rawAsset = ShaderProgram::Create(asset->GetName(), {
+				VertexShader::Create(asset->GetName() + "_Vertex", vertexSource),
+				FragmentShader::Create(asset->GetName() + "_Fragment", fragmentSource)
+			});
+
+			if (rawAsset == nullptr)
+				throw std::runtime_error("Some error occurred when created Shader Program!");
+			else
+				return rawAsset;
+		}
 		else
-			return asset;
+		{
+			// Handle unsupported cases with both filepath and dependencies
+			std::string error("LoadShaderProgram doesn't support a Shader Program with a filepath AND dependencies!");
+			AR_CORE_ERROR(error);
+			throw std::runtime_error(error);
+		}
 	}
 
 	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies)

@@ -19,6 +19,7 @@
 #include <queue>				// Queue data structure
 #include <thread>				// Threading
 #include <mutex>				// Mutex for synchronization
+#include <shared_mutex>			// Shared mutex for synchronization
 #include <condition_variable>	// Condition variables
 #include <atomic>				// Atomic operations
 
