@@ -44,6 +44,7 @@ namespace Ares {
 
 	const std::string Asset::GetStateString() const
 	{
+		std::shared_lock lock(m_AssetMutex);
 		switch (m_State)
 		{
 		case AssetState::None: return "None";
@@ -58,6 +59,7 @@ namespace Ares {
 
 	const size_t Asset::GetHash() const
 	{
+		std::shared_lock lock(m_AssetMutex);
 		size_t hash = 0;
 
 		// Hash filepath (if not empty)
@@ -80,21 +82,25 @@ namespace Ares {
 
 	void Asset::SetName(const std::string& name)
 	{
+		std::unique_lock lock(m_AssetMutex);
 		m_Name = name;
 	}
 
 	void Asset::SetState(const AssetState& state)
 	{
+		std::unique_lock lock(m_AssetMutex);
 		m_State = state;
 	}
 
 	void Asset::SetAssetId(const uint32_t& id)
 	{
+		std::unique_lock lock(m_AssetMutex);
 		m_AssetId = id;
 	}
 
 	void Asset::SetAsset(const Ref<AssetBase>& asset)
 	{
+		std::unique_lock lock(m_AssetMutex);
 		m_Asset = asset;
 	}
 
