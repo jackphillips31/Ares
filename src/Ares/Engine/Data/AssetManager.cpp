@@ -143,8 +143,43 @@ namespace Ares {
 		}
 
 		// Dispatch Event, notify listeners, and return
-		DispatchAssetEvent(asset);
+		DispatchAssetEvent<AssetStagedEvent>(asset);
 		return asset;
+	}
+
+	void AssetManager::Unstage(const Ref<Asset>& asset)
+	{
+		// Check for references outside AssetManager
+		if (asset.use_count() > 1)
+		{
+			AR_CORE_WARN("Asset: {} has {} reference(s) outside Asset Cache!", asset->GetName(), asset.use_count() - 1);
+		}
+
+		// Remove from secondary lookup maps
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			s_NameIdMap.erase(asset->GetName());
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_HashIdMutex);
+			s_HashIdMap.erase(asset->GetHash());
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
+			s_TypeIdMap.erase(asset->GetType());
+		}
+
+		// Remove from asset cache
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			s_AssetCache.erase(asset->GetAssetId());
+		}
+
+		asset->SetAssetId(0);
+		asset->SetAsset(nullptr);
+		asset->SetState(AssetState::None);
+
+		DispatchAssetEvent<AssetUnstagedEvent>(asset);
 	}
 
 	void AssetManager::Load(const Ref<Asset>& asset, const AssetCallbackFn callback)
@@ -187,6 +222,21 @@ namespace Ares {
 					LoadRawAsset(asset, callback);
 				}
 			}
+		}
+	}
+
+	void AssetManager::Unload(const Ref<Asset>& asset)
+	{
+		if (asset->GetAsset().use_count() > 1)
+		{
+			// Asset has references outside AssetManager
+			AR_CORE_WARN("Cant unload Asset! Asset: {} has {} reference(s) outside Asset Cache!", asset->GetName(), asset->GetAsset().use_count() - 1);
+		}
+		else
+		{
+			// Unload asset
+			asset->SetAsset(nullptr);
+			DispatchAssetEvent<AssetUnloadedEvent>(asset);
 		}
 	}
 
@@ -298,56 +348,6 @@ namespace Ares {
 		ProcessListenerCallbacks();
 	}
 
-	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message)
-	{
-		Ref<Event> event;
-		switch (asset->GetState())
-		{
-		case AssetState::None: return;
-		case AssetState::Staged: {
-			AssetStagedEvent tempEvent(asset, message);
-			EventQueue::Dispatch<AssetStagedEvent>(tempEvent);
-			event = CreateRef<AssetStagedEvent>(tempEvent);
-			break;
-		}
-		case AssetState::Loading: {
-			AssetLoadingEvent tempEvent(asset, message);
-			EventQueue::Dispatch<AssetLoadingEvent>(tempEvent);
-			event = CreateRef<AssetLoadingEvent>(tempEvent);
-			break;
-		}
-		case AssetState::Loaded: {
-			AssetLoadedEvent tempEvent(asset, message);
-			EventQueue::Dispatch<AssetLoadedEvent>(tempEvent);
-			event = CreateRef<AssetLoadedEvent>(tempEvent);
-			break;
-		}
-		case AssetState::Failed: {
-			AssetFailedEvent tempEvent(asset, message);
-			EventQueue::Dispatch<AssetFailedEvent>(tempEvent);
-			event = CreateRef<AssetFailedEvent>(tempEvent);
-			break;
-		}
-		default: return;
-		}
-
-		// Dispatch event to listeners
-		{
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
-
-			// Queue file-specific listeners
-			if (s_Listeners.find(asset->GetName()) != s_Listeners.end())
-			{
-				for (auto& listener : s_Listeners[asset->GetName()])
-					QueueListenerCallback([func = listener.second, event]() { func(*event); });
-			}
-
-			// Queue global listeners
-			for (auto& globalListener : s_GlobalListeners)
-				QueueListenerCallback([func = globalListener.second, event]() { func(*event); });
-		}
-	}
-
 	void AssetManager::QueueListenerCallback(std::function<void()> callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerCallbackQueueMutex);
@@ -386,6 +386,9 @@ namespace Ares {
 	{
 		// Mark asset's state as "Loading"
 		asset->SetState(AssetState::Loading);
+
+		// Dispatch AssetLoadingEvent
+		DispatchAssetEvent<AssetLoadingEvent>(asset);
 
 		// Submit the task to the ThreadPool for async loading
 		ThreadPool::SubmitTask([asset, callback]()
@@ -435,7 +438,14 @@ namespace Ares {
 				}
 
 				// Dispatch event and notify listeners of asset's loading status
-				DispatchAssetEvent(asset, eventMessage);
+				if (asset->GetState() == AssetState::Loaded)
+					DispatchAssetEvent<AssetLoadedEvent>(asset, eventMessage);
+				else if (asset->GetState() == AssetState::Failed)
+					DispatchAssetEvent<AssetFailedEvent>(asset, eventMessage);
+				else
+				{
+					AR_CORE_ASSERT(false, "Something went wrong when loading asset!");
+				}
 
 				// If a callback function is provided, enqueue it for execution
 				if (callback)

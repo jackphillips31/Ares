@@ -107,4 +107,28 @@ namespace Ares {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
+	class AssetUnloadedEvent : public AssetBaseEvent
+	{
+	public:
+		AssetUnloadedEvent(const Ref<Asset>& asset, const std::string& message = "")
+		{
+			Initialize(asset, message);
+		}
+
+		EVENT_CLASS_TYPE(AssetUnloaded)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
+	class AssetUnstagedEvent : public AssetBaseEvent
+	{
+	public:
+		AssetUnstagedEvent(const Ref<Asset>& asset, const std::string& message = "")
+		{
+			Initialize(asset, message);
+		}
+
+		EVENT_CLASS_TYPE(AssetUnstaged)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
 }

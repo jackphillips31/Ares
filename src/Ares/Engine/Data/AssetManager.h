@@ -23,16 +23,19 @@ namespace Ares {
 		static void Init();
 		static void Shutdown();
 
-		// Stage asset function
+		// Stage / Unstage methods
 		template <typename AssetType>
 		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 		template <typename AssetType>
 		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}); }
 		template <typename AssetType>
 		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies); }
+		static void Unstage(const Ref<Asset>& asset);
 
+		// Load / Unload methods
 		static void Load(const Ref<Asset>& asset, const AssetCallbackFn = nullptr);
 		static void Load(const std::vector<Ref<Asset>>& assets, const AssetCallbackFn = nullptr);
+		static void Unload(const Ref<Asset>& asset);
 
 		// Getter functions
 		static Ref<Asset> GetAsset(const std::string& name);
@@ -47,6 +50,7 @@ namespace Ares {
 
 	private:
 		// Helpers for callback & listener system
+		template <typename AssetEventType>
 		static void DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message = "");
 		static void QueueListenerCallback(std::function<void()> callback);
 		static void QueueCallback(std::function<void()> callback);
@@ -94,5 +98,38 @@ namespace Ares {
 		static std::queue<std::function<void()>> s_ListenerCallbackQueue;
 		static std::mutex s_ListenerCallbackQueueMutex;
 	};
+
+	template <typename AssetEventType>
+	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message)
+	{
+		// Make sure AssetEventType is an asset event
+		if (!std::is_base_of_v<AssetBaseEvent, AssetEventType>)
+		{
+			AR_CORE_ASSERT(false, "Tried to dispatch non-asset event: {}", typeid(AssetEventType).name());
+		}
+
+		// Create event
+		AssetEventType tempEvent(asset, message);
+		Ref<AssetEventType> event = CreateRef<AssetEventType>(tempEvent);
+
+		// Dispatch to event queue
+		EventQueue::Dispatch<AssetEventType>(tempEvent);
+
+		// Dispatch to asset listeners
+		{
+			std::lock_guard<std::mutex> lock(s_ListenerMutex);
+
+			// Queue name-specific listeners
+			if (s_Listeners.find(asset->GetName()) != s_Listeners.end())
+			{
+				for (auto& listener : s_Listeners[asset->GetName()])
+					QueueListenerCallback([func = listener.second, event]() { func(*event); });
+			}
+
+			// Queue global listeners
+			for (auto& globalListener : s_GlobalListeners)
+				QueueListenerCallback([func = globalListener.second, event]() { func(*event); });
+		}
+	}
 
 }
