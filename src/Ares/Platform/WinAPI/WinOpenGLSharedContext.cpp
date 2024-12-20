@@ -1,4 +1,5 @@
 #include <arespch.h>
+#include <glad/wgl.h>
 
 #include "Engine/Core/Application.h"
 
@@ -12,7 +13,16 @@ namespace Ares {
 		Application& app = Application::Get();
 		m_HDC = GetDC(static_cast<HWND>(app.GetWindow().GetNativeWindow()));
 
-		m_Context = wglCreateContext(m_HDC);
+		int attributes[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+			WGL_CONTEXT_FLAGS_ARB,
+			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			0
+		};
+
+		// Create the final OpenGL context and get rid of the temporary one
+		m_Context = wglCreateContextAttribsARB(m_HDC, reinterpret_cast<HGLRC>(const_cast<void*>(primaryContext)), attributes);
 		if (!m_Context)
 			AR_CORE_ERROR("Failed to create shared OpenGL context!");
 		if (!wglShareLists(reinterpret_cast<HGLRC>(const_cast<void*>(primaryContext)), m_Context))

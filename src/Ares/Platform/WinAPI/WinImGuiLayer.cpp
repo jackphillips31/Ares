@@ -123,7 +123,7 @@ namespace Ares {
 			0
 		};
 
-		HGLRC mainContext = wglGetCurrentContext();
+		HGLRC mainContext = reinterpret_cast<HGLRC>(const_cast<void*>(Application::Get().GetWindow().GetGraphicsContext()->GetContextHandle()));
 		AR_CORE_ASSERT(mainContext, "Failed to get main context for viewport!");
 
 		HGLRC sharedContext = wglCreateContextAttribsARB(hdc, mainContext, attributes);
@@ -133,25 +133,24 @@ namespace Ares {
 		{
 			DWORD error2 = GetLastError();
 			AR_CORE_ERROR("wglShareLists failed with error: {}", error2);
-			//AR_CORE_ASSERT(false, "Failed to share OpenGL resources!");
 		}
 
-		ReleaseDC((HWND)viewport->PlatformHandle, hdc);
+		ReleaseDC(static_cast<HWND>(viewport->PlatformHandle), hdc);
 
-		viewport->RendererUserData = (void*)sharedContext;
+		viewport->RendererUserData = static_cast<void*>(sharedContext);
 	}
 
 	void RenderViewport(ImGuiViewport* viewport, void* render_arg)
 	{
-		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
-		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
+		HDC hdc = GetDC(static_cast<HWND>(viewport->PlatformHandle));
+		HGLRC sharedContext = static_cast<HGLRC>(viewport->RendererUserData);
 
 		wglMakeCurrent(hdc, sharedContext);
 
 		ImGui_ImplOpenGL3_RenderDrawData(viewport->DrawData);
 
 		SwapBuffers(hdc);
-
+		
 		wglMakeCurrent(nullptr, nullptr);
 	}
 
