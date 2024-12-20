@@ -1,6 +1,7 @@
 #include <arespch.h>
 
 #include "Engine/Core/Application.h"
+#include "Engine/Renderer/RenderCommand.h"
 
 #include "Engine/Core/ThreadPool.h"
 
@@ -53,6 +54,7 @@ namespace Ares {
 						s_TaskQueue.pop();
 					}
 					task();
+					RenderCommand::Finish();
 				}
 			});
 		};

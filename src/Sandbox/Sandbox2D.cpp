@@ -77,7 +77,14 @@ Sandbox2D::Sandbox2D()
 			m_DefaultWhite->SetData(&textureData, sizeof(uint32_t));
 
 			Ares::FileBuffer defaultTexture = Ares::FileIO::LoadFile("assets/textures/DefaultTexture.png");
-			m_DefaultTexture = Ares::Texture::Create("DefaultTexture", defaultTexture);
+			//m_DefaultTexture = Ares::Texture::Create("DefaultTexture", defaultTexture);
+		}
+	);
+
+	Ares::AssetManager::Load(
+		Ares::AssetManager::Stage<Ares::Texture>("DefaultTexture", "assets/textures/DefaultTexture.png"),
+		[this](Ares::Ref<Ares::Asset> asset) {
+			m_DefaultTexture = asset->GetAsset<Ares::Texture>();
 		}
 	);
 }

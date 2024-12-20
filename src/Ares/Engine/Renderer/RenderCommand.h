@@ -33,6 +33,10 @@ namespace Ares {
 			s_RendererAPI->Clear();
 		}
 
+		inline static void Finish() {
+			s_RendererAPI->Finish();
+		}
+
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
