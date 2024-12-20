@@ -26,7 +26,6 @@ public:
 	virtual void OnImGuiRender() override;
 
 	bool OnWindowFocus(Ares::WindowFocusEvent& event);
-	bool OnAssetLoad(Ares::AssetLoadedEvent& event);
 
 private:
 	Ares::Window& m_Window;
@@ -42,12 +41,10 @@ private:
 	Ares::Ref<Ares::VertexBuffer> m_VBO;
 	Ares::Ref<Ares::IndexBuffer> m_IBO;
 	Ares::Ref<Ares::VertexArray> m_VAO;
-	Ares::Ref<Ares::Asset> m_VertexShader;
-	Ares::Ref<Ares::Asset> m_FragmentShader;
-	Ares::Ref<Ares::ShaderProgram> m_ShaderProgram;
 	Ares::Ref<Ares::FrameBuffer> m_FBO;
-
-	uint32_t m_TextureListener;
+	Ares::Ref<Ares::Texture> m_DefaultWhite;
+	Ares::Ref<Ares::Texture> m_DefaultTexture;
+	Ares::Ref<Ares::ShaderProgram> m_ShaderProgram;
 
 	Ares::Scope<ViewportCamera> m_Camera;
 };

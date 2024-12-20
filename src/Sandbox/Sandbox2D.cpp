@@ -6,48 +6,47 @@ Sandbox2D::Sandbox2D()
 {
 	Ares::BufferLayout bufferLayout = Ares::BufferLayout({
 		{ Ares::ShaderDataType::Float3, "a_Position"},
-		{ Ares::ShaderDataType::Float4, "a_Color"}
+		{ Ares::ShaderDataType::Float4, "a_Color"},
+		{ Ares::ShaderDataType::Float2, "a_TexCoord"},
+		{ Ares::ShaderDataType::Float, "a_TexIndex"},
+		{ Ares::ShaderDataType::Float, "a_TilingFactor"}
 	});
 
-	float vertices[98] = {
-		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	float vertices[110] = {
+		// SQUARE
+		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,	// 0 - Top left
+		0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,	// 1 - Top right
+		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	// 2 - Bottom left
+		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,	// 3 - Bottom right
 
-		-1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // RED -X
-		-1.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-		-2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		// RED -X
+		-1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// 4 - Bottom right
+		-1.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// 5 - Top
+		-2.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// 6 - Bottom left
 
-		1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // GREEN +X
-		1.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-		2.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
+		// GREEN +X
+		1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// 7 - Bottom left
+		1.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// 8 - Top
+		2.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f	// 9 - Bottom right
 	};
 
-	uint32_t indices[30] = {
-		0, 1, 2,
-		2, 1, 3,
-		1, 4, 3,
-		3, 4, 5,
-		5, 3, 2,
-		2, 6, 5,
-		7, 6, 2,
-		2, 0, 7,
+	uint32_t indices[12] = {
+		// SQUARE
+		0, 2, 1,
+		1, 2, 3,
 
-		8, 9, 10,
+		// RED -X
+		4, 5, 6,
 
-		11, 12, 13
+		// GREEN +X
+		9, 8, 7
 	};
 
 	m_VBO = Ares::VertexBuffer::Create(vertices, sizeof(vertices));
 	m_VBO->SetLayout(bufferLayout);
 
-	m_IBO = Ares::IndexBuffer::Create(30);
-	m_IBO->SetData(indices, 30);
+	m_IBO = Ares::IndexBuffer::Create(12);
+	m_IBO->SetData(indices, 12);
 
 	m_VAO = Ares::VertexArray::Create();
 	m_VAO->AddVertexBuffer(m_VBO);
@@ -56,24 +55,29 @@ Sandbox2D::Sandbox2D()
 	m_Camera = Ares::CreateScope<ViewportCamera>(1280.0f, 720.0f);
 	m_Camera->SetPosition({ 0.0f, 0.0f, 2.0f });
 
-	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnAssetLoad));
 	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
 
 	Ares::AssetManager::Load(
-		{
-			Ares::AssetManager::Stage<Ares::Texture2D>("DefaultTexture", "assets/textures/DefaultTexture.png"),
-			Ares::AssetManager::Stage<Ares::ShaderProgram>("FlatColorShaderProgram", {
-				Ares::AssetManager::Stage<Ares::VertexShader>("FlatColorVertex", "assets/shaders/FlatColorVertex.glsl"),
-				Ares::AssetManager::Stage<Ares::FragmentShader>("FlatColorFragment", "assets/shaders/FlatColorFragment.glsl")
-			})
-		},
+		Ares::AssetManager::Stage<Ares::ShaderProgram>("TextureShader", "assets/shaders/TextureShaderSource.shader"),
 		[this](Ares::Ref<Ares::Asset> asset)
 		{
-			if (asset->GetName() == "FlatColorShaderProgram")
+			int32_t samplers[4];
+			int32_t samplers2[4] = { 0, 1, 2, 3 };
+			for (uint32_t i = 0; i < 4; i++)
 			{
-				m_ShaderProgram = asset->GetAsset<Ares::ShaderProgram>();
-				m_ShaderProgram->Bind();
+				samplers[i] = i;
 			}
+
+			m_ShaderProgram = asset->GetAsset<Ares::ShaderProgram>();
+			m_ShaderProgram->Bind();
+			m_ShaderProgram->SetIntArray("u_Textures", samplers, 4);
+
+			uint32_t textureData = 0xffffffff;
+			m_DefaultWhite = Ares::Texture::Create("TestTexture", { 1, 1 }, Ares::Texture::Format::RGBA);
+			m_DefaultWhite->SetData(&textureData, sizeof(uint32_t));
+
+			Ares::FileBuffer defaultTexture = Ares::FileIO::LoadFile("assets/textures/DefaultTexture.png");
+			m_DefaultTexture = Ares::Texture::Create("DefaultTexture", defaultTexture);
 		}
 	);
 }
@@ -115,16 +119,18 @@ void Sandbox2D::OnRender()
 	if (availableSize.x && availableSize.y)
 		m_Camera->SetViewportSize({ availableSize.x, availableSize.y });
 
-	if (frameBuffer && m_ShaderProgram)
+	if (frameBuffer && m_ShaderProgram && m_DefaultTexture && m_DefaultWhite)
 	{
-		m_ShaderProgram->SetMat4("u_ViewProjectionMatrix", m_Camera->GetViewProjectionMatrix());
+		m_ShaderProgram->Bind();
+		m_ShaderProgram->SetMat4("u_ViewProjection", m_Camera->GetViewProjectionMatrix());
+
+		m_DefaultWhite->Bind(0);
+		m_DefaultTexture->Bind(1);
 
 		frameBuffer->Bind();
-
 		Ares::RenderCommand::SetViewport(0, 0, static_cast<uint32_t>(availableSize.x), static_cast<uint32_t>(availableSize.y));
 		Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Ares::RenderCommand::Clear();
-
 		Ares::RenderCommand::DrawIndexed(m_VAO);
 		frameBuffer->Unbind();
 	}
@@ -160,11 +166,5 @@ void Sandbox2D::OnImGuiRender()
 bool Sandbox2D::OnWindowFocus(Ares::WindowFocusEvent& event)
 {
 	AR_TRACE(event);
-	return false;
-}
-
-bool Sandbox2D::OnAssetLoad(Ares::AssetLoadedEvent& event)
-{
-	AR_TRACE("{} loaded!", event.GetAssetName());
 	return false;
 }
