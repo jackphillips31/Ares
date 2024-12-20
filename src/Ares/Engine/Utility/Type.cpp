@@ -15,7 +15,7 @@ namespace Ares {
 				{typeid(::Ares::VertexShader), Type::VertexShader},
 				{typeid(::Ares::FragmentShader), Type::FragmentShader},
 				{typeid(::Ares::ShaderProgram), Type::ShaderProgram},
-				{typeid(::Ares::Texture2D), Type::Texture2D}
+				{typeid(::Ares::Texture), Type::Texture}
 			};
 
 			const uint32_t GetTypeMapId(const std::type_index& type)

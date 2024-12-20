@@ -12,7 +12,7 @@ namespace Ares {
 				VertexShader,
 				FragmentShader,
 				ShaderProgram,
-				Texture2D,
+				Texture,
 			};
 
 			const uint32_t GetTypeMapId(const std::type_index& type);

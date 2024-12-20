@@ -63,7 +63,7 @@ namespace Ares {
 		static void LoadRawAsset(const Ref<Asset>& asset, const AssetCallbackFn callback = nullptr);
 		static Ref<VertexShader> LoadVertexShader(const Ref<Asset>& asset);
 		static Ref<FragmentShader> LoadFragmentShader(const Ref<Asset>& asset);
-		static Ref<Texture2D> LoadTexture2D(const Ref<Asset>& asset);
+		static Ref<Texture> LoadTexture(const Ref<Asset>& asset);
 		static Ref<ShaderProgram> LoadShaderProgram(const Ref<Asset>& asset);
 
 		// Private hash function

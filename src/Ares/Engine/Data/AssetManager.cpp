@@ -34,7 +34,7 @@ namespace Ares {
 	// Explicit instantiations for StageAsset types
 	template Ref<Asset> AssetManager::Stage<VertexShader>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 	template Ref<Asset> AssetManager::Stage<FragmentShader>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
-	template Ref<Asset> AssetManager::Stage<Texture2D>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
+	template Ref<Asset> AssetManager::Stage<Texture>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 
 	void AssetManager::Init()
@@ -415,8 +415,8 @@ namespace Ares {
 						rawAsset = LoadShaderProgram(asset);
 						break;
 					}
-					case Utility::Type::Texture2D: {
-						rawAsset = LoadTexture2D(asset);
+					case Utility::Type::Texture: {
+						rawAsset = LoadTexture(asset);
 						break;
 					}
 					default: {
@@ -477,16 +477,16 @@ namespace Ares {
 		return FragmentShader::Create(asset->GetName(), fileBuffer);
 	}
 
-	Ref<Texture2D> AssetManager::LoadTexture2D(const Ref<Asset>& asset)
+	Ref<Texture> AssetManager::LoadTexture(const Ref<Asset>& asset)
 	{
 		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
 		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
 		{
-			std::string error = "Failed to load Texture2D file: '" + asset->GetFilepath() + "'";
+			std::string error = "Failed to load Texture file: '" + asset->GetFilepath() + "'";
 			AR_CORE_ERROR(error);
 			throw std::runtime_error(error);
 		}
-		return Texture2D::Create(asset->GetName(), fileBuffer);
+		return Texture::Create(asset->GetName(), fileBuffer);
 	}
 
 	Ref<ShaderProgram> AssetManager::LoadShaderProgram(const Ref<Asset>& asset)
