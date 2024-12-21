@@ -11,6 +11,7 @@ namespace Ares {
 	{
 	public:
 		OpenGLTexture(const std::string& name, const FileBuffer& fileBuffer);
+		OpenGLTexture(const std::string& name, const void* data, const size_t& size);
 		OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const Format& format);
 		virtual ~OpenGLTexture();
 

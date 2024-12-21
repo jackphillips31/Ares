@@ -19,6 +19,18 @@ namespace Ares {
 		return nullptr;
 	}
 
+	Ref<Texture> Texture::Create(const std::string& name, const void* data, const size_t& size)
+	{
+		switch (Renderer::GetAPI())
+		{
+		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLTexture>(name, data, size);
+		}
+
+		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
+
 	Ref<Texture> Texture::Create(const std::string& name, const glm::uvec2& dimensions, Format format)
 	{
 		switch (Renderer::GetAPI())

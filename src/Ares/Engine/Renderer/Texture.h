@@ -67,6 +67,7 @@ namespace Ares {
 		virtual uint32_t GetRendererID() const = 0;
 
 		static Ref<Texture> Create(const std::string& name, const FileBuffer& fileBuffer);
+		static Ref<Texture> Create(const std::string& name, const void* data, const size_t& size);
 		static Ref<Texture> Create(const std::string& name, const glm::uvec2& dimensions, Format format = Format::RGBA);
 
 		virtual bool operator==(const Texture& other) const = 0;

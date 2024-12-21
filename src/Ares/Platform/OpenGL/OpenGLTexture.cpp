@@ -34,7 +34,47 @@ namespace Ares {
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, width, height);
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, 64, 64, m_DataFormat, GL_UNSIGNED_BYTE, imageData);
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, width, height, m_DataFormat, GL_UNSIGNED_BYTE, imageData);
+
+		// Set default texture parameters
+		SetFilter(Filter::Linear, Filter::Linear);
+		SetWrap(Wrap::Repeat);
+
+		stbi_image_free(imageData);
+
+		glFinish();
+	}
+
+	OpenGLTexture::OpenGLTexture(const std::string& name, const void* data, const size_t& size)
+		: m_Name(name), m_BoundSlot(-1), m_Format(Format::None)
+	{
+		int32_t width, height, channels;
+		stbi_set_flip_vertically_on_load(1);
+
+		stbi_uc* imageData = stbi_load_from_memory(reinterpret_cast<const uint8_t*>(data), static_cast<int32_t>(size), &width, &height, &channels, 0);
+		AR_CORE_ASSERT(imageData, "Failed to load image!");
+		m_Width = static_cast<uint32_t>(width);
+		m_Height = static_cast<uint32_t>(height);
+
+		if (channels == 4)
+		{
+			m_InternalFormat = GL_RGBA8;
+			m_DataFormat = GL_RGBA;
+			m_Format = Format::RGBA;
+		}
+		else if (channels == 3)
+		{
+			m_InternalFormat = GL_RGB8;
+			m_DataFormat = GL_RGB;
+			m_Format = Format::RGB;
+		}
+
+		AR_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, width, height);
+
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, width, height, m_DataFormat, GL_UNSIGNED_BYTE, imageData);
 
 		// Set default texture parameters
 		SetFilter(Filter::Linear, Filter::Linear);
