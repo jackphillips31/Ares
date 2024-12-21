@@ -41,6 +41,8 @@ namespace Ares {
 		SetWrap(Wrap::Repeat);
 
 		stbi_image_free(imageData);
+
+		glFinish();
 	}
 
 	OpenGLTexture::OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const Format& format)
@@ -57,6 +59,8 @@ namespace Ares {
 		// Set default texture parameters
 		SetFilter(Filter::Linear, Filter::Linear);
 		SetWrap(Wrap::Repeat);
+
+		glFinish();
 	}
 
 	OpenGLTexture::~OpenGLTexture()

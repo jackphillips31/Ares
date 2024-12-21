@@ -54,7 +54,6 @@ namespace Ares {
 						s_TaskQueue.pop();
 					}
 					task();
-					RenderCommand::Finish();
 				}
 			});
 		};
