@@ -1,5 +1,4 @@
 #include <arespch.h>
-#include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Platform/OpenGL/OpenGLShader.h"
@@ -50,22 +49,22 @@ namespace Ares {
 	{
 		m_ShaderId = glCreateShader(GetShaderType());
 
-		glShaderSource(m_ShaderId, 1, &shaderSource, &shaderSize);
+		glShaderSource(m_ShaderId, 1, static_cast<const GLchar *const*>(&shaderSource), static_cast<const GLint*>(&shaderSize));
 		glCompileShader(m_ShaderId);
 
 		GLint isCompiled = 0;
 		glGetShaderiv(m_ShaderId, GL_COMPILE_STATUS, &isCompiled);
 		if (isCompiled == GL_FALSE)
 		{
-			int32_t maxLength = 0;
+			GLint maxLength = 0;
 			glGetShaderiv(m_ShaderId, GL_INFO_LOG_LENGTH, &maxLength);
 
-			std::vector<char> infoLog(maxLength);
+			std::vector<GLchar> infoLog(maxLength);
 			glGetShaderInfoLog(m_ShaderId, maxLength, &maxLength, &infoLog[0]);
 
 			glDeleteShader(m_ShaderId);
 
-			AR_CORE_ERROR("Shader Compilation Error: {}", infoLog.data());
+			AR_CORE_ERROR("Shader Compilation Error: {}", static_cast<char*>(infoLog.data()));
 			AR_CORE_ASSERT(false, "Shader Compilation Failure!");
 			return;
 		}
@@ -115,22 +114,22 @@ namespace Ares {
 	{
 		m_ShaderId = glCreateShader(GetShaderType());
 
-		glShaderSource(m_ShaderId, 1, &shaderSource, &shaderSize);
+		glShaderSource(m_ShaderId, 1, static_cast<const GLchar* const*>(&shaderSource), static_cast<const GLint*>(&shaderSize));
 		glCompileShader(m_ShaderId);
 
 		GLint isCompiled = 0;
 		glGetShaderiv(m_ShaderId, GL_COMPILE_STATUS, &isCompiled);
 		if (isCompiled == GL_FALSE)
 		{
-			int32_t maxLength = 0;
+			GLint maxLength = 0;
 			glGetShaderiv(m_ShaderId, GL_INFO_LOG_LENGTH, &maxLength);
 
-			std::vector<char> infoLog(maxLength);
+			std::vector<GLchar> infoLog(maxLength);
 			glGetShaderInfoLog(m_ShaderId, maxLength, &maxLength, &infoLog[0]);
 
 			glDeleteShader(m_ShaderId);
 
-			AR_CORE_ERROR("Shader Compilation Error: {}", infoLog.data());
+			AR_CORE_ERROR("Shader Compilation Error: {}", static_cast<char*>(infoLog.data()));
 			AR_CORE_ASSERT(false, "Shader Compilation Failure!");
 			return;
 		}
@@ -157,7 +156,7 @@ namespace Ares {
 
 		for (auto& shader : shaders)
 		{
-			glAttachShader(m_ProgramId, shader->GetId());
+			glAttachShader(m_ProgramId, static_cast<GLuint>(shader->GetId()));
 		}
 
 		glLinkProgram(m_ProgramId);
@@ -166,15 +165,15 @@ namespace Ares {
 		glGetProgramiv(m_ProgramId, GL_LINK_STATUS, &isLinked);
 		if (isLinked == GL_FALSE)
 		{
-			int32_t maxLength = 0;
+			GLint maxLength = 0;
 			glGetProgramiv(m_ProgramId, GL_INFO_LOG_LENGTH, &maxLength);
 
-			std::vector<char> infoLog(maxLength);
+			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(m_ProgramId, maxLength, &maxLength, &infoLog[0]);
 
 			glDeleteProgram(m_ProgramId);
 
-			AR_CORE_ERROR("Shader Program Error: {}", infoLog.data());
+			AR_CORE_ERROR("Shader Program Error: {}", static_cast<char*>(infoLog.data()));
 			AR_CORE_ASSERT(false, "Shader Program Link Failure!");
 			return;
 		}
@@ -197,90 +196,90 @@ namespace Ares {
 
 	void OpenGLShaderProgram::SetInt(const std::string& name, int32_t value)
 	{
-		UploadUniformInt(name, value);
+		UploadUniformInt(name, static_cast<GLint>(value));
 	}
 
 	void OpenGLShaderProgram::SetIntArray(const std::string& name, int32_t* values, uint32_t count)
 	{
-		UploadUniformIntArray(name, values, count);
+		UploadUniformIntArray(name, static_cast<GLsizei>(count), static_cast<GLint*>(values));
 	}
 
 	void OpenGLShaderProgram::SetFloat(const std::string& name, float value)
 	{
-		UploadUniformFloat(name, value);
+		UploadUniformFloat(name, static_cast<GLfloat>(value));
 	}
 
 	void OpenGLShaderProgram::SetFloat2(const std::string& name, const glm::vec2& values)
 	{
-		UploadUniformFloat2(name, values);
+		UploadUniformFloat2(name, static_cast<GLfloat>(values.x), static_cast<GLfloat>(values.y));
 	}
 
 	void OpenGLShaderProgram::SetFloat3(const std::string& name, const glm::vec3& values)
 	{
-		UploadUniformFloat3(name, values);
+		UploadUniformFloat3(name, static_cast<GLfloat>(values.x), static_cast<GLfloat>(values.y), static_cast<GLfloat>(values.z));
 	}
 
 	void OpenGLShaderProgram::SetFloat4(const std::string& name, const glm::vec4& values)
 	{
-		UploadUniformFloat4(name, values);
+		UploadUniformFloat4(name, static_cast<GLfloat>(values.x), static_cast<GLfloat>(values.y), static_cast<GLfloat>(values.z), static_cast<GLfloat>(values.w));
 	}
 
 	void OpenGLShaderProgram::SetMat3(const std::string& name, const glm::mat3& matrix)
 	{
-		UploadUniformMat3(name, matrix);
+		UploadUniformMat3(name, static_cast<const GLfloat*>(glm::value_ptr(matrix)));
 	}
 
 	void OpenGLShaderProgram::SetMat4(const std::string& name, const glm::mat4& matrix)
 	{
-		UploadUniformMat4(name, matrix);
+		UploadUniformMat4(name, static_cast<const GLfloat*>(glm::value_ptr(matrix)));
 	}
 
-	void OpenGLShaderProgram::UploadUniformInt(const std::string& name, int32_t value)
+	void OpenGLShaderProgram::UploadUniformInt(const std::string& name, GLint value)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
 		glUniform1i(location, value);
 	}
 
-	void OpenGLShaderProgram::UploadUniformIntArray(const std::string& name, int32_t* values, uint32_t count)
+	void OpenGLShaderProgram::UploadUniformIntArray(const std::string& name, GLsizei count, const GLint* values)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
 		glUniform1iv(location, count, values);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat(const std::string& name, float value)
+	void OpenGLShaderProgram::UploadUniformFloat(const std::string& name, GLfloat value)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
 		glUniform1f(location, value);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat2(const std::string& name, const glm::vec2& values)
+	void OpenGLShaderProgram::UploadUniformFloat2(const std::string& name, GLfloat v0, GLfloat v1)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
-		glUniform2f(location, values.x, values.y);
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+		glUniform2f(location, v0, v1);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
+	void OpenGLShaderProgram::UploadUniformFloat3(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
-		glUniform3f(location, values.x, values.y, values.z);
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+		glUniform3f(location, v0, v1, v2);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
+	void OpenGLShaderProgram::UploadUniformFloat4(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
-		glUniform4f(location, values.x, values.y, values.z, values.w);
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+		glUniform4f(location, v0, v1, v2, v3);
 	}
 
-	void OpenGLShaderProgram::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
+	void OpenGLShaderProgram::UploadUniformMat3(const std::string& name, const GLfloat* values)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
-		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+		glUniformMatrix3fv(location, 1, GL_FALSE, values);
 	}
 
-	void OpenGLShaderProgram::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+	void OpenGLShaderProgram::UploadUniformMat4(const std::string& name, const GLfloat* values)
 	{
-		int32_t location = glGetUniformLocation(m_ProgramId, name.c_str());
-		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+		GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+		glUniformMatrix4fv(location, 1, GL_FALSE, values);
 	}
 
 }

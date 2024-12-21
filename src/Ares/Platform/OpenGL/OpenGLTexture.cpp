@@ -13,8 +13,8 @@ namespace Ares {
 
 		stbi_uc* imageData = stbi_load_from_memory(static_cast<const uint8_t*>(fileBuffer.GetBuffer()), static_cast<int32_t>(fileBuffer.GetSize()), &width, &height, &channels, 0);
 		AR_CORE_ASSERT(imageData, "Failed to load image!");
-		m_Width = static_cast<uint32_t>(width);
-		m_Height = static_cast<uint32_t>(height);
+		m_Width = static_cast<GLsizei>(width);
+		m_Height = static_cast<GLsizei>(height);
 
 		if (channels == 4)
 		{
@@ -32,9 +32,9 @@ namespace Ares {
 		AR_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, width, height);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, width, height, m_DataFormat, GL_UNSIGNED_BYTE, imageData);
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, static_cast<const void*>(imageData));
 
 		// Set default texture parameters
 		SetFilter(Filter::Linear, Filter::Linear);
@@ -45,16 +45,16 @@ namespace Ares {
 		glFinish();
 	}
 
-	OpenGLTexture::OpenGLTexture(const std::string& name, const void* data, const size_t& size)
+	OpenGLTexture::OpenGLTexture(const std::string& name, const RawData& data)
 		: m_Name(name), m_BoundSlot(-1), m_Format(Format::None)
 	{
 		int32_t width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
 
-		stbi_uc* imageData = stbi_load_from_memory(reinterpret_cast<const uint8_t*>(data), static_cast<int32_t>(size), &width, &height, &channels, 0);
+		stbi_uc* imageData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(data.Data), static_cast<int32_t>(data.Size), &width, &height, &channels, 0);
 		AR_CORE_ASSERT(imageData, "Failed to load image!");
-		m_Width = static_cast<uint32_t>(width);
-		m_Height = static_cast<uint32_t>(height);
+		m_Width = static_cast<GLsizei>(width);
+		m_Height = static_cast<GLsizei>(height);
 
 		if (channels == 4)
 		{
@@ -72,9 +72,9 @@ namespace Ares {
 		AR_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, width, height);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, width, height, m_DataFormat, GL_UNSIGNED_BYTE, imageData);
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, static_cast<void*>(imageData));
 
 		// Set default texture parameters
 		SetFilter(Filter::Linear, Filter::Linear);
@@ -86,7 +86,7 @@ namespace Ares {
 	}
 
 	OpenGLTexture::OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const Format& format)
-		: m_Name(name), m_Width(dimensions.x), m_Height(dimensions.y), m_Format(format), m_RendererID(0), m_BoundSlot(-1)
+		: m_Name(name), m_Width(static_cast<GLsizei>(dimensions.x)), m_Height(static_cast<GLsizei>(dimensions.y)), m_Format(format), m_RendererID(0), m_BoundSlot(-1)
 	{
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 
@@ -94,7 +94,7 @@ namespace Ares {
 		m_DataFormat = GetGLDataFormat(format);
 
 		// Allocate immutable storage for the texture
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, dimensions.x, dimensions.y);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
 		// Set default texture parameters
 		SetFilter(Filter::Linear, Filter::Linear);
@@ -111,7 +111,7 @@ namespace Ares {
 	void OpenGLTexture::Bind(uint32_t slot) const
 	{
 		AR_CORE_ASSERT(m_RendererID != 0, "Invalid Renderer ID!");
-		glBindTextureUnit(slot, m_RendererID);
+		glBindTextureUnit(static_cast<GLuint>(slot), m_RendererID);
 		m_BoundSlot = static_cast<int32_t>(slot);
 	}
 
@@ -119,7 +119,7 @@ namespace Ares {
 	{
 		if (m_BoundSlot != -1)
 		{
-			glBindTextureUnit(m_BoundSlot, 0);
+			glBindTextureUnit(static_cast<GLuint>(m_BoundSlot), 0);
 			m_BoundSlot = -1;
 		}
 	}
@@ -138,16 +138,20 @@ namespace Ares {
 
 	void OpenGLTexture::Resize(const uint32_t& width, const uint32_t& height)
 	{
-		m_Width = width;
-		m_Height = height;
+		m_Width = static_cast<GLsizei>(width);
+		m_Height = static_cast<GLsizei>(height);
 
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, width, height);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 	}
 
-	void OpenGLTexture::SetData(const void* data, const size_t& size)
+	void OpenGLTexture::SetData(const RawData& data)
 	{
-		AR_CORE_ASSERT(static_cast<uint32_t>(size) == m_Width * m_Height * GetBytesPerPixel(m_Format), "Data size mismatch!");
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+		AR_CORE_ASSERT(
+			static_cast<uint32_t>(data.Size) ==
+			static_cast<uint32_t>(m_Width) * static_cast<uint32_t>(m_Height) * GetBytesPerPixel(m_Format),
+			"Data size mismatch!"
+		);
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data.Data);
 	}
 
 	void OpenGLTexture::GenerateMips()

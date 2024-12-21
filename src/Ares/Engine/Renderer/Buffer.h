@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/Utility.h"
+
 namespace Ares {
 
 	enum class ShaderDataType
@@ -133,7 +135,7 @@ namespace Ares {
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetData(const void* vertices, uint32_t size) const = 0;
+		virtual void SetData(const RawData& data) const = 0;
 		
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
@@ -141,7 +143,7 @@ namespace Ares {
 		virtual bool operator==(const VertexBuffer& other) const = 0;
 
 		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(const RawData& data);
 	};
 
 	class IndexBuffer
@@ -152,12 +154,12 @@ namespace Ares {
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetData(const uint32_t* indices, uint32_t count) const = 0;
+		virtual void SetData(const RawData& data) const = 0;
 
 		virtual uint32_t GetCount() const = 0;
 
-		static Ref<IndexBuffer> Create(uint32_t count);
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+		static Ref<IndexBuffer> Create(uint32_t size);
+		static Ref<IndexBuffer> Create(const RawData& data);
 	};
 
 }

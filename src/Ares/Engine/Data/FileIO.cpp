@@ -10,7 +10,7 @@ namespace Ares {
 		if (!file)
 		{
 			AR_CORE_WARN("Failed to open file for reading: '{}'", filepath);
-			return FileBuffer(nullptr, 0);
+			return FileBuffer({ nullptr, 0 });
 		}
 		else
 		{
@@ -18,13 +18,13 @@ namespace Ares {
 			size_t fileSize = file.tellg();
 			file.seekg(0, std::ios::beg);
 
-			FileBuffer result(nullptr, fileSize);
+			FileBuffer result({ nullptr, fileSize });
 
 			Scope<uint8_t[]> buffer = CreateScope<uint8_t[]>(fileSize);
 			if (!file.read(reinterpret_cast<char*>(result.SetBuffer()), fileSize))
 			{
 				AR_CORE_WARN("Failed to read from file: '{}'", filepath);
-				return FileBuffer(nullptr, 0);
+				return FileBuffer({ nullptr, 0 });
 			}
 			else
 			{

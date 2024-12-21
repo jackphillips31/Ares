@@ -110,6 +110,7 @@ namespace Ares {
 		asset->SetAssetId(0);
 		asset->SetAsset(nullptr);
 		asset->SetState(AssetState::None);
+		asset->SetRawData({ nullptr, 0 });
 
 		DispatchAssetEvent<AssetUnstagedEvent>(asset);
 	}
@@ -126,7 +127,7 @@ namespace Ares {
 			if (asset->GetState() == AssetState::Staged)
 			{
 				// Load standalone asset with no dependencies
-				if (asset->GetDependencies().size() == 0 && (!asset->GetFilepath().empty() || asset->GetRawData() != nullptr))
+				if (asset->GetDependencies().size() == 0 && (!asset->GetFilepath().empty() || asset->GetRawData()))
 				{
 					LoadRawAsset(asset, callback);
 				}
@@ -413,20 +414,18 @@ namespace Ares {
 	{		
 		if (asset->GetFilepath().empty()) {
 			AR_CORE_ASSERT(asset->GetRawData(), "Texture without filepath needs raw data!");
-			if (asset->GetRawDataSize() == sizeof(uint32_t)) {
+			if (asset->GetRawData().Size == sizeof(uint32_t)) {
 				Ref<Texture> result = Texture::Create(asset->GetName(), {1, 1}, Texture::Format::RGBA);
-				uint32_t test = 0xffffffff;
-				uint32_t* testPtr = &test;
-				result->SetData(asset->GetRawData(), asset->GetRawDataSize());
+				result->SetData(asset->GetRawData());
 				return result;
 			}
-			else if (asset->GetRawDataSize() == 3) {
+			else if (asset->GetRawData().Size == 3) {
 				Ref<Texture> result = Texture::Create(asset->GetName(), { 1, 1 }, Texture::Format::RGB);
-				result->SetData(asset->GetRawData(), asset->GetRawDataSize());
+				result->SetData(asset->GetRawData());
 				return result;
 			}
 			else {
-				return Texture::Create(asset->GetName(), asset->GetRawData(), asset->GetRawDataSize());
+				return Texture::Create(asset->GetName(), asset->GetRawData());
 			}
 		}
 		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
@@ -549,7 +548,7 @@ namespace Ares {
 		}
 	}
 
-	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const void* rawData, const size_t& rawDataSize)
+	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const RawData& rawData)
 	{
 		size_t hash = 0;
 
@@ -569,8 +568,8 @@ namespace Ares {
 		}
 
 		// Hash raw data (if not empty)
-		if (rawData && rawDataSize != 0) {
-			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(rawData), rawDataSize));
+		if (rawData) {
+			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(rawData.Data), rawData.Size));
 		}
 
 		return hash;

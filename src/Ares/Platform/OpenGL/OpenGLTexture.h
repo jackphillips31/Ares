@@ -11,14 +11,14 @@ namespace Ares {
 	{
 	public:
 		OpenGLTexture(const std::string& name, const FileBuffer& fileBuffer);
-		OpenGLTexture(const std::string& name, const void* data, const size_t& size);
+		OpenGLTexture(const std::string& name, const RawData& data);
 		OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const Format& format);
 		virtual ~OpenGLTexture();
 
 		// Core properties
 		inline const std::string& GetName() const override { return m_Name; }
-		inline uint32_t GetWidth() const override { return m_Width; }
-		inline uint32_t GetHeight() const override { return m_Height; }
+		inline uint32_t GetWidth() const override { return static_cast<uint32_t>(m_Width); }
+		inline uint32_t GetHeight() const override { return static_cast<uint32_t>(m_Height); }
 		inline Format GetFormat() const override { return m_Format; }
 
 		// Binding and state
@@ -33,12 +33,12 @@ namespace Ares {
 
 		// Utilities
 		void Resize(const uint32_t& width, const uint32_t& height) override;
-		void SetData(const void* data, const size_t& size) override;
+		void SetData(const RawData& data) override;
 		void GenerateMips() override;
 		inline bool IsValid() const override { return m_RendererID; }
 
 		// Renderer ID access (for low-level operations)
-		inline uint32_t GetRendererID() const override { return m_RendererID; }
+		inline uint32_t GetRendererID() const override { return static_cast<uint32_t>(m_RendererID); }
 
 		inline bool operator==(const Texture& other) const override
 		{
@@ -48,10 +48,10 @@ namespace Ares {
 	private:
 		std::string m_Path;
 		std::string m_Name;
-		uint32_t m_Width, m_Height;
+		GLsizei m_Width, m_Height;
 		Format m_Format;
 		mutable int32_t m_BoundSlot;
-		uint32_t m_RendererID;
+		GLuint m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
 
 	private:

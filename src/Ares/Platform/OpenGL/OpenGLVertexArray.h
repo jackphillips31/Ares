@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glad/gl.h>
+
 #include "Engine/Renderer/VertexArray.h"
 
 namespace Ares {
@@ -20,8 +22,8 @@ namespace Ares {
 		virtual const Ref<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; }
 
 	private:
-		uint32_t m_RendererID;
-		uint32_t m_VertexBufferIndex = 0;
+		GLuint m_RendererID;
+		GLuint m_VertexBufferIndex;
 		std::vector<Ref<VertexBuffer>> m_VertexBuffers;
 		Ref<IndexBuffer> m_IndexBuffer;
 	};

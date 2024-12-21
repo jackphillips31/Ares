@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glad/gl.h>
+
 #include "Engine/Renderer/FrameBuffer.h"
 
 namespace Ares {
@@ -20,9 +22,9 @@ namespace Ares {
 		uintptr_t GetColorAttachmentHandle() const override;
 
 	private:
-		uint32_t m_FBO;
-		uint32_t m_RBO;
-		uint32_t m_Texture;
+		GLuint m_FBO;
+		GLuint m_RBO;
+		GLuint m_Texture;
 
 		uint32_t m_Width;
 		uint32_t m_Height;

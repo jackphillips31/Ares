@@ -9,14 +9,13 @@ namespace Ares {
 		const AssetState& state,
 		const std::string& filepath,
 		const std::vector<uint32_t>& dependencies,
-		const void* rawData,
-		const size_t& rawDataSize
+		const RawData& rawData
 	)
 	{
 		// CreateRef (std::make_shared) doesn't have access to private
 		// constructors, so we wrap a raw pointer with a smart pointer
 		// instead.
-		return Ref<Asset>(new Asset(type, state, filepath, dependencies, rawData, rawDataSize));
+		return Ref<Asset>(new Asset(type, state, filepath, dependencies, rawData));
 	}
 
 	Asset::Asset(
@@ -24,8 +23,7 @@ namespace Ares {
 		const AssetState& state,
 		const std::string& filepath,
 		const std::vector<uint32_t>& dependencies,
-		const void* rawData,
-		const size_t& rawDataSize
+		const RawData& rawData
 	)
 		: m_Name(""),
 		m_Filepath(filepath),
@@ -35,8 +33,7 @@ namespace Ares {
 		m_AssetId(0),
 		m_Asset(nullptr),
 		m_State(state),
-		m_RawData(const_cast<void*>(rawData)),
-		m_RawDataSize(rawDataSize)
+		m_RawData(rawData)
 	{
 	}
 
@@ -49,8 +46,7 @@ namespace Ares {
 		m_AssetId(0),
 		m_Asset(nullptr),
 		m_State(AssetState::None),
-		m_RawData(nullptr),
-		m_RawDataSize(0)
+		m_RawData(RawData(nullptr, 0))
 	{
 	}
 
@@ -95,8 +91,8 @@ namespace Ares {
 		}
 
 		// Hash raw data (if not empty)
-		if (m_RawData && m_RawDataSize != 0) {
-			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(m_RawData), m_RawDataSize));
+		if (m_RawData) {
+			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(m_RawData.Data), m_RawData.Size));
 		}
 
 		return hash;
@@ -124,6 +120,11 @@ namespace Ares {
 	{
 		std::unique_lock lock(m_AssetMutex);
 		m_Asset = asset;
+	}
+
+	void Asset::SetRawData(const RawData& rawData) {
+		std::unique_lock lock(m_AssetMutex);
+		m_RawData = rawData;
 	}
 
 }

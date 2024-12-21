@@ -1,5 +1,4 @@
 #include <arespch.h>
-#include <glad/gl.h>
 
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 
@@ -27,6 +26,7 @@ namespace Ares {
 	}
 
 	OpenGLVertexArray::OpenGLVertexArray()
+		: m_VertexBufferIndex(0)
 	{
 		glCreateVertexArrays(1, &m_RendererID);
 	}
@@ -59,10 +59,10 @@ namespace Ares {
 			glEnableVertexAttribArray(m_VertexBufferIndex);
 			glVertexAttribPointer(
 				m_VertexBufferIndex,
-				element.GetComponentCount(),
+				static_cast<GLint>(element.GetComponentCount()),
 				ShaderDataTypeToOpenGLBaseType(element.Type),
 				element.Normalized ? GL_TRUE : GL_FALSE,
-				static_cast<int32_t>(layout.GetStride()),
+				static_cast<GLsizei>(layout.GetStride()),
 				reinterpret_cast<const void*>(element.Offset)
 			);
 			m_VertexBufferIndex++;

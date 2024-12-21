@@ -19,12 +19,12 @@ namespace Ares {
 		return nullptr;
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(const RawData& data)
 	{
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLVertexBuffer>(vertices, size);
+		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLVertexBuffer>(data);
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -43,12 +43,12 @@ namespace Ares {
 		return nullptr;
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
+	Ref<IndexBuffer> IndexBuffer::Create(const RawData& data)
 	{
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLIndexBuffer>(indices, count);
+		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLIndexBuffer>(data);
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");

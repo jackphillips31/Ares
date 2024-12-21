@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/Utility.h"
 
 namespace Ares {
 
 	class FileBuffer
 	{
 	public:
-		FileBuffer(const void* data, size_t size);
+		FileBuffer(const RawData& data);
 		FileBuffer(const FileBuffer& other) = delete;
 		FileBuffer(FileBuffer&& other) noexcept;
 		~FileBuffer();

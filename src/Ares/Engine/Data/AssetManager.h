@@ -26,11 +26,13 @@ namespace Ares {
 
 		// Stage / Unstage methods
 		template <typename AssetType>
-		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const void* rawData, const size_t& rawDataSize);
+		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const RawData& rawData);
 		template <typename AssetType>
-		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}, nullptr, 0); }
+		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}, { nullptr, 0 }); }
 		template <typename AssetType>
-		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies, nullptr, 0); }
+		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies, { nullptr, 0 }); }
+		template <typename AssetType>
+		inline static Ref<Asset> Stage(const std::string& name, const RawData& rawData) { return Stage<AssetType>(name, "", {}, rawData); }
 		static void Unstage(const Ref<Asset>& asset);
 
 		// Load / Unload methods
@@ -68,7 +70,7 @@ namespace Ares {
 		static Ref<ShaderProgram> LoadShaderProgram(const Ref<Asset>& asset);
 
 		// Private hash function
-		static const size_t GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const void* rawData, const size_t& rawDataSize);
+		static const size_t GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const RawData& rawData);
 		static Ref<Asset> FindExistingAsset(const size_t& contentHash);
 
 	private:
@@ -101,9 +103,9 @@ namespace Ares {
 	};
 
 	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const void* rawData, const size_t& rawDataSize)
+	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const RawData& rawData)
 	{
-		if (filepath.empty() && dependencies.size() == 0 && !rawData && rawDataSize == 0)
+		if (filepath.empty() && dependencies.size() == 0 && !rawData)
 		{
 			AR_CORE_ASSERT(false, "Asset needs either filepath, dependencies or raw data to be staged!");
 		}
@@ -117,7 +119,7 @@ namespace Ares {
 
 		// Compute content hash and check cache
 		Ref<Asset> asset = nullptr;
-		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds, rawData, rawDataSize);
+		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds, rawData);
 		asset = FindExistingAsset(contentHash);
 		if (asset)
 			return asset;
@@ -132,7 +134,7 @@ namespace Ares {
 
 		// Create and initialize the asset
 		const uint32_t currentId = s_NextAssetId++;
-		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds, rawData, rawDataSize);
+		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds, rawData);
 		asset->SetName(assetName);
 		asset->SetAssetId(currentId);
 

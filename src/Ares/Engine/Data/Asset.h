@@ -29,16 +29,14 @@ namespace Ares {
 			const AssetState& state,
 			const std::string& filepath,
 			const std::vector<uint32_t>& dependencies,
-			const void* rawData,
-			const size_t& rawDataSize
+			const RawData& rawData
 		);
 		Asset(
 			const std::type_index& type,
 			const AssetState& state,
 			const std::string& filepath,
 			const std::vector<uint32_t>& dependencies,
-			const void* rawData,
-			const size_t& rawDataSize
+			const RawData& rawData
 		);
 		Asset();
 
@@ -82,10 +80,10 @@ namespace Ares {
 		void SetState(const AssetState& state);
 		void SetAssetId(const uint32_t& id);
 		void SetAsset(const Ref<AssetBase>& asset);
+		void SetRawData(const RawData& rawData);
 
 		// Private getters for AssetManager to use
-		inline const void* GetRawData() const { return m_RawData; }
-		inline const size_t& GetRawDataSize() const { return m_RawDataSize; }
+		inline const RawData& GetRawData() const { return m_RawData; }
 
 	private:
 		std::string m_Name;
@@ -96,8 +94,7 @@ namespace Ares {
 		uint32_t m_AssetId;
 		Ref<AssetBase> m_Asset;
 		AssetState m_State;
-		void* m_RawData;
-		size_t m_RawDataSize;
+		RawData m_RawData;
 		mutable std::shared_mutex m_AssetMutex;
 	};
 

@@ -44,11 +44,10 @@ Sandbox2D::Sandbox2D()
 		9, 8, 7
 	};
 
-	m_VBO = Ares::VertexBuffer::Create(vertices, sizeof(vertices));
+	m_VBO = Ares::VertexBuffer::Create({ vertices, sizeof(vertices) });
 	m_VBO->SetLayout(bufferLayout);
 
-	m_IBO = Ares::IndexBuffer::Create(12);
-	m_IBO->SetData(indices, 12);
+	m_IBO = Ares::IndexBuffer::Create({ indices, sizeof(indices) });
 
 	m_VAO = Ares::VertexArray::Create();
 	m_VAO->AddVertexBuffer(m_VBO);
@@ -78,7 +77,7 @@ Sandbox2D::Sandbox2D()
 	Ares::AssetManager::Load(
 		{
 			Ares::AssetManager::Stage<Ares::Texture>("DefaultTexture", "assets/textures/DefaultTexture.png"),
-			Ares::AssetManager::Stage<Ares::Texture>("DefaultWhite", "", {}, &g_DefaultWhiteTexture, sizeof(uint32_t))
+			Ares::AssetManager::Stage<Ares::Texture>("DefaultWhite", { &g_DefaultWhiteTexture, sizeof(uint32_t) })
 		},
 		[this](Ares::Ref<Ares::Asset> asset) {
 			if (asset->GetName() == "DefaultTexture")

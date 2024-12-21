@@ -59,7 +59,7 @@ namespace Ares {
 
 		// Utilites
 		virtual void Resize(const uint32_t& width, const uint32_t& height) = 0;
-		virtual void SetData(const void* data, const size_t& size) = 0;
+		virtual void SetData(const RawData& data) = 0;
 		virtual void GenerateMips() = 0;
 		virtual bool IsValid() const = 0;
 
@@ -67,7 +67,7 @@ namespace Ares {
 		virtual uint32_t GetRendererID() const = 0;
 
 		static Ref<Texture> Create(const std::string& name, const FileBuffer& fileBuffer);
-		static Ref<Texture> Create(const std::string& name, const void* data, const size_t& size);
+		static Ref<Texture> Create(const std::string& name, const RawData& data);
 		static Ref<Texture> Create(const std::string& name, const glm::uvec2& dimensions, Format format = Format::RGBA);
 
 		virtual bool operator==(const Texture& other) const = 0;

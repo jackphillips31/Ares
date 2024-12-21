@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glad/gl.h>
+
 #include "Engine/Renderer/Shader.h"
 
 namespace Ares {
@@ -15,12 +17,12 @@ namespace Ares {
 		inline virtual const std::string& GetName() const override { return m_Name; }
 
 	private:
-		inline virtual uint32_t GetShaderType() const;
+		inline virtual GLenum GetShaderType() const;
 		virtual void Compile(const char* shaderSource, const int32_t shaderSize);
 
 	private:
 		std::string m_Name;
-		uint32_t m_ShaderId;
+		GLuint m_ShaderId;
 	};
 
 	class OpenGLFragmentShader : public FragmentShader
@@ -34,12 +36,12 @@ namespace Ares {
 		inline virtual const std::string& GetName() const override { return m_Name; }
 
 	private:
-		inline virtual uint32_t GetShaderType() const;
+		inline virtual GLenum GetShaderType() const;
 		virtual void Compile(const char* shaderSource, const int32_t shaderSize);
 
 	private:
 		std::string m_Name;
-		uint32_t m_ShaderId;
+		GLuint m_ShaderId;
 	};
 
 	class OpenGLShaderProgram : public ShaderProgram
@@ -64,18 +66,18 @@ namespace Ares {
 
 	private:
 		void LinkShaders(const std::vector<Ref<Shader>>& shaders);
-		void UploadUniformInt(const std::string& name, int32_t value);
-		void UploadUniformIntArray(const std::string& name, int32_t* values, uint32_t count);
-		void UploadUniformFloat(const std::string& name, float value);
-		void UploadUniformFloat2(const std::string& name, const glm::vec2& values);
-		void UploadUniformFloat3(const std::string& name, const glm::vec3& values);
-		void UploadUniformFloat4(const std::string& name, const glm::vec4& values);
-		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
-		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+		void UploadUniformInt(const std::string& name, GLint value);
+		void UploadUniformIntArray(const std::string& name, GLsizei count, const GLint* values);
+		void UploadUniformFloat(const std::string& name, GLfloat value);
+		void UploadUniformFloat2(const std::string& name, GLfloat v0, GLfloat v1);
+		void UploadUniformFloat3(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2);
+		void UploadUniformFloat4(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+		void UploadUniformMat3(const std::string& name, const GLfloat* values);
+		void UploadUniformMat4(const std::string& name, const GLfloat* values);
 
 	private:
 		std::string m_Name;
-		int32_t m_ProgramId;
+		GLuint m_ProgramId;
 	};
 
 }
