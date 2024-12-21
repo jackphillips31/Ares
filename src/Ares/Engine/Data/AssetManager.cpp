@@ -1,7 +1,6 @@
 #include <arespch.h>
 
 #include "Engine/Core/ThreadPool.h"
-#include "Engine/Core/Utility.h"
 #include "Engine/Data/FileIO.h"
 
 #include "Engine/Data/AssetManager.h"
@@ -30,12 +29,6 @@ namespace Ares {
 
 	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
 	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
-
-	// Explicit instantiations for StageAsset types
-	template Ref<Asset> AssetManager::Stage<VertexShader>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
-	template Ref<Asset> AssetManager::Stage<FragmentShader>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
-	template Ref<Asset> AssetManager::Stage<Texture>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
-	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
 
 	void AssetManager::Init()
 	{
@@ -86,67 +79,6 @@ namespace Ares {
 		}
 	}
 
-	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies)
-	{
-		if (filepath.empty() && dependencies.size() == 0)
-		{
-			AR_CORE_ASSERT(false, "Asset needs either filepath or dependencies to be staged!");
-		}
-
-		// Convert dependencies into IDs
-		std::vector<uint32_t> dependencyIds;
-		for (const Ref<Asset>& dep : dependencies)
-		{
-			dependencyIds.push_back(dep->GetAssetId());
-		}
-
-		// Compute content hash and check cache
-		Ref<Asset> asset = nullptr;
-		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds);
-		asset = FindExistingAsset(contentHash);
-		if (asset)
-			return asset;
-
-		// Ensure unique asset name
-		std::string assetName = name;
-		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			while (s_NameIdMap[assetName] != 0)
-				assetName = Utility::String::IncrementStringSuffix(assetName);
-		}
-
-		// Create and initialize the asset
-		const uint32_t currentId = s_NextAssetId++;
-		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds);
-		asset->SetName(assetName);
-		asset->SetAssetId(currentId);
-
-		// Update maps for name, hash, and type associations
-		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			s_NameIdMap[assetName] = currentId;
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_HashIdMutex);
-			s_HashIdMap[contentHash] = currentId;
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
-			s_TypeIdMap[typeid(AssetType)] = currentId;
-		}
-
-		// Add asset to cache
-		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			s_AssetCache[currentId] = asset;
-		}
-
-		// Dispatch Event, notify listeners, and return
-		DispatchAssetEvent<AssetStagedEvent>(asset);
-		return asset;
-	}
-
 	void AssetManager::Unstage(const Ref<Asset>& asset)
 	{
 		// Check for references outside AssetManager
@@ -194,7 +126,7 @@ namespace Ares {
 			if (asset->GetState() == AssetState::Staged)
 			{
 				// Load standalone asset with no dependencies
-				if (asset->GetDependencies().size() == 0 && !asset->GetFilepath().empty())
+				if (asset->GetDependencies().size() == 0 && (!asset->GetFilepath().empty() || asset->GetRawData() != nullptr))
 				{
 					LoadRawAsset(asset, callback);
 				}
@@ -478,7 +410,25 @@ namespace Ares {
 	}
 
 	Ref<Texture> AssetManager::LoadTexture(const Ref<Asset>& asset)
-	{
+	{		
+		if (asset->GetFilepath().empty()) {
+			AR_CORE_ASSERT(asset->GetRawData(), "Texture without filepath needs raw data!");
+			if (asset->GetRawDataSize() == sizeof(uint32_t)) {
+				Ref<Texture> result = Texture::Create(asset->GetName(), {1, 1}, Texture::Format::RGBA);
+				uint32_t test = 0xffffffff;
+				uint32_t* testPtr = &test;
+				result->SetData(asset->GetRawData(), asset->GetRawDataSize());
+				return result;
+			}
+			else if (asset->GetRawDataSize() == 3) {
+				Ref<Texture> result = Texture::Create(asset->GetName(), { 1, 1 }, Texture::Format::RGB);
+				result->SetData(asset->GetRawData(), asset->GetRawDataSize());
+				return result;
+			}
+			else {
+				return Texture::Create(asset->GetName(), asset->GetRawData(), asset->GetRawDataSize());
+			}
+		}
 		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
 		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
 		{
@@ -599,9 +549,12 @@ namespace Ares {
 		}
 	}
 
-	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const void* rawData, const size_t& rawDataSize)
 	{
 		size_t hash = 0;
+
+		// Hash type
+		CombineHash<std::type_index>(hash, type);
 
 		// Hash filepath (if not empty)
 		if (!filepath.empty())
@@ -615,8 +568,10 @@ namespace Ares {
 			CombineHash<uint32_t>(hash, id);
 		}
 
-		// Hash type
-		CombineHash<std::type_index>(hash, type);
+		// Hash raw data (if not empty)
+		if (rawData && rawDataSize != 0) {
+			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(rawData), rawDataSize));
+		}
 
 		return hash;
 	}

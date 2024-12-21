@@ -5,6 +5,7 @@
 #include "Engine/Events/EventQueue.h"
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Core/Utility.h"
 
 #define AR_BIND_ASSET_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 #define AR_BIND_ASSET_STATIC_FN(fn) std::bind(&fn, std::placeholders::_1)
@@ -25,11 +26,11 @@ namespace Ares {
 
 		// Stage / Unstage methods
 		template <typename AssetType>
-		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies);
+		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const void* rawData, const size_t& rawDataSize);
 		template <typename AssetType>
-		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}); }
+		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}, nullptr, 0); }
 		template <typename AssetType>
-		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies); }
+		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies, nullptr, 0); }
 		static void Unstage(const Ref<Asset>& asset);
 
 		// Load / Unload methods
@@ -67,7 +68,7 @@ namespace Ares {
 		static Ref<ShaderProgram> LoadShaderProgram(const Ref<Asset>& asset);
 
 		// Private hash function
-		static const size_t GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies = {});
+		static const size_t GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const void* rawData, const size_t& rawDataSize);
 		static Ref<Asset> FindExistingAsset(const size_t& contentHash);
 
 	private:
@@ -98,6 +99,67 @@ namespace Ares {
 		static std::queue<std::function<void()>> s_ListenerCallbackQueue;
 		static std::mutex s_ListenerCallbackQueueMutex;
 	};
+
+	template <typename AssetType>
+	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const void* rawData, const size_t& rawDataSize)
+	{
+		if (filepath.empty() && dependencies.size() == 0 && !rawData && rawDataSize == 0)
+		{
+			AR_CORE_ASSERT(false, "Asset needs either filepath, dependencies or raw data to be staged!");
+		}
+
+		// Convert dependencies into IDs
+		std::vector<uint32_t> dependencyIds;
+		for (const Ref<Asset>& dep : dependencies)
+		{
+			dependencyIds.push_back(dep->GetAssetId());
+		}
+
+		// Compute content hash and check cache
+		Ref<Asset> asset = nullptr;
+		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds, rawData, rawDataSize);
+		asset = FindExistingAsset(contentHash);
+		if (asset)
+			return asset;
+
+		// Ensure unique asset name
+		std::string assetName = name;
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			while (s_NameIdMap[assetName] != 0)
+				assetName = Utility::String::IncrementStringSuffix(assetName);
+		}
+
+		// Create and initialize the asset
+		const uint32_t currentId = s_NextAssetId++;
+		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds, rawData, rawDataSize);
+		asset->SetName(assetName);
+		asset->SetAssetId(currentId);
+
+		// Update maps for name, hash, and type associations
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			s_NameIdMap[assetName] = currentId;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_HashIdMutex);
+			s_HashIdMap[contentHash] = currentId;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
+			s_TypeIdMap[typeid(AssetType)] = currentId;
+		}
+
+		// Add asset to cache
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			s_AssetCache[currentId] = asset;
+		}
+
+		// Dispatch Event, notify listeners, and return
+		DispatchAssetEvent<AssetStagedEvent>(asset);
+		return asset;
+	}
 
 	template <typename AssetEventType>
 	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message)

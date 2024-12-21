@@ -1,5 +1,7 @@
 #include "Sandbox2D.h"
 
+const uint32_t g_DefaultWhiteTexture = 0xffffffff;
+
 Sandbox2D::Sandbox2D()
 	: Layer("Sandbox2D"),
 	m_Window(Ares::Application::Get().GetWindow()), myFont(nullptr)
@@ -10,7 +12,7 @@ Sandbox2D::Sandbox2D()
 		{ Ares::ShaderDataType::Float2, "a_TexCoord"},
 		{ Ares::ShaderDataType::Float, "a_TexIndex"},
 		{ Ares::ShaderDataType::Float, "a_TilingFactor"}
-	});
+		});
 
 	float vertices[110] = {
 		// SQUARE
@@ -62,7 +64,6 @@ Sandbox2D::Sandbox2D()
 		[this](Ares::Ref<Ares::Asset> asset)
 		{
 			int32_t samplers[4];
-			int32_t samplers2[4] = { 0, 1, 2, 3 };
 			for (uint32_t i = 0; i < 4; i++)
 			{
 				samplers[i] = i;
@@ -71,20 +72,19 @@ Sandbox2D::Sandbox2D()
 			m_ShaderProgram = asset->GetAsset<Ares::ShaderProgram>();
 			m_ShaderProgram->Bind();
 			m_ShaderProgram->SetIntArray("u_Textures", samplers, 4);
-
-			uint32_t textureData = 0xffffffff;
-			m_DefaultWhite = Ares::Texture::Create("TestTexture", { 1, 1 }, Ares::Texture::Format::RGBA);
-			m_DefaultWhite->SetData(&textureData, sizeof(uint32_t));
-
-			Ares::FileBuffer defaultTexture = Ares::FileIO::LoadFile("assets/textures/DefaultTexture.png");
-			//m_DefaultTexture = Ares::Texture::Create("DefaultTexture", defaultTexture);
 		}
 	);
 
 	Ares::AssetManager::Load(
-		Ares::AssetManager::Stage<Ares::Texture>("DefaultTexture", "assets/textures/DefaultTexture.png"),
+		{
+			Ares::AssetManager::Stage<Ares::Texture>("DefaultTexture", "assets/textures/DefaultTexture.png"),
+			Ares::AssetManager::Stage<Ares::Texture>("DefaultWhite", "", {}, &g_DefaultWhiteTexture, sizeof(uint32_t))
+		},
 		[this](Ares::Ref<Ares::Asset> asset) {
-			m_DefaultTexture = asset->GetAsset<Ares::Texture>();
+			if (asset->GetName() == "DefaultTexture")
+				m_DefaultTexture = asset->GetAsset<Ares::Texture>();
+			if (asset->GetName() == "DefaultWhite")
+				m_DefaultWhite = asset->GetAsset<Ares::Texture>();
 		}
 	);
 }

@@ -4,15 +4,29 @@
 
 namespace Ares {
 
-	Ref<Asset> Asset::Create(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	Ref<Asset> Asset::Create(
+		const std::type_index& type,
+		const AssetState& state,
+		const std::string& filepath,
+		const std::vector<uint32_t>& dependencies,
+		const void* rawData,
+		const size_t& rawDataSize
+	)
 	{
 		// CreateRef (std::make_shared) doesn't have access to private
 		// constructors, so we wrap a raw pointer with a smart pointer
 		// instead.
-		return Ref<Asset>(new Asset(type, state, filepath, dependencies));
+		return Ref<Asset>(new Asset(type, state, filepath, dependencies, rawData, rawDataSize));
 	}
 
-	Asset::Asset(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies)
+	Asset::Asset(
+		const std::type_index& type,
+		const AssetState& state,
+		const std::string& filepath,
+		const std::vector<uint32_t>& dependencies,
+		const void* rawData,
+		const size_t& rawDataSize
+	)
 		: m_Name(""),
 		m_Filepath(filepath),
 		m_TypeName(Utility::Type::ExtractClassName(type.name())),
@@ -20,7 +34,9 @@ namespace Ares {
 		m_Dependencies(dependencies),
 		m_AssetId(0),
 		m_Asset(nullptr),
-		m_State(state)
+		m_State(state),
+		m_RawData(const_cast<void*>(rawData)),
+		m_RawDataSize(rawDataSize)
 	{
 	}
 
@@ -29,11 +45,12 @@ namespace Ares {
 		m_Filepath(""),
 		m_TypeName(""),
 		m_Type(typeid(void)),
-		m_HasFilepath(false),
 		m_Dependencies({}),
 		m_AssetId(0),
 		m_Asset(nullptr),
-		m_State(AssetState::None)
+		m_State(AssetState::None),
+		m_RawData(nullptr),
+		m_RawDataSize(0)
 	{
 	}
 
@@ -62,6 +79,9 @@ namespace Ares {
 		std::shared_lock lock(m_AssetMutex);
 		size_t hash = 0;
 
+		// Hash type
+		CombineHash<std::type_index>(hash, m_Type);
+
 		// Hash filepath (if not empty)
 		if (!m_Filepath.empty())
 		{
@@ -74,8 +94,10 @@ namespace Ares {
 			CombineHash<uint32_t>(hash, id);
 		}
 
-		// Hash type
-		CombineHash<std::type_index>(hash, m_Type);
+		// Hash raw data (if not empty)
+		if (m_RawData && m_RawDataSize != 0) {
+			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(m_RawData), m_RawDataSize));
+		}
 
 		return hash;
 	}

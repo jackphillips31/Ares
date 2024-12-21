@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Utility/Type.h"
+#include "Engine/Core/Utility.h"
 
 namespace Ares {
 
@@ -24,8 +24,22 @@ namespace Ares {
 	class Asset
 	{
 	private:
-		static Ref<Asset> Create(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies);
-		Asset(const std::type_index& type, const AssetState& state, const std::string& filepath, const std::vector<uint32_t>& dependencies);
+		static Ref<Asset> Create(
+			const std::type_index& type,
+			const AssetState& state,
+			const std::string& filepath,
+			const std::vector<uint32_t>& dependencies,
+			const void* rawData,
+			const size_t& rawDataSize
+		);
+		Asset(
+			const std::type_index& type,
+			const AssetState& state,
+			const std::string& filepath,
+			const std::vector<uint32_t>& dependencies,
+			const void* rawData,
+			const size_t& rawDataSize
+		);
 		Asset();
 
 		friend class AssetManager;
@@ -55,6 +69,7 @@ namespace Ares {
 			std::shared_lock lock(m_AssetMutex);
 			return static_pointer_cast<AssetType>(m_Asset);
 		}
+
 		inline const Ref<AssetBase>& GetAsset() const
 		{
 			std::shared_lock lock(m_AssetMutex);
@@ -68,16 +83,21 @@ namespace Ares {
 		void SetAssetId(const uint32_t& id);
 		void SetAsset(const Ref<AssetBase>& asset);
 
+		// Private getters for AssetManager to use
+		inline const void* GetRawData() const { return m_RawData; }
+		inline const size_t& GetRawDataSize() const { return m_RawDataSize; }
+
 	private:
 		std::string m_Name;
 		std::string m_Filepath;
 		std::string m_TypeName;
 		std::type_index m_Type;
 		std::vector<uint32_t> m_Dependencies;
-		bool m_HasFilepath;
 		uint32_t m_AssetId;
 		Ref<AssetBase> m_Asset;
 		AssetState m_State;
+		void* m_RawData;
+		size_t m_RawDataSize;
 		mutable std::shared_mutex m_AssetMutex;
 	};
 
