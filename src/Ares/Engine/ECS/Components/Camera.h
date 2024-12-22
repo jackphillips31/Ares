@@ -1,9 +1,10 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "Engine/ECS/Core/Component.h"
+#include "Engine/ECS/Core/EntityManager.h"
 
 namespace Ares::ECS {
 
@@ -62,6 +63,10 @@ namespace Ares::ECS {
 			{
 				CalculateViewProjectionMatrix();
 				return viewProjectionMatrix;
+			}
+			const bool& IsActive() const
+			{
+				return isActive;
 			}
 
 
@@ -155,6 +160,12 @@ namespace Ares::ECS {
 				mode = Mode::Perspective;
 			}
 
+			// Set active
+			void SetActive(bool active)
+			{
+				isActive = active;
+			}
+
 		private:
 			void CalculateViewMatrix()
 			{
@@ -245,6 +256,9 @@ namespace Ares::ECS {
 			bool viewMatrixDirty = true;
 			bool projectionMatrixDirty = true;
 			bool viewProjectionMatrixDirty = true;
+
+			// Camera active
+			bool isActive = false;
 		};
 
 	}

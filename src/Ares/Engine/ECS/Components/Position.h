@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/ECS/Core/Component.h"
+#include "Engine/ECS/Core/EntityManager.h"
 
 namespace Ares::ECS {
 
@@ -16,22 +16,20 @@ namespace Ares::ECS {
 			// Default constructor
 			Position() : glm::vec3(0.0f, 0.0f, 0.0f) {}
 
+			// Constructor from vec3
+			Position(const glm::vec3 position) : glm::vec3(position) {}
+
 			// Parameterized constructor
 			Position(float x, float y, float z) : glm::vec3(x, y, z) {}
 
-			// Copy assignment & copy constructor
-			Position& operator=(const glm::vec3& other)
+			// Setters
+			void SetPosition(const glm::vec3& pos)
 			{
-				x = other.x;
-				y = other.y;
-				z = other.z;
-				return *this;
+				*this = Position(pos);
 			}
-			Position(const Position& other)
+			void SetPosition(float x, float y, float z)
 			{
-				x = other.x;
-				y = other.y;
-				z = other.z;
+				SetPosition({ x, y, z });
 			}
 		};
 
