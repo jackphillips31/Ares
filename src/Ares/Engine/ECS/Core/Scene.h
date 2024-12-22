@@ -12,14 +12,14 @@ namespace Ares::ECS {
 		// Called once when the system is registered in the ECS framework
 		virtual void OnInit(Scene& scene) {}
 
+		// Called when the system is being removed or cleaned up
+		virtual void OnShutdown(Scene& scene) {}
+
 		// Called every OnUpdate
 		virtual void OnUpdate(Scene& scene, Timestep timestep) = 0;
 
 		// Called every OnRender
 		virtual void OnRender(Scene& scene) {}
-
-		// Called when the system is being removed or cleaned up
-		virtual void OnShutdown(Scene& scene) {}
 	};
 
 	class Scene
@@ -76,7 +76,7 @@ namespace Ares::ECS {
 	{
 		if (m_SystemIdMap.find(typeid(System)) != m_SystemIdMap.end())
 		{
-			return m_Systems[m_SystemIdMap[typeid(System)]].get();
+			return static_cast<System*>(m_Systems[m_SystemIdMap[typeid(System)]].get());
 		}
 		else
 		{

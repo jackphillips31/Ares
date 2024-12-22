@@ -18,6 +18,10 @@ namespace Ares::ECS {
 		Entity CreateEntity();
 		void DestroyEntity(Entity& entity);
 		void SetEntityName(Entity& entity, const std::string& name);
+
+		// Getter methods
+		Entity GetEntity(const uint32_t& id);
+		Entity GetEntity(const std::string& name);
 		const std::string GetEntityName(Entity& entity);
 		const std::unordered_map<uint32_t, std::unordered_map<std::type_index, Scope<Component>>>& GetEntityMap();
 
@@ -43,7 +47,8 @@ namespace Ares::ECS {
 		uint32_t m_NextEntityID = 1;
 		std::unordered_map<uint32_t, std::unordered_map<std::type_index, Scope<Component>>> m_Components;
 		std::unordered_map<std::type_index, std::vector<uint32_t>> m_ComponentMap;
-		std::unordered_map<uint32_t, std::string> m_ComponentNameMap;
+		std::unordered_map<uint32_t, std::string> m_EntityNameMap;
+		std::unordered_map<std::string, uint32_t> m_NameEntityMap;
 	};
 
 	class Entity

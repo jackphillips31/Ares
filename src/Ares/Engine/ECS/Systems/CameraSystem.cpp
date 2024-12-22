@@ -25,6 +25,9 @@ namespace Ares::ECS::Systems {
 				{
 					activeCamera = camera;
 
+					// Update viewport
+					camera->SetViewportSize(m_ViewWidth, m_ViewHeight);
+
 					// Update camera position and orientation
 					Components::Position* position = entityManager->GetComponent<Components::Position>(entityId);
 					Components::Orientation* orientation = entityManager->GetComponent<Components::Orientation>(entityId);
@@ -36,6 +39,18 @@ namespace Ares::ECS::Systems {
 				}
 			}
 		}
+	}
+
+	void CameraSystem::SetViewportSize(const uint32_t& width, const uint32_t& height)
+	{
+		m_ViewWidth = width;
+		m_ViewHeight = height;
+	}
+
+	void CameraSystem::SetViewportSize(const float& width, const float& height)
+	{
+		m_ViewWidth = static_cast<uint32_t>(width);
+		m_ViewHeight = static_cast<uint32_t>(height);
 	}
 
 }

@@ -113,7 +113,7 @@ namespace Ares::ECS {
 			{
 				SetNearFarPlanes(newPlanes.x, newPlanes.y);
 			}
-			void SetViewportDimensions(const glm::vec2& newDimensions)
+			void SetViewportSize(const glm::vec2& newDimensions)
 			{
 				if (!(viewportDimensions == newDimensions))
 				{
@@ -121,13 +121,13 @@ namespace Ares::ECS {
 					projectionMatrixDirty = true;
 				}
 			}
-			void SetViewportDimensions(float x, float y)
+			void SetViewportSize(float x, float y)
 			{
-				SetViewportDimensions({ x, y });
+				SetViewportSize({ x, y });
 			}
-			void SetViewportDimensions(uint32_t x, uint32_t y)
+			void SetViewportSize(uint32_t x, uint32_t y)
 			{
-				SetViewportDimensions({ static_cast<float>(x), static_cast<float>(y) });
+				SetViewportSize({ static_cast<float>(x), static_cast<float>(y) });
 			}
 			void SetOrthoZoom(float newZoom)
 			{
