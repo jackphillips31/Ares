@@ -1,9 +1,6 @@
 #include <arespch.h>
 
-#include "Engine/Core/Timestep.h"
 #include "Engine/Data/AssetManager.h"
-#include "Engine/ECS/Core/Components.h"
-#include "Engine/ECS/Core/Scene.h"
 
 #include "Engine/ECS/Systems/RenderSystem.h"
 

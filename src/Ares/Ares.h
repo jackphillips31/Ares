@@ -30,10 +30,14 @@
 #include "Engine/ImGui/ImGuiElement.h"
 #include "Engine/Layers/ImGuiLayer.h"
 
-#include "Engine/ECS/Core/Components.h"
+#include "Engine/ECS/Core/Component.h"
+#include "Engine/ECS/Core/Entity.h"
 #include "Engine/ECS/Core/EntityManager.h"
 #include "Engine/ECS/Core/Scene.h"
-#include "Engine/ECS/Core/Systems.h"
+#include "Engine/ECS/Core/System.h"
+#include "Engine/ECS/Components/AllComponents.h"
+#include "Engine/ECS/Systems/CameraSystem.h"
+#include "Engine/ECS/Systems/RenderSystem.h"
 
 //----------------- RENDERER ------------------
 //---------------------------------------------

@@ -4,7 +4,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "Engine/ECS/Core/EntityManager.h"
+#include "Engine/ECS/Core/Component.h"
 
 namespace Ares::ECS {
 

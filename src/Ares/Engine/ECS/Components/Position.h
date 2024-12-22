@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/ECS/Core/EntityManager.h"
+#include "Engine/ECS/Core/Component.h"
 
 namespace Ares::ECS {
 

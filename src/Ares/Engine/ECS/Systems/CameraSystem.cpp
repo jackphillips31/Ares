@@ -1,8 +1,6 @@
 #include <arespch.h>
 
-#include "Engine/Core/Timestep.h"
-#include "Engine/ECS/Core/Components.h"
-#include "Engine/ECS/Core/Scene.h"
+#include "Engine/ECS/Components/AllComponents.h"
 
 #include "Engine/ECS/Systems/CameraSystem.h"
 

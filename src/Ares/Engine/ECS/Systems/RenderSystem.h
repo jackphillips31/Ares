@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/ECS/Core/System.h"
+
 namespace Ares::ECS::Systems {
 
 	class RenderSystem : public System

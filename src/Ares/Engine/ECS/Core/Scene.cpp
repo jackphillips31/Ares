@@ -1,8 +1,5 @@
 #include <arespch.h>
 
-#include "Engine/Core/Timestep.h"
-#include "Engine/ECS/Core/EntityManager.h"
-
 #include "Engine/ECS/Core/Scene.h"
 
 namespace Ares::ECS {
