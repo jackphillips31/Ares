@@ -1,7 +1,5 @@
 #pragma once
-
-#include "Engine/Core/Core.h"
-#include "Engine/Renderer/SharedGraphicsContext.h"
+#include <future>
 
 namespace Ares {
 
@@ -21,9 +19,6 @@ namespace Ares {
 	private:
 		// Worker threads
 		static std::vector<std::thread> s_Workers;
-
-		// Shared graphics contexts
-		static std::vector<Scope<SharedGraphicsContext>> s_SharedContexts;
 
 		// Task queue
 		static std::queue<std::function<void()>> s_TaskQueue;

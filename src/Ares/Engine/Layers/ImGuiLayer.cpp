@@ -1,10 +1,9 @@
 #include <arespch.h>
+#include "Engine/Layers/ImGuiLayer.h"
 
 #ifdef AR_PLATFORM_WINDOWS
 #include "Platform/WinAPI/WinImGuiLayer.h"
 #endif
-
-#include "Engine/Layers/ImGuiLayer.h"
 
 namespace Ares {
 

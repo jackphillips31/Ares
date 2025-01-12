@@ -1,23 +1,37 @@
 #pragma once
 
-#include "Engine/Renderer/Buffer.h"
-
 namespace Ares {
+
+	class VertexBuffer;
+	class IndexBuffer;
 
 	class VertexArray
 	{
 	public:
-		virtual ~VertexArray() {}
+		virtual ~VertexArray() = default;
 
+		// Core properties
+		virtual const std::vector<VertexBuffer*>& GetVertexBuffers() const = 0;
+		virtual IndexBuffer* GetIndexBuffer() const = 0;
+
+		// Binding and state
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) = 0;
-		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) = 0;
+		// Setters
+		virtual void AddVertexBuffer(VertexBuffer* vertexBuffer) = 0;
+		virtual void SetIndexBuffer(IndexBuffer* indexBuffer) = 0;
 
-		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const = 0;
-		virtual const Ref<IndexBuffer>& GetIndexBuffer() const = 0;
+		// RendererID access (for low-level operations)
+		virtual uint32_t GetRendererID() const = 0;
 
+		// Creation method
 		static Ref<VertexArray> Create();
+
+		// Equality operator
+		inline bool operator==(const VertexArray& other) const
+		{
+			return GetRendererID() == other.GetRendererID();
+		}
 	};
 }

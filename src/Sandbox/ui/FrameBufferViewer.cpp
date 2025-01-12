@@ -1,5 +1,3 @@
-#include <imgui.h>
-
 #include "ui/FramebufferViewer.h"
 
 FrameBufferViewerElement::FrameBufferViewerElement()
@@ -12,26 +10,18 @@ FrameBufferViewerElement::~FrameBufferViewerElement()
 	m_FrameBuffer.reset();
 }
 
-void FrameBufferViewerElement::OnUpdate()
+void FrameBufferViewerElement::OnUpdate(const Ares::Timestep& ts)
 {
 	if (m_ContentRegionAvailable.x && m_ContentRegionAvailable.y)
 	{
-		if (!m_FrameBuffer)
-		{
-			m_FrameBuffer = Ares::FrameBuffer::Create(
-				static_cast<uint32_t>(m_ContentRegionAvailable.x),
-				static_cast<uint32_t>(m_ContentRegionAvailable.y)
-			);
-		}
-		else
-		{
-			uint32_t newWidth = static_cast<uint32_t>(m_ContentRegionAvailable.x);
-			uint32_t newHeight = static_cast<uint32_t>(m_ContentRegionAvailable.y);
+		uint32_t newWidth = static_cast<uint32_t>(m_ContentRegionAvailable.x);
+		uint32_t newHeight = static_cast<uint32_t>(m_ContentRegionAvailable.y);
 
-			if (m_FrameBuffer->GetWidth() != newWidth || m_FrameBuffer->GetHeight() != newHeight)
-			{
-				m_FrameBuffer->Resize(newWidth, newHeight);
-			}
+		if (m_FrameBuffer == nullptr)
+			m_FrameBuffer = Ares::FrameBuffer::Create(newWidth, newHeight);
+		else if (m_FrameBuffer->GetWidth() != newWidth || m_FrameBuffer->GetHeight() != newHeight)
+		{
+			m_FrameBuffer->Resize(newWidth, newHeight);
 		}
 	}
 }
@@ -48,7 +38,7 @@ void FrameBufferViewerElement::Draw()
 
 		// UV coordinates flipping the texture vertically
 		ImGui::Image(
-			static_cast<ImTextureID>(m_FrameBuffer->GetColorAttachmentHandle()),
+			static_cast<ImTextureID>(m_FrameBuffer->GetTextureHandle()),
 			m_ContentRegionAvailable,
 			{ 0.0f, 1.0f },
 			{ 1.0f, 0.0f }

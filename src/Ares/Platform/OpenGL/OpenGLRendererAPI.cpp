@@ -1,7 +1,10 @@
 #include <arespch.h>
+#include "Platform/OpenGL/OpenGLRendererAPI.h"
+
 #include <glad/gl.h>
 
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Engine/Renderer/Buffer.h"
+#include "Engine/Renderer/VertexArray.h"
 
 namespace Ares {
 
@@ -30,7 +33,7 @@ namespace Ares {
 	void OpenGLRendererAPI::Init()
 	{
 		AR_CORE_INFO("Initializing OpenGLRendererAPI");
-		
+
 	#ifdef AR_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -46,7 +49,7 @@ namespace Ares {
 		glDepthFunc(GL_LESS);
 	}
 
-	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+	void OpenGLRendererAPI::SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height)
 	{
 		glViewport(static_cast<GLint>(x), static_cast<GLint>(y), static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 	}
@@ -56,20 +59,41 @@ namespace Ares {
 		glClearColor(static_cast<GLfloat>(color.r), static_cast<GLfloat>(color.g), static_cast<GLfloat>(color.b), static_cast<GLfloat>(color.a));
 	}
 
+	void OpenGLRendererAPI::SetFaceCulling(const bool set)
+	{
+		if (set)
+			glEnable(GL_CULL_FACE);
+		else
+			glDisable(GL_CULL_FACE);
+	}
+
 	void OpenGLRendererAPI::Clear()
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void OpenGLRendererAPI::Finish() {
+	void OpenGLRendererAPI::Finish()
+	{
 		glFinish();
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
+	void OpenGLRendererAPI::Flush()
+	{
+		glFlush();
+	}
+
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t indexCount)
 	{
 		vertexArray->Bind();
 		GLsizei count = static_cast<GLsizei>(indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount());
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+	}
+
+	void OpenGLRendererAPI::DrawInstanced(const Ref<VertexArray>& vertexArray, const uint32_t instanceCount)
+	{
+		vertexArray->Bind();
+		GLsizei count = static_cast<GLsizei>(vertexArray->GetIndexBuffer()->GetCount());
+		glDrawElementsInstanced(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr, instanceCount);
 	}
 
 }

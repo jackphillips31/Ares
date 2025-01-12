@@ -1,9 +1,9 @@
 #pragma once
-
 #include "Engine/Core/Window.h"
-#include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
+
+	class GraphicsContext;
 
 	class WinWindow : public Window
 	{

@@ -1,34 +1,22 @@
 #include <arespch.h>
-
-#include "Engine/Core/ThreadPool.h"
-#include "Engine/Data/FileIO.h"
-
 #include "Engine/Data/AssetManager.h"
 
+#include "Engine/Core/MainThreadQueue.h"
+#include "Engine/Core/ThreadPool.h"
+#include "Engine/Core/Utility.h"
+#include "Engine/Data/DataBuffer.h"
+#include "Engine/Data/FileIO.h"
+#include "Engine/Data/MemoryDataProvider.h"
+#include "Engine/Data/RawData.h"
+#include "Engine/Data/Parsers/OBJParser.h"
+#include "Engine/Data/Parsers/ShaderParser.h"
+#include "Engine/Events/AssetEvent.h"
+#include "Engine/Events/EventQueue.h"
+#include "Engine/Renderer/Assets/MeshData.h"
+#include "Engine/Renderer/Assets/Shader.h"
+#include "Engine/Renderer/Assets/Texture.h"
+
 namespace Ares {
-
-	std::unordered_map<uint32_t, Ref<Asset>> AssetManager::s_AssetCache;
-	std::mutex AssetManager::s_CacheMutex;
-	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
-
-	std::unordered_map<std::string, uint32_t> AssetManager::s_NameIdMap;
-	std::mutex AssetManager::s_NameIdMutex;
-	std::unordered_map<size_t, uint32_t> AssetManager::s_HashIdMap;
-	std::mutex AssetManager::s_HashIdMutex;
-	std::unordered_map<std::type_index, uint32_t> AssetManager::s_TypeIdMap;
-	std::mutex AssetManager::s_TypeIdMutex;
-
-	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
-	std::mutex AssetManager::s_CallbackQueueMutex;
-
-	std::atomic<uint32_t> AssetManager::s_NextListenerId{ 1 };
-	std::unordered_map<std::string, std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn>> AssetManager::s_Listeners;
-	std::unordered_map<uint32_t, std::string> AssetManager::s_ListenerNameMap;
-	std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn> AssetManager::s_GlobalListeners;
-	std::mutex AssetManager::s_ListenerMutex;
-
-	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
-	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
 
 	void AssetManager::Init()
 	{
@@ -79,12 +67,79 @@ namespace Ares {
 		}
 	}
 
+	template <typename AssetType>
+	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const MemoryDataKey dataKey)
+	{
+		if (filepath.empty() && dependencies.size() == 0 && dataKey == 0)
+		{
+			AR_CORE_ASSERT(false, "Asset needs either filepath, dependencies or raw data to be staged!");
+		}
+
+		// Convert dependencies into IDs
+		std::vector<uint32_t> dependencyIds;
+		for (const Ref<Asset>& dep : dependencies)
+		{
+			dependencyIds.push_back(dep->GetAssetId());
+		}
+
+		// Compute content hash and check cache
+		Ref<Asset> asset = nullptr;
+		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds, dataKey);
+		asset = FindExistingAsset(contentHash);
+		if (asset)
+			return asset;
+
+		// Ensure unique asset name
+		std::string assetName = name;
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			while (s_NameIdMap[assetName] != 0)
+				assetName = Utility::IncrementStringSuffix(assetName);
+		}
+
+		// Create and initialize the asset
+		const uint32_t currentId = s_NextAssetId++;
+		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds, dataKey);
+		asset->SetName(assetName);
+		asset->SetAssetId(currentId);
+
+		// Update maps for name, hash, and type associations
+		{
+			std::lock_guard<std::mutex> lock(s_NameIdMutex);
+			s_NameIdMap[assetName] = currentId;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_HashIdMutex);
+			s_HashIdMap[contentHash] = currentId;
+		}
+		{
+			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
+			s_TypeIdMap[typeid(AssetType)] = currentId;
+		}
+
+		// Add asset to cache
+		{
+			std::lock_guard<std::mutex> lock(s_CacheMutex);
+			s_AssetCache[currentId] = asset;
+		}
+
+		// Dispatch Event, notify listeners, and return
+		DispatchAssetEvent<AssetStagedEvent>(asset);
+		return asset;
+	}
+
 	void AssetManager::Unstage(const Ref<Asset>& asset)
 	{
 		// Check for references outside AssetManager
 		if (asset.use_count() > 1)
 		{
 			AR_CORE_WARN("Asset: {} has {} reference(s) outside Asset Cache!", asset->GetName(), asset.use_count() - 1);
+		}
+
+		// Check to see if asset has been unloaded first
+		if (asset->GetAsset() != nullptr)
+		{
+			AR_CORE_WARN("Asset: {} has not been unloaded! Current State: {} - Asset will be removed regardless...", asset->GetName(), asset->GetStateString());
 		}
 
 		// Remove from secondary lookup maps
@@ -94,7 +149,7 @@ namespace Ares {
 		}
 		{
 			std::lock_guard<std::mutex> lock(s_HashIdMutex);
-			s_HashIdMap.erase(asset->GetHash());
+			s_HashIdMap.erase(std::hash<Asset>()(asset));
 		}
 		{
 			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
@@ -107,32 +162,34 @@ namespace Ares {
 			s_AssetCache.erase(asset->GetAssetId());
 		}
 
-		asset->SetAssetId(0);
-		asset->SetAsset(nullptr);
-		asset->SetState(AssetState::None);
-		asset->SetRawData({ nullptr, 0 });
+		asset->Unstage();
 
 		DispatchAssetEvent<AssetUnstagedEvent>(asset);
 	}
 
-	void AssetManager::Load(const Ref<Asset>& asset, const AssetCallbackFn callback)
+	void AssetManager::Load(const Ref<Asset>& asset, AssetCallbackFn&& callback)
 	{
-		Load(std::vector<Ref<Asset>>({ asset }), callback);
+		Load(std::vector<Ref<Asset>>({ asset }), std::move(callback));
 	}
 
-	void AssetManager::Load(const std::vector<Ref<Asset>>& assets, const AssetCallbackFn callback)
+	void AssetManager::Load(const std::vector<Ref<Asset>>& assets, AssetCallbackFn&& callback)
 	{
 		for (const Ref<Asset>& asset : assets)
 		{
+			if (asset == nullptr)
+			{
+				AR_CORE_ASSERT(false, "Asset has not been staged!");
+				continue;
+			}
 			if (asset->GetState() == AssetState::Staged)
 			{
 				// Load standalone asset with no dependencies
-				if (asset->GetDependencies().size() == 0 && (!asset->GetFilepath().empty() || asset->GetRawData()))
+				if (asset->GetDependencies().size() == 0)
 				{
-					LoadRawAsset(asset, callback);
+					LoadRawAsset(asset, std::move(callback));
 				}
 				// Load asset with dependencies
-				else if (asset->GetDependencies().size() > 0 && asset->GetFilepath().empty())
+				else
 				{
 					std::vector<uint32_t> assetDependencies = asset->GetDependencies();
 					for (uint32_t& currentDependency : assetDependencies)
@@ -142,17 +199,17 @@ namespace Ares {
 						// Load staged dependency recursively
 						if (currentDep->GetState() == AssetState::Staged)
 						{
-							LoadRawAsset(currentDep, [assets, callback](Ares::Ref<Asset> asset) { Load(assets, callback); });
+							LoadRawAsset(currentDep, [assets, callback](Ares::Ref<Asset> asset) mutable { Load(assets, std::move(callback)); });
 							return;
 						}
 						// Log if dependency failed
 						else if (currentDep->GetState() == AssetState::Failed)
 						{
-							AR_CORE_ASSERT("Asset: {} failed to load!", currentDep->GetName());
+							AR_CORE_ASSERT(false, "Asset: {} failed to load!", currentDep->GetName());
 						}
 					}
 					// Load the asset after dependencies
-					LoadRawAsset(asset, callback);
+					LoadRawAsset(asset, std::move(callback));
 				}
 			}
 		}
@@ -160,17 +217,13 @@ namespace Ares {
 
 	void AssetManager::Unload(const Ref<Asset>& asset)
 	{
-		if (asset->GetAsset().use_count() > 1)
+		// Unload asset
+		if (asset->HasFilepath() && asset->GetDataKey() != 0)
 		{
-			// Asset has references outside AssetManager
-			AR_CORE_WARN("Cant unload Asset! Asset: {} has {} reference(s) outside Asset Cache!", asset->GetName(), asset->GetAsset().use_count() - 1);
+			MemoryDataProvider::UnregisterData(asset->GetDataKey());
 		}
-		else
-		{
-			// Unload asset
-			asset->SetAsset(nullptr);
-			DispatchAssetEvent<AssetUnloadedEvent>(asset);
-		}
+		asset->Unload();
+		DispatchAssetEvent<AssetUnloadedEvent>(asset);
 	}
 
 	Ref<Asset> AssetManager::GetAsset(const std::string& name)
@@ -219,7 +272,7 @@ namespace Ares {
 		return result;
 	}
 
-	const AssetListener AssetManager::AddListener(const std::string& name, std::function<void(Event&)> callback)
+	const AssetListener AssetManager::AddListener(const std::string& name, ListenerCallbackFn&& callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
 		uint32_t currentId = s_NextListenerId++;
@@ -228,7 +281,7 @@ namespace Ares {
 		return currentId;
 	}
 
-	const AssetListener AssetManager::AddListener(std::function<void(Event&)> callback)
+	const AssetListener AssetManager::AddListener(ListenerCallbackFn&& callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
 		uint32_t currentId = s_NextListenerId++;
@@ -281,6 +334,39 @@ namespace Ares {
 		ProcessListenerCallbacks();
 	}
 
+	template <typename AssetEventType>
+	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message)
+	{
+		// Make sure AssetEventType is an asset event
+		if (!std::is_base_of_v<AssetBaseEvent, AssetEventType>)
+		{
+			AR_CORE_ASSERT(false, "Tried to dispatch non-asset event: {}", typeid(AssetEventType).name());
+		}
+
+		// Create event
+		AssetEventType tempEvent(asset, message);
+		Ref<AssetEventType> event = CreateRef<AssetEventType>(tempEvent);
+
+		// Dispatch to event queue
+		EventQueue::Dispatch<AssetEventType>(tempEvent);
+
+		// Dispatch to asset listeners
+		{
+			std::lock_guard<std::mutex> lock(s_ListenerMutex);
+
+			// Queue name-specific listeners
+			if (s_Listeners.find(asset->GetName()) != s_Listeners.end())
+			{
+				for (auto& listener : s_Listeners[asset->GetName()])
+					QueueListenerCallback([func = listener.second, event]() { func(*event); });
+			}
+
+			// Queue global listeners
+			for (auto& globalListener : s_GlobalListeners)
+				QueueListenerCallback([func = globalListener.second, event]() { func(*event); });
+		}
+	}
+
 	void AssetManager::QueueListenerCallback(std::function<void()> callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerCallbackQueueMutex);
@@ -315,7 +401,7 @@ namespace Ares {
 		}
 	}
 
-	void AssetManager::LoadRawAsset(const Ref<Asset>& asset, const AssetCallbackFn callback)
+	void AssetManager::LoadRawAsset(const Ref<Asset>& asset, AssetCallbackFn&& callback)
 	{
 		// Mark asset's state as "Loading"
 		asset->SetState(AssetState::Loading);
@@ -324,231 +410,253 @@ namespace Ares {
 		DispatchAssetEvent<AssetLoadingEvent>(asset);
 
 		// Submit the task to the ThreadPool for async loading
-		ThreadPool::SubmitTask([asset, callback]()
+		ThreadPool::SubmitTask([asset, callback]() mutable
+		{
+			//Scope<AssetBase> rawAsset = nullptr;
+			std::string eventMessage;
+
+			// Retrieve the asset type ID to determine how to process the asset
+			const Utility::AssetType assetType = Utility::GetAssetType(asset->GetType());
+			try
 			{
-				Ref<AssetBase> rawAsset = nullptr;
-				std::string eventMessage;
-
-				// Retrieve the asset type ID to determine how to process the asset
-				const uint32_t assetTypeId = Utility::Type::GetTypeMapId(asset->GetType());
-				try
+				// Check if asset is valid
+				if (asset->GetDependencies().size() == 0 && !asset->HasFilepath() && asset->GetDataKey() == 0)
 				{
-					// Handle asset loading based on its type
-					switch (assetTypeId)
+					throw std::runtime_error("Staged [" + asset->GetName() + "] " + asset->GetTypeName() + " asset doesn't have valid metadata (no dependencies & no filepath & no MemoryDataKey)");
+				}
+
+				// Load file (if provided) into MemoryDataProvider
+				if (asset->HasFilepath())
+				{
+					DataBuffer fileData = FileIO::LoadFile(asset->GetFilepath());
+					MemoryDataKey fileKey = MemoryDataProvider::RegisterData(std::move(fileData));
+					if (fileKey == 0)
 					{
-					case Utility::Type::VertexShader: {
-						rawAsset = LoadVertexShader(asset);
-						break;
+						throw std::runtime_error("Something went wrong... Asset DataKey is still 0!");
 					}
-					case Utility::Type::FragmentShader: {
-						rawAsset = LoadFragmentShader(asset);
-						break;
-					}
-					case Utility::Type::ShaderProgram: {
-						rawAsset = LoadShaderProgram(asset);
-						break;
-					}
-					case Utility::Type::Texture: {
-						rawAsset = LoadTexture(asset);
-						break;
-					}
-					default: {
-						// Log and throw an error for unsupported asset types
-						AR_CORE_ERROR("Unsupported asset type!");
-						throw std::runtime_error("Unsupported asset type!");
-					}
-					}
-
-					// If loading succeeds, assign the loaded asset and mark asset state as "Loaded"
-					asset->SetAsset(rawAsset);
-					asset->SetState(AssetState::Loaded);
+					asset->SetDataKey(fileKey);
 				}
-				catch (std::exception& e)
+
+				// Handle asset loading based on its type
+				if (assetType == Utility::AssetType::VertexShader || assetType == Utility::AssetType::FragmentShader)
 				{
-					// If an exception occurs, mark the asset state as "Failed" and store error message
-					asset->SetState(AssetState::Failed);
-					eventMessage = e.what();
-				}
+					const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
+					std::string_view shaderData(static_cast<const char*>(data.GetBuffer()), data.GetSize());
 
-				// Dispatch event and notify listeners of asset's loading status
-				if (asset->GetState() == AssetState::Loaded)
-					DispatchAssetEvent<AssetLoadedEvent>(asset, eventMessage);
-				else if (asset->GetState() == AssetState::Failed)
-					DispatchAssetEvent<AssetFailedEvent>(asset, eventMessage);
+					MainThreadQueue::SubmitTask([asset, callback = std::move(callback), shaderData, assetType]() {
+						Scope<Shader> result = nullptr;
+						try
+						{
+							if (assetType == Utility::AssetType::VertexShader)
+							{
+								result = VertexShader::Create(asset->GetName(), shaderData);
+							}
+							else if (assetType == Utility::AssetType::FragmentShader)
+							{
+								result = FragmentShader::Create(asset->GetName(), shaderData);
+							}
+
+							if (result == nullptr)
+							{
+								throw std::runtime_error("Something went wrong when creating the raw asset!");
+							}
+
+							if (assetType == Utility::AssetType::VertexShader)
+							{
+								asset->SetAsset(Scope<VertexShader>(static_cast<VertexShader*>(result.release())));
+							}
+							else if (assetType == Utility::AssetType::FragmentShader)
+							{
+								asset->SetAsset(Scope<FragmentShader>(static_cast<FragmentShader*>(result.release())));
+							}
+							else
+							{
+								throw std::runtime_error("Asset was not set!");
+							}
+
+							asset->SetState(AssetState::Loaded);
+							DispatchAssetEvent<AssetLoadedEvent>(asset);
+						}
+						catch (std::exception& e)
+						{
+							AR_CORE_CRITICAL("{} Creation Error: {}", asset->GetTypeName(), e.what());
+							asset->SetState(AssetState::Failed);
+							DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+						}
+						if (callback)
+							QueueCallback([callback, asset]() { callback(asset); });
+					});
+				}
+				else if (assetType == Utility::AssetType::ShaderProgram)
+				{
+					if (asset->GetDependencies().size() > 0)
+					{
+						std::vector<Shader*> shaders;
+						for (const uint32_t& assetId : asset->GetDependencies())
+						{
+							Ref<Asset> dependency = AssetManager::GetAsset(assetId);
+							if (dependency->GetState() != AssetState::Loaded)
+								throw std::runtime_error("Shader Program dependency is not loaded!");
+
+							if (dependency->GetType() == typeid(VertexShader))
+							{
+								shaders.push_back(dependency->GetAsset<VertexShader>());
+								continue;
+							}
+							if (dependency->GetType() == typeid(FragmentShader))
+							{
+								shaders.push_back(dependency->GetAsset<FragmentShader>());
+								continue;
+							}
+						}
+						MainThreadQueue::SubmitTask([asset, callback = std::move(callback), shaders]() {
+							Scope<ShaderProgram> result = nullptr;
+							try
+							{
+								result = ShaderProgram::Create(asset->GetName(), shaders);
+								if (result == nullptr)
+									throw std::runtime_error("Something went wrong when creating the raw asset!");
+
+								asset->SetAsset(std::move(result));
+								asset->SetState(AssetState::Loaded);
+								DispatchAssetEvent<AssetLoadedEvent>(asset);
+							}
+							catch (std::exception& e)
+							{
+								AR_CORE_CRITICAL("Shader Program Creation Error: {}", e.what());
+								asset->SetState(AssetState::Failed);
+								DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+							}
+							if (callback)
+								QueueCallback([callback, asset]() { callback(asset); });
+						});
+					}
+					else
+					{
+						const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
+						Ref<ParsedShaderData> shaderData = CreateRef<ParsedShaderData>(ShaderParser::ParseShaders(data));
+
+						if (shaderData == nullptr)
+							throw std::runtime_error("Shader Data was not parsed!");
+
+						if (!shaderData->IsValid)
+							throw std::runtime_error("Error while parsing shaders: " + shaderData->Error);
+
+						MainThreadQueue::SubmitTask([asset, callback = std::move(callback), shaderData]() {
+							Scope<ShaderProgram> result = nullptr;
+							try
+							{
+								result = ShaderProgram::Create(asset->GetName(), shaderData);
+								if (result == nullptr)
+									throw std::runtime_error("Something went wrong when creating the raw asset!");
+
+								asset->SetAsset(std::move(result));
+								asset->SetState(AssetState::Loaded);
+								DispatchAssetEvent<AssetLoadedEvent>(asset);
+							}
+							catch (std::exception& e)
+							{
+								AR_CORE_CRITICAL("Shader Program Creation Error: {}", e.what());
+								asset->SetState(AssetState::Failed);
+								DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+							}
+							if (callback)
+								QueueCallback([callback, asset]() { callback(asset); });
+						});
+					}
+				}
+				else if (assetType == Utility::AssetType::MeshData)
+				{
+					const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
+					Ref<ParsedMeshData> meshData = nullptr;
+
+					if (Utility::GetFileExtension(asset->GetFilepath()) == "obj")
+					{
+						meshData = CreateRef<ParsedMeshData>(OBJParser::ParseMesh(data));
+					}
+					else
+					{
+						// TODO: We need to be able to parse different formats.
+						//		 For the time being, we are taking any asset
+						//		 thats MeshData and parsing it as if its an OBJ.
+						meshData = CreateRef<ParsedMeshData>(OBJParser::ParseMesh(data));
+					}
+
+					if (meshData == nullptr)
+						throw std::runtime_error("Mesh Data was not parsed!");
+
+					if (!meshData->IsValid)
+						throw std::runtime_error("Error while parsing Mesh Data: " + meshData->Error);
+
+					MainThreadQueue::SubmitTask([asset, callback = std::move(callback), meshData]() {
+						Scope<MeshData> result = nullptr;
+						try
+						{
+							result = MeshData::Create(asset->GetName(), meshData);
+							if (result == nullptr)
+								throw std::runtime_error("Something went wrong when creating the raw asset!");
+
+							asset->SetAsset(std::move(result));
+							asset->SetState(AssetState::Loaded);
+							DispatchAssetEvent<AssetLoadedEvent>(asset);
+						}
+						catch (std::exception& e)
+						{
+							AR_CORE_CRITICAL("Mesh Data Creation Error: {}", e.what());
+							asset->SetState(AssetState::Failed);
+							DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+						}
+						if (callback)
+							QueueCallback([callback, asset]() { callback(asset); });
+					});
+				}
+				else if (assetType == Utility::AssetType::Texture)
+				{
+					const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
+
+					MainThreadQueue::SubmitTask([asset, callback = std::move(callback), data = RawData(data.GetBuffer(), data.GetSize())]() {
+						Scope<Texture> result = nullptr;
+						try
+						{
+							result = Texture::Create(asset->GetName(), data);
+							if (result == nullptr)
+								throw std::runtime_error("Something went wrong when creating the raw asset!");
+
+							asset->SetAsset(std::move(result));
+							asset->SetState(AssetState::Loaded);
+							DispatchAssetEvent<AssetLoadedEvent>(asset);
+						}
+						catch (std::exception& e)
+						{
+							AR_CORE_CRITICAL("Texture Creation Error: {}", e.what());
+							asset->SetState(AssetState::Failed);
+							DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+						}
+						if (callback)
+							QueueCallback([callback, asset]() { callback(asset); });
+					});
+				}
 				else
 				{
-					AR_CORE_ASSERT(false, "Something went wrong when loading asset!");
-				}
-
-				// If a callback function is provided, enqueue it for execution
-				if (callback)
-					QueueCallback([callback, asset]() { callback(asset); });
-			});
-	}
-
-	Ref<VertexShader> AssetManager::LoadVertexShader(const Ref<Asset>& asset)
-	{
-		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Vertex Shader file: '" + asset->GetFilepath() + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-		return VertexShader::Create(asset->GetName(), fileBuffer);
-	}
-
-	Ref<FragmentShader> AssetManager::LoadFragmentShader(const Ref<Asset>& asset)
-	{
-		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Fragment Shader file: '" + asset->GetFilepath() + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-		return FragmentShader::Create(asset->GetName(), fileBuffer);
-	}
-
-	Ref<Texture> AssetManager::LoadTexture(const Ref<Asset>& asset)
-	{		
-		if (asset->GetFilepath().empty()) {
-			AR_CORE_ASSERT(asset->GetRawData(), "Texture without filepath needs raw data!");
-			if (asset->GetRawData().Size == sizeof(uint32_t)) {
-				Ref<Texture> result = Texture::Create(asset->GetName(), {1, 1}, Texture::Format::RGBA);
-				result->SetData(asset->GetRawData());
-				return result;
-			}
-			else if (asset->GetRawData().Size == 3) {
-				Ref<Texture> result = Texture::Create(asset->GetName(), { 1, 1 }, Texture::Format::RGB);
-				result->SetData(asset->GetRawData());
-				return result;
-			}
-			else {
-				return Texture::Create(asset->GetName(), asset->GetRawData());
-			}
-		}
-		FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
-		if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-		{
-			std::string error = "Failed to load Texture file: '" + asset->GetFilepath() + "'";
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
-		return Texture::Create(asset->GetName(), fileBuffer);
-	}
-
-	Ref<ShaderProgram> AssetManager::LoadShaderProgram(const Ref<Asset>& asset)
-	{
-		if (asset->GetDependencies().size() > 0 && asset->GetFilepath().empty())
-		{
-			// Load ShaderProgram using its dependencies
-			std::vector<uint32_t> depIds = asset->GetDependencies();
-			std::vector<Ref<Asset>> dependencies;
-			std::vector<Ref<Shader>> tempShaders;
-
-			for (uint32_t& dep : depIds)
-			{
-				dependencies.push_back(GetAsset(dep));
-			}
-
-			// Extract shaders from dependencies
-			for (Ref<Asset>& dep : dependencies)
-			{
-				if (dep->GetType() == typeid(VertexShader) || dep->GetType() == typeid(FragmentShader))
-					tempShaders.push_back(dep->GetAsset<Shader>());
-			}
-
-			if (tempShaders.size() == 0)
-			{
-				std::string error("None of this Shader Program's dependencies were shaders!");
-				AR_CORE_ERROR(error);
-				throw std::runtime_error(error);
-			}
-
-			// Create ShaderProgram from extracted shaders
-			Ref<ShaderProgram> rawAsset = ShaderProgram::Create(asset->GetName(), tempShaders);
-
-			if (rawAsset == nullptr)
-			{
-				std::string error("Some error occurred when creating Shader Program!");
-				AR_CORE_ERROR(error);
-				throw std::runtime_error(error);
-			}
-			else
-				return rawAsset;
-		}
-		else if (!asset->GetFilepath().empty() && asset->GetDependencies().size() == 0)
-		{
-			// Load ShaderProgram from a single file
-			FileBuffer fileBuffer = FileIO::LoadFile(asset->GetFilepath());
-			if (!fileBuffer.GetBuffer() || fileBuffer.GetSize() == 0)
-			{
-				std::string error = "Failed to load Shader Program file: '" + asset->GetFilepath() + "'";
-				AR_CORE_ERROR(error);
-				throw std::runtime_error(error);
-			}
-
-			std::string shaderSource(static_cast<const char*>(fileBuffer.GetBuffer()), fileBuffer.GetSize());
-			std::string vertexSource = "";
-			std::string fragmentSource = "";
-
-			// Parse shader types from source code
-			const char* typeToken = "#type";
-			size_t typeTokenLength = strlen(typeToken);
-			size_t pos = shaderSource.find(typeToken, 0);
-			while (pos != std::string::npos)
-			{
-				size_t eol = shaderSource.find_first_of("\r\n", pos);
-				if (eol == std::string::npos)
-					throw std::runtime_error("Shader Syntax Error!");
-
-				size_t begin = pos + typeTokenLength + 1;
-				std::string type = shaderSource.substr(begin, eol - begin);
-				if (type != "vertex" && type != "fragment" && type != "pixel")
-					throw std::runtime_error("Shader Syntax Error: Invalid shader type specification!");
-
-				size_t nextLinePos = shaderSource.find_first_not_of("\r\n", eol);
-				if (nextLinePos == std::string::npos)
-					throw std::runtime_error("Shader Syntax Error!");
-
-				pos = shaderSource.find(typeToken, nextLinePos);
-
-				if (type == "vertex")
-				{
-					vertexSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
-				}
-				else if (type == "fragment" || type == "pixel")
-				{
-					fragmentSource = (pos == std::string::npos) ? shaderSource.substr(nextLinePos) : shaderSource.substr(nextLinePos, pos - nextLinePos);
+					throw std::runtime_error("Unknown Asset Type!");
 				}
 			}
-
-			// Ensure both vertex and fragment shaders exist
-			if (vertexSource == "" || fragmentSource == "")
-				throw std::runtime_error("One or more shaders are missing!");
-
-			// Create ShaderProgram using parsed shaders
-			Ref<ShaderProgram> rawAsset = ShaderProgram::Create(asset->GetName(), {
-				VertexShader::Create(asset->GetName() + "_Vertex", vertexSource),
-				FragmentShader::Create(asset->GetName() + "_Fragment", fragmentSource)
-			});
-
-			if (rawAsset == nullptr)
-				throw std::runtime_error("Some error occurred when created Shader Program!");
-			else
-				return rawAsset;
-		}
-		else
-		{
-			// Handle unsupported cases with both filepath and dependencies
-			std::string error("LoadShaderProgram doesn't support a Shader Program with a filepath AND dependencies!");
-			AR_CORE_ERROR(error);
-			throw std::runtime_error(error);
-		}
+			catch (std::exception& e)
+			{
+				// Log any errors
+				AR_CORE_CRITICAL("Asset Loading Error: {}", e.what());
+				asset->SetState(AssetState::Failed);
+				DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+			}
+		});
 	}
 
-	const size_t AssetManager::GetHash(const std::type_index& type, const std::string& filepath, const std::vector<uint32_t>& dependencies, const RawData& rawData)
+	const size_t AssetManager::GetHash(
+		const std::type_index& type,
+		const std::string& filepath,
+		const std::vector<uint32_t>& dependencies,
+		const MemoryDataKey dataKey
+	)
 	{
 		size_t hash = 0;
 
@@ -560,16 +668,19 @@ namespace Ares {
 		{
 			CombineHash<std::string>(hash, filepath);
 		}
+		// Only hash data key if filepath is empty
+		else
+		{
+			if (dataKey != 0)
+			{
+				CombineHash<uint32_t>(hash, dataKey);
+			}
+		}
 
 		// Hash dependency ids (if not empty)
 		for (uint32_t id : dependencies)
 		{
 			CombineHash<uint32_t>(hash, id);
-		}
-
-		// Hash raw data (if not empty)
-		if (rawData) {
-			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(rawData.Data), rawData.Size));
 		}
 
 		return hash;
@@ -591,14 +702,48 @@ namespace Ares {
 			auto assetIt = s_AssetCache.find(it->second);
 			if (assetIt != s_AssetCache.end())
 			{
-				if (assetIt->second->GetHash() == contentHash)
-				{
+				if (std::hash<Asset>()(assetIt->second) == contentHash)
 					return assetIt->second;
-				}
 			}
 		}
 
 		return nullptr;
 	}
 
+	// Private members
+	std::unordered_map<uint32_t, Ref<Asset>> AssetManager::s_AssetCache;
+	std::mutex AssetManager::s_CacheMutex;
+	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
+
+	std::unordered_map<std::string, uint32_t> AssetManager::s_NameIdMap;
+	std::mutex AssetManager::s_NameIdMutex;
+	std::unordered_map<size_t, uint32_t> AssetManager::s_HashIdMap;
+	std::mutex AssetManager::s_HashIdMutex;
+	std::unordered_map<std::type_index, uint32_t> AssetManager::s_TypeIdMap;
+	std::mutex AssetManager::s_TypeIdMutex;
+
+	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
+	std::mutex AssetManager::s_CallbackQueueMutex;
+
+	std::atomic<uint32_t> AssetManager::s_NextListenerId{ 1 };
+	std::unordered_map<std::string, std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn>> AssetManager::s_Listeners;
+	std::unordered_map<uint32_t, std::string> AssetManager::s_ListenerNameMap;
+	std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn> AssetManager::s_GlobalListeners;
+	std::mutex AssetManager::s_ListenerMutex;
+
+	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
+	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
+
+	// Template explicit instantiations
+	template Ref<Asset> AssetManager::Stage<VertexShader>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
+	template Ref<Asset> AssetManager::Stage<FragmentShader>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
+	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
+	template Ref<Asset> AssetManager::Stage<Texture>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
+	template Ref<Asset> AssetManager::Stage<MeshData>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
+
+	template void AssetManager::DispatchAssetEvent<AssetStagedEvent>(const Ref<Asset>&, const std::string&);
+	template void AssetManager::DispatchAssetEvent<AssetUnstagedEvent>(const Ref<Asset>&, const std::string&);
+	template void AssetManager::DispatchAssetEvent<AssetLoadedEvent>(const Ref<Asset>&, const std::string&);
+	template void AssetManager::DispatchAssetEvent<AssetUnloadedEvent>(const Ref<Asset>&, const std::string&);
+	template void AssetManager::DispatchAssetEvent<AssetFailedEvent>(const Ref<Asset>&, const std::string&);
 }

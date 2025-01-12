@@ -1,10 +1,9 @@
 #include <arespch.h>
+#include "Engine/Core/Input.h"
 
 #ifdef AR_PLATFORM_WINDOWS
 #include "Platform/WinAPI/WinInput.h"
 #endif
-
-#include "Engine/Core/Input.h"
 
 namespace Ares {
 

@@ -14,6 +14,10 @@
 #include <bitset>				// Bit manipulation
 #include <typeindex>			// Type information
 #include <regex>				// Regular expressions
+#include <variant>				// Utility library
+#include <type_traits>			// Metaprogramming
+#include <cstdio>				// C standard library
+#include <stdio.h>				// Generic file operation
 
 #include <future>				// Asynchronous programming
 #include <queue>				// Queue data structure

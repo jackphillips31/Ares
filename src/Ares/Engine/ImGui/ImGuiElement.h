@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Engine/Events/Event.h"
-
 namespace Ares {
+
+	class Event;
+	class Timestep;
 
 	class ImGuiElement
 	{
@@ -10,10 +11,9 @@ namespace Ares {
 		virtual ~ImGuiElement() = default;
 
 		virtual void Draw() {};
-		virtual void OnUpdate() {};
+		virtual void OnUpdate(const Timestep& ts) {};
 
 		virtual void OnEvent(Event& e) {};
 	};
 
 }
-

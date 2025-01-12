@@ -1,8 +1,7 @@
 #pragma once
-
-#include <imgui.h>
-
 #include "Engine/Layers/ImGuiLayer.h"
+
+struct ImGuiViewport;
 
 namespace Ares {
 

@@ -1,6 +1,7 @@
 #include <arespch.h>
-
 #include "Platform/WinAPI/WinMouseCodes.h"
+
+#include "Engine/Events/MouseCodes.h"
 
 namespace Ares {
 

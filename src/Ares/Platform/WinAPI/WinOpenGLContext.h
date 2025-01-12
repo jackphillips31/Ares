@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
@@ -9,11 +8,11 @@ namespace Ares {
 	public:
 		WinOpenGLContext(void* windowHandle);
 
-		virtual void Init() override;
-		virtual void SwapBuffers() override;
-		virtual void MakeCurrent() override;
+		void Init() override;
+		void SwapBuffers() override;
+		void MakeCurrent() override;
 
-		virtual const void* GetContextHandle() const override;
+		inline void* GetContextHandle() const override { return static_cast<void*>(m_Context); }
 
 	private:
 		HWND m_WindowHandle;

@@ -1,10 +1,9 @@
 #include <arespch.h>
+#include "Engine/Core/Window.h"
 
 #ifdef AR_PLATFORM_WINDOWS
 #include "Platform/WinAPI/WinWindow.h"
 #endif
-
-#include "Engine/Core/Window.h"
 
 namespace Ares {
 

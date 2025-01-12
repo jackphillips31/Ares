@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Engine/Core/Layer.h"
 
 namespace Ares {

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Ares.h>
 
 class WindowSettingsElement : public Ares::ImGuiElement

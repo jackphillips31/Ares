@@ -1,9 +1,9 @@
 #include <arespch.h>
+#include "Engine/Renderer/VertexArray.h"
 
+#include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
-
-#include "Engine/Renderer/VertexArray.h"
 
 namespace Ares {
 

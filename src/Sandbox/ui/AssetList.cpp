@@ -1,5 +1,7 @@
 #include "ui/AssetList.h"
 
+#include <imgui.h>
+
 AssetListElement::AssetListElement()
 {
 	m_AssetList = Ares::AssetManager::GetCompleteList();
@@ -37,11 +39,25 @@ void AssetListElement::Draw()
 			std::string filepath = currentAsset->HasFilepath() ? currentAsset->GetFilepath() : "N/A";
 			ImGui::Text("Filepath:");
 			ImGui::Text(filepath.c_str());
-			ImGui::Text("Asset Ref Count: %u", currentAsset->GetAsset().use_count());
-			ImGui::Text("Asset Wrapper Ref Count: %u", currentAsset.use_count());
+			ImGui::Text("Asset State: %s", currentAsset->GetStateString().c_str());
+			ImGui::Text("Asset Ref Count: %u", currentAsset.use_count());
+			ImGui::Separator();
+			std::string loadLabel = [currentAsset]() {
+				if (currentAsset->GetState() == Ares::AssetState::Loaded)
+					return "Unload Asset";
+				if (currentAsset->GetState() == Ares::AssetState::Staged)
+					return "Load Asset";
+				return "Unknown State";
+			}();
+			if (ImGui::MenuItem(loadLabel.c_str()))
+			{
+				if (currentAsset->GetState() == Ares::AssetState::Loaded)
+					Ares::AssetManager::Unload(currentAsset);
+				else if (currentAsset->GetState() == Ares::AssetState::Staged)
+					Ares::AssetManager::Load(currentAsset);
+			}
 			if (currentAsset->HasFilepath())
 			{
-				ImGui::Separator();
 				if (ImGui::MenuItem("Open File"))
 				{
 					AR_BUG("Open File does not work yet!");

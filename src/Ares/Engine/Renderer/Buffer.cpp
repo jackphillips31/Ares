@@ -1,54 +1,41 @@
 #include <arespch.h>
+#include "Engine/Renderer/Buffer.h"
 
+#include "Engine/Data/RawData.h"
+#include "Engine/Renderer/BufferLayout.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
-#include "Engine/Renderer/Buffer.h"
-
 namespace Ares {
 
-	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	Scope<VertexBuffer> VertexBuffer::Create(const size_t size, const BufferUsage usage)
+	{
+		return VertexBuffer::Create({ nullptr, size }, usage);
+	}
+
+	Scope<VertexBuffer> VertexBuffer::Create(const RawData& data, const BufferUsage usage)
 	{
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLVertexBuffer>(size);
+		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLVertexBuffer>(data, usage);
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(const RawData& data)
+	Scope<IndexBuffer> IndexBuffer::Create(const size_t size, const BufferUsage usage)
 	{
-		switch (Renderer::GetAPI())
-		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLVertexBuffer>(data);
-		}
-
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
+		return IndexBuffer::Create({ nullptr, size }, usage);
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(uint32_t count)
+	Scope<IndexBuffer> IndexBuffer::Create(const RawData& data, const BufferUsage usage)
 	{
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLIndexBuffer>(count);
-		}
-
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
-	}
-
-	Ref<IndexBuffer> IndexBuffer::Create(const RawData& data)
-	{
-		switch (Renderer::GetAPI())
-		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLIndexBuffer>(data);
+		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLIndexBuffer>(data, usage);
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");

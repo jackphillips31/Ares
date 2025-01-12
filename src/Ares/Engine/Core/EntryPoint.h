@@ -1,7 +1,4 @@
 #pragma once
-
-#include "Engine/Core/Core.h"
-
 #ifdef AR_PLATFORM_WINDOWS
 #include <windows.h>
 #endif

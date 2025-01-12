@@ -1,15 +1,15 @@
 #include <arespch.h>
+#include "Platform/WinAPI/WinOpenGLContext.h"
+
 #include <glad/gl.h>
 #include <glad/wgl.h>
 
 #include "Engine/Core/Application.h"
 
-#include "Platform/WinAPI/WinOpenGLContext.h"
-
 namespace Ares {
 
 	WinOpenGLContext::WinOpenGLContext(void* windowHandle)
-		: m_WindowHandle((HWND)windowHandle), m_Context(nullptr), m_DeviceContext(nullptr)
+		: m_WindowHandle(static_cast<HWND>(windowHandle)), m_Context(nullptr), m_DeviceContext(nullptr)
 	{
 	}
 
@@ -44,11 +44,12 @@ namespace Ares {
 		// Load WGL Extensions
 		gladLoaderLoadWGL(m_DeviceContext);
 
+		// DEBUG FLAGS
 		int attributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
 			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
 			WGL_CONTEXT_FLAGS_ARB,
-			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
 			0
 		};
 
@@ -77,6 +78,10 @@ namespace Ares {
 		AR_CORE_INFO("  {:<10}- {}", "Vendor", (char*)glGetString(GL_VENDOR));
 		AR_CORE_INFO("  {:<10}- {}", "Renderer", (char*)glGetString(GL_RENDERER));
 		AR_CORE_INFO("  {:<10}- {}", "Version", (char*)glGetString(GL_VERSION));
+
+		int maxVertexAttribs;
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+		AR_CORE_INFO("Max Attribs: {}", maxVertexAttribs);
 	}
 
 	void WinOpenGLContext::SwapBuffers()
@@ -90,11 +95,6 @@ namespace Ares {
 		{
 			AR_CORE_WARN("Failed to make OpenGL context current!");
 		}
-	}
-
-	const void* WinOpenGLContext::GetContextHandle() const
-	{
-		return static_cast<const void*>(m_Context);
 	}
 
 }

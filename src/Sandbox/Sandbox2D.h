@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Ares.h>
 #include <imgui.h>
 
@@ -8,8 +7,7 @@
 #include "ui/WindowSettings.h"
 #include "ui/FrameBufferViewer.h"
 #include "ui/AssetList.h"
-
-#include "scene/ViewportCamera.h"
+#include "ui/Editor/EntityList.h"
 
 class Sandbox2D : public Ares::Layer
 {
@@ -20,12 +18,18 @@ public:
 	virtual void OnAttach() override;
 	virtual void OnDetach() override;
 
-	void OnUpdate(Ares::Timestep ts) override;
+	void OnUpdate(const Ares::Timestep& ts) override;
 	void OnRender() override;
 	void OnEvent(Ares::Event& e) override;
 	virtual void OnImGuiRender() override;
 
 	bool OnWindowFocus(Ares::WindowFocusEvent& event);
+	void CreateLightEntity();
+	void CreateCameraEntity();
+	void CreateQuadMeshEntities();
+	void CreateTeapotEntity();
+	void LoadShaderProgram();
+	void LoadDefaultTexture();
 
 private:
 	Ares::Window& m_Window;
@@ -37,14 +41,13 @@ private:
 	WindowSettingsElement m_WindowSettingsElement;
 	FrameBufferViewerElement m_FrameBufferElement;
 	AssetListElement m_AssetListElement;
+	EntityListElement m_EntityListElement;
 
-	Ares::Ref<Ares::VertexBuffer> m_VBO;
-	Ares::Ref<Ares::IndexBuffer> m_IBO;
-	Ares::Ref<Ares::VertexArray> m_VAO;
-	Ares::Ref<Ares::FrameBuffer> m_FBO;
-	Ares::Ref<Ares::Texture> m_DefaultWhite;
-	Ares::Ref<Ares::Texture> m_DefaultTexture;
-	Ares::Ref<Ares::ShaderProgram> m_ShaderProgram;
-
-	Ares::Scope<ViewportCamera> m_Camera;
+	Ares::Scope<Ares::ECS::Scene> m_SandboxScene;
+	Ares::ECS::Entity m_LightEntity;
+	Ares::ECS::Entity m_CameraEntity;
+	Ares::ECS::Entity m_SquareEntity;
+	Ares::ECS::Entity m_SquareEntity2;
+	Ares::ECS::Entity m_SquareEntity3;
+	Ares::ECS::Entity m_TeapotEntity;
 };

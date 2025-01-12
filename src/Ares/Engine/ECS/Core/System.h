@@ -1,29 +1,31 @@
 #pragma once
 
-#include "Engine/Core/Timestep.h"
+namespace Ares {
 
-namespace Ares::ECS {
+	class Timestep;
+	
+	namespace ECS {
 
-	class Scene;
+		class Scene;
 
-	class System
-	{
-	public:
-		virtual ~System() = default;
+		class System
+		{
+		public:
+			virtual ~System() = default;
 
-		// Called once when the system is registered in the ECS framework
-		virtual void OnInit(Scene& scene) {}
+			// Called once when the system is registered in the ECS framework
+			virtual void OnInit(const Scene& scene) {}
 
-		// Called when the system is being removed or cleaned up
-		virtual void OnShutdown(Scene& scene) {}
+			// Called when the system is being removed or cleaned up
+			virtual void OnShutdown(const Scene& scene) {}
 
-		// Called every OnUpdate
-		virtual void OnUpdate(Scene& scene, Timestep timestep) = 0;
+			// Called every OnUpdate
+			virtual void OnUpdate(const Scene& scene, const Timestep& timestep) = 0;
 
-		// Called every OnRender
-		virtual void OnRender(Scene& scene) {}
-	};
+			// Called every OnRender
+			virtual void OnRender(const Scene& scene) {}
+		};
+
+	}
 
 }
-
-#include "Engine/ECS/Core/Scene.h"

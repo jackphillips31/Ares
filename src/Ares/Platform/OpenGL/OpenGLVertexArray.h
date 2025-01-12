@@ -1,5 +1,4 @@
 #pragma once
-
 #include <glad/gl.h>
 
 #include "Engine/Renderer/VertexArray.h"
@@ -10,22 +9,28 @@ namespace Ares {
 	{
 	public:
 		OpenGLVertexArray();
-		virtual ~OpenGLVertexArray();
+		~OpenGLVertexArray() override;
 
-		virtual void Bind() const override;
-		virtual void Unbind() const override;
+		// Core properties
+		inline const std::vector<VertexBuffer*>& GetVertexBuffers() const { return m_VertexBuffers; }
+		inline IndexBuffer* GetIndexBuffer() const { return m_IndexBuffer; }
 
-		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
-		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) override;
+		// Binding and state
+		void Bind() const override;
+		void Unbind() const override;
 
-		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; }
-		virtual const Ref<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; }
+		// Setters
+		void AddVertexBuffer(VertexBuffer* vertexBuffer) override;
+		void SetIndexBuffer(IndexBuffer* indexBuffer) override;
+
+		// RendererID access (for low-level operations)
+		inline uint32_t GetRendererID() const override { return static_cast<uint32_t>(m_RendererID); }
 
 	private:
 		GLuint m_RendererID;
 		GLuint m_VertexBufferIndex;
-		std::vector<Ref<VertexBuffer>> m_VertexBuffers;
-		Ref<IndexBuffer> m_IndexBuffer;
+		std::vector<VertexBuffer*> m_VertexBuffers;
+		IndexBuffer* m_IndexBuffer;
 	};
 
 }

@@ -1,6 +1,6 @@
-#include <imgui.h>
-
 #include "ui/MainWindow.h"
+
+#include <imgui.h>
 
 MainWindowElement::MainWindowElement()
 {
@@ -39,7 +39,7 @@ void MainWindowElement::Draw()
 			if (ImGui::MenuItem("Exit"))
 			{
 				Ares::WindowCloseEvent event;
-				Ares::Application::Get().OnEvent(event);
+				Ares::EventQueue::Dispatch<Ares::WindowCloseEvent>(event);
 			}
 			ImGui::EndMenu();
 		}
@@ -54,6 +54,5 @@ void MainWindowElement::Draw()
 	// Add a dock space
 	ImGuiID dockspaceId = ImGui::GetID("MainDockSpace");
 	ImGui::DockSpace(dockspaceId);
-
 	ImGui::End();
 }

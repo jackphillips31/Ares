@@ -1,26 +1,18 @@
 #pragma once
 
-namespace Ares {
+namespace Ares::Utility {
 
-	namespace Utility {
+	enum class AssetType : uint8_t
+	{
+		None = 0,
+		VertexShader,
+		FragmentShader,
+		ShaderProgram,
+		Texture,
+		MeshData
+	};
 
-		namespace Type {
-
-			enum Types : uint32_t
-			{
-				None = 0,
-				VertexShader,
-				FragmentShader,
-				ShaderProgram,
-				Texture,
-			};
-
-			const uint32_t GetTypeMapId(const std::type_index& type);
-
-			std::string ExtractClassName(const std::string& typeName);
-
-		}
-
-	}
+	const AssetType GetAssetType(const std::type_index& type);
+	const std::string ExtractClassName(const std::type_index& type);
 
 }

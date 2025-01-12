@@ -26,7 +26,7 @@ Ares::Application* Ares::CreateApplication()
 	Ares::ApplicationSettings settings;
 	settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
 	settings.Icon = &appIcon;
-	settings.ThreadCount = 2;
+	settings.ThreadCount = 4;
 
 	return new SandboxApp(settings);
 }

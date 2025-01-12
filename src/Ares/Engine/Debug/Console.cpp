@@ -1,7 +1,7 @@
 #include <arespch.h>
-#include <imgui.h>
-
 #include "Engine/Debug/Console.h"
+
+#include <imgui.h>
 
 namespace Ares {
 

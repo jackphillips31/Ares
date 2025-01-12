@@ -1,8 +1,7 @@
 #include <arespch.h>
+#include "Engine/Renderer/Renderer.h"
 
 #include "Engine/Renderer/RenderCommand.h"
-
-#include "Engine/Renderer/Renderer.h"
 
 namespace Ares {
 
@@ -18,7 +17,7 @@ namespace Ares {
 		RenderCommand::Shutdown();
 	}
 
-	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
+	void Renderer::OnClientResize(const uint32_t width, const uint32_t height)
 	{
 		RenderCommand::SetViewport(0, 0, width, height);
 	}

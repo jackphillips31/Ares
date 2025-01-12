@@ -2,7 +2,7 @@
 
 namespace Ares {
 
-	typedef enum class MouseCode : uint16_t
+	enum class MouseCode : uint16_t
 	{
 		// From glfw3.h
 		Button0 = 0,
@@ -18,7 +18,9 @@ namespace Ares {
 		ButtonLeft = Button0,
 		ButtonRight = Button1,
 		ButtonMiddle = Button2
-	} Mouse;
+	};
+
+	using Mouse = MouseCode;
 
 	inline std::ostream& operator<<(std::ostream& os, MouseCode mouseCode)
 	{

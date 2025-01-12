@@ -1,91 +1,14 @@
 #include <arespch.h>
+#include "Platform/OpenGL/OpenGLTexture.h"
+
+#include <glm/vec2.hpp>
 #include <stb_image.h>
 
-#include "Platform/OpenGL/OpenGLTexture.h"
+#include "Engine/Data/RawData.h"
 
 namespace Ares {
 
-	OpenGLTexture::OpenGLTexture(const std::string& name, const FileBuffer& fileBuffer)
-		: m_Name(name), m_BoundSlot(-1), m_Format(Format::None)
-	{
-		int32_t width, height, channels;
-		stbi_set_flip_vertically_on_load(1);
-
-		stbi_uc* imageData = stbi_load_from_memory(static_cast<const uint8_t*>(fileBuffer.GetBuffer()), static_cast<int32_t>(fileBuffer.GetSize()), &width, &height, &channels, 0);
-		AR_CORE_ASSERT(imageData, "Failed to load image!");
-		m_Width = static_cast<GLsizei>(width);
-		m_Height = static_cast<GLsizei>(height);
-
-		if (channels == 4)
-		{
-			m_InternalFormat = GL_RGBA8;
-			m_DataFormat = GL_RGBA;
-			m_Format = Format::RGBA;
-		}
-		else if (channels == 3)
-		{
-			m_InternalFormat = GL_RGB8;
-			m_DataFormat = GL_RGB;
-			m_Format = Format::RGB;
-		}
-
-		AR_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
-
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
-
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, static_cast<const void*>(imageData));
-
-		// Set default texture parameters
-		SetFilter(Filter::Linear, Filter::Linear);
-		SetWrap(Wrap::Repeat);
-
-		stbi_image_free(imageData);
-
-		glFinish();
-	}
-
-	OpenGLTexture::OpenGLTexture(const std::string& name, const RawData& data)
-		: m_Name(name), m_BoundSlot(-1), m_Format(Format::None)
-	{
-		int32_t width, height, channels;
-		stbi_set_flip_vertically_on_load(1);
-
-		stbi_uc* imageData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(data.Data), static_cast<int32_t>(data.Size), &width, &height, &channels, 0);
-		AR_CORE_ASSERT(imageData, "Failed to load image!");
-		m_Width = static_cast<GLsizei>(width);
-		m_Height = static_cast<GLsizei>(height);
-
-		if (channels == 4)
-		{
-			m_InternalFormat = GL_RGBA8;
-			m_DataFormat = GL_RGBA;
-			m_Format = Format::RGBA;
-		}
-		else if (channels == 3)
-		{
-			m_InternalFormat = GL_RGB8;
-			m_DataFormat = GL_RGB;
-			m_Format = Format::RGB;
-		}
-
-		AR_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
-
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
-
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, static_cast<void*>(imageData));
-
-		// Set default texture parameters
-		SetFilter(Filter::Linear, Filter::Linear);
-		SetWrap(Wrap::Repeat);
-
-		stbi_image_free(imageData);
-
-		glFinish();
-	}
-
-	OpenGLTexture::OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const Format& format)
+	OpenGLTexture::OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format)
 		: m_Name(name), m_Width(static_cast<GLsizei>(dimensions.x)), m_Height(static_cast<GLsizei>(dimensions.y)), m_Format(format), m_RendererID(0), m_BoundSlot(-1)
 	{
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
@@ -96,16 +19,80 @@ namespace Ares {
 		// Allocate immutable storage for the texture
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
+		// Set the raw data
+		SetData(rawData);
+
 		// Set default texture parameters
 		SetFilter(Filter::Linear, Filter::Linear);
 		SetWrap(Wrap::Repeat);
+	}
 
-		glFinish();
+	OpenGLTexture::OpenGLTexture(const std::string& name, const RawData& data)
+		: m_Name(name), m_Format(Format::None), m_RendererID(0), m_BoundSlot(-1)
+	{
+		const size_t dataSize = data.Size;
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+
+		if (dataSize == 3 || dataSize == 4)
+		{
+			m_Width = 1;
+			m_Height = 1;
+
+			if (dataSize == 3)
+				m_Format = Format::RGB;
+			if (dataSize == 4)
+				m_Format = Format::RGBA;
+
+			m_InternalFormat = GetGLInternalFormat(m_Format);
+			m_DataFormat = GetGLDataFormat(m_Format);
+
+			glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data.Data);
+		}
+		else
+		{
+			int32_t width, height, channels;
+			stbi_set_flip_vertically_on_load(1);
+
+			stbi_uc* imageData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(data.Data), static_cast<int32_t>(data.Size), &width, &height, &channels, 0);
+			AR_CORE_ASSERT(imageData, "Failed to load image!");
+			m_Width = static_cast<GLsizei>(width);
+			m_Height = static_cast<GLsizei>(height);
+
+			if (channels == 4)
+			{
+				m_InternalFormat = GL_RGBA8;
+				m_DataFormat = GL_RGBA;
+				m_Format = Format::RGBA;
+			}
+			else if (channels == 3)
+			{
+				m_InternalFormat = GL_RGB8;
+				m_DataFormat = GL_RGB;
+				m_Format = Format::RGB;
+			}
+
+			AR_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
+
+			glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, static_cast<void*>(imageData));
+
+			stbi_image_free(imageData);
+		}
+
+		// Set default texture parameters
+		SetFilter(Filter::Linear, Filter::Linear);
+		SetWrap(Wrap::Repeat);
 	}
 
 	OpenGLTexture::~OpenGLTexture()
 	{
-		glDeleteTextures(1, &m_RendererID);
+		if (m_RendererID)
+		{
+			glDeleteTextures(1, &m_RendererID);
+			m_RendererID = 0;
+		}
 	}
 
 	void OpenGLTexture::Bind(uint32_t slot) const
@@ -124,19 +111,19 @@ namespace Ares {
 		}
 	}
 
-	void OpenGLTexture::SetFilter(const Filter& minFilter, const Filter& maxFilter)
+	void OpenGLTexture::SetFilter(const Filter minFilter, const Filter maxFilter)
 	{
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GetGLFilter(minFilter));
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GetGLFilter(maxFilter));
 	}
 
-	void OpenGLTexture::SetWrap(const Wrap& wrap)
+	void OpenGLTexture::SetWrap(const Wrap wrap)
 	{
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GetGLWrap(wrap));
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GetGLWrap(wrap));
 	}
 
-	void OpenGLTexture::Resize(const uint32_t& width, const uint32_t& height)
+	void OpenGLTexture::Resize(const uint32_t width, const uint32_t height)
 	{
 		m_Width = static_cast<GLsizei>(width);
 		m_Height = static_cast<GLsizei>(height);

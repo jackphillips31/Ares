@@ -1,11 +1,10 @@
 #include <arespch.h>
-
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
 
 namespace Ares {
 
 	OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height)
-		: m_FBO(0), m_RBO(0), m_Texture(0), m_Width(width), m_Height(height)
+		: m_FBO(0), m_RBO(0), m_Texture(0), m_Width(static_cast<GLsizei>(width)), m_Height(static_cast<GLsizei>(height))
 	{
 		CreateFramebuffer();
 	}
@@ -27,19 +26,14 @@ namespace Ares {
 
 	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
-		if (width == m_Width && height == m_Height)
+		if (static_cast<GLsizei>(width) == m_Width && static_cast<GLsizei>(height) == m_Height)
 			return;
 
-		m_Width = width;
-		m_Height = height;
+		m_Width = static_cast<GLsizei>(width);
+		m_Height = static_cast<GLsizei>(height);
 
 		DestroyFramebuffer();
 		CreateFramebuffer();
-	}
-
-	uintptr_t OpenGLFrameBuffer::GetColorAttachmentHandle() const
-	{
-		return static_cast<uintptr_t>(m_Texture);
 	}
 
 	void OpenGLFrameBuffer::CreateFramebuffer()
@@ -49,14 +43,14 @@ namespace Ares {
 
 		glGenTextures(1, &m_Texture);
 		glBindTexture(GL_TEXTURE_2D, m_Texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(m_Width), static_cast<GLsizei>(m_Height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture, 0);
 
 		glGenRenderbuffers(1, &m_RBO);
 		glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(m_Width), static_cast<GLsizei>(m_Height));
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Width, m_Height);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RBO);
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)

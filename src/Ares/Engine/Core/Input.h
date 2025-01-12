@@ -1,12 +1,10 @@
 #pragma once
-
-#include <glm/glm.hpp>
-
-#include "Engine/Core/Core.h"
-#include "Engine/Events/KeyCodes.h"
-#include "Engine/Events/MouseCodes.h"
+#include <glm/vec2.hpp>
 
 namespace Ares {
+
+	enum class KeyCode : uint16_t;
+	enum class MouseCode : uint16_t;
 
 	class Input
 	{

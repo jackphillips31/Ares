@@ -1,7 +1,5 @@
 #pragma once
-
 #include <Ares.h>
-#include <imgui.h>
 
 class AssetListElement : public Ares::ImGuiElement
 {

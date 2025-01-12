@@ -1,12 +1,11 @@
 #include <arespch.h>
+#include "Engine/Renderer/GraphicsContext.h"
 
 #include "Engine/Renderer/Renderer.h"
 
 #ifdef AR_PLATFORM_WINDOWS
 #include "Platform/WinAPI/WinOpenGLContext.h"
 #endif
-
-#include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
 

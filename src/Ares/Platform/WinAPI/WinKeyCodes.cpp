@@ -1,6 +1,7 @@
 #include <arespch.h>
-
 #include "Platform/WinAPI/WinKeyCodes.h"
+
+#include "Engine/Events/KeyCodes.h"
 
 namespace Ares {
 

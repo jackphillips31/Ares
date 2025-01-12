@@ -61,6 +61,9 @@
 #define AR_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 #define AR_STATIC_BIND_EVENT_FN(fn) std::bind(&fn, std::placeholders::_1)
 
+#define AR_BIND_ASSET_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+#define AR_BIND_ASSET_STATIC_FN(fn) std::bind(&fn, std::placeholders::_1)
+
 namespace Ares {
 
 	template<typename T>
@@ -80,10 +83,10 @@ namespace Ares {
 	}
 
 	// Helper function to combine hash values
-	template<typename T>
-	void CombineHash(size_t& seed, const T& value)
-	{
-		seed ^= std::hash<T>{}(value)+0x9e3779b9 + (seed << 6) + (seed >> 2);
-	}
+	//template<typename T>
+	//void CombineHash(size_t& seed, const T& value)
+	//{
+	//	seed ^= std::hash<T>{}(value)+0x9e3779b9 + (seed << 6) + (seed >> 2);
+	//}
 
 }

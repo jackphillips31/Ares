@@ -1,8 +1,7 @@
 #include <arespch.h>
+#include "Engine/Renderer/RendererAPI.h"
 
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
-
-#include "Engine/Renderer/RendererAPI.h"
 
 namespace Ares {
 

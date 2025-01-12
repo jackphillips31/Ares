@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Engine/Data/FileBuffer.h"
-
 namespace Ares {
+
+	class DataBuffer;
 
 	class FileIO
 	{
 	public:
-		static FileBuffer LoadFile(const std::string& filepath);
+		static DataBuffer LoadFile(const std::string& filepath);
 
-		static bool SaveFile(const std::string& filepath, const FileBuffer& buffer);
+		static bool SaveFile(const std::string& filepath, const DataBuffer& buffer);
 
 	private:
 		FileIO() = default;

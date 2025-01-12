@@ -1,15 +1,7 @@
 #pragma once
 
-namespace Ares {
+namespace Ares::Utility {
 
-	namespace Utility {
-
-		namespace String {
-
-			std::string IncrementStringSuffix(const std::string& input);
-
-		}
-
-	}
+	std::string IncrementStringSuffix(const std::string& input);
 
 }

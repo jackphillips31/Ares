@@ -1,5 +1,4 @@
 #include <arespch.h>
-
 #include "Engine/Core/Layer.h"
 
 namespace Ares {

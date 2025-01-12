@@ -1,13 +1,17 @@
 #include <arespch.h>
+#include "Engine/Core/Application.h"
 
 #include "Engine/Core/Input.h"
+#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
+#include "Engine/Core/Window.h"
 #include "Engine/Data/AssetManager.h"
 #include "Engine/Events/EventQueue.h"
+#include "Engine/Events/ApplicationEvent.h"
+#include "Engine/Layers/ImGuiLayer.h"
 #include "Engine/Renderer/Renderer.h"
-
-#include "Engine/Core/Application.h"
+#include "Engine/Renderer/RenderCommand.h"
 
 namespace Ares {
 
@@ -36,6 +40,10 @@ namespace Ares {
 		EventQueue::Init();
 		AssetManager::Init();
 		Renderer::Init();
+		MainThreadQueue::Init();
+
+		EventQueue::AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
+		EventQueue::AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
 
 		m_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(m_ImGuiLayer);
@@ -43,6 +51,7 @@ namespace Ares {
 
 	Application::~Application()
 	{
+		MainThreadQueue::Shutdown();
 		Renderer::Shutdown();
 		Input::Shutdown();
 		AssetManager::Shutdown();
@@ -76,6 +85,7 @@ namespace Ares {
 
 				m_Window->OnUpdate();
 				AssetManager::OnUpdate();
+				MainThreadQueue::OnUpdate();
 
 				if (!m_Minimized)
 				{
@@ -109,10 +119,6 @@ namespace Ares {
 
 	void Application::OnEvent(Event& e)
 	{
-		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
-
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			(*it)->OnEvent(e);
@@ -136,7 +142,7 @@ namespace Ares {
 		}
 
 		m_Minimized = false;
-		Renderer::OnWindowResize(e.GetClientWidth(), e.GetClientHeight());
+		Renderer::OnClientResize(e.GetClientWidth(), e.GetClientHeight());
 
 		return false;
 	}

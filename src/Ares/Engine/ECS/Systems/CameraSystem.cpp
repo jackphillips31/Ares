@@ -1,54 +1,83 @@
 #include <arespch.h>
-
-#include "Engine/ECS/Components/AllComponents.h"
-
 #include "Engine/ECS/Systems/CameraSystem.h"
+
+#include "Engine/Core/Timestep.h"
+#include "Engine/ECS/Components/AllComponents.h"
+#include "Engine/ECS/Core/EntityManager.h"
+#include "Engine/ECS/Core/Scene.h"
 
 namespace Ares::ECS::Systems {
 
-	void CameraSystem::OnUpdate(Scene& scene, Timestep timestep)
+	CameraSystem::CameraSystem()
+		: m_ViewportSize(1280.0f, 720.0f), m_ActiveCameraEntityId(0)
 	{
-		EntityManager* entityManager = scene.GetEntityManager();
-		Components::Camera* activeCamera = nullptr;
+	}
 
-		// Query entities with Position and Camera components
-		for (auto& entry : entityManager->GetEntityMap())
+	void CameraSystem::OnUpdate(const Scene& scene, const Timestep& timestep)
+	{
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		EntityManager* entityManager = scene.GetEntityManager();
+
+		// Query entities with Transform and Camera components
+		for (auto& entry : entityManager->GetEntityComponents())
 		{
 			const uint32_t entityId = entry.first;
 			Components::Camera* camera = entityManager->GetComponent<Components::Camera>(entityId);
 			if (camera != nullptr)
 			{
 				// Entity has camera - check if active
-				if (camera->IsActive())
+				if (m_ActiveCameraEntityId == entityId)
 				{
-					activeCamera = camera;
-
 					// Update viewport
-					camera->SetViewportSize(m_ViewWidth, m_ViewHeight);
+					camera->SetViewportSize(m_ViewportSize);
 
 					// Update camera position and orientation
-					Components::Position* position = entityManager->GetComponent<Components::Position>(entityId);
-					Components::Orientation* orientation = entityManager->GetComponent<Components::Orientation>(entityId);
+					Components::Transform* transform = entityManager->GetComponent<Components::Transform>(entityId);
 
-					if (position)
-						camera->SetPosition(*position);
-					if (orientation)
-						camera->SetOrientation(*orientation);
+					if (transform)
+					{
+						camera->SetPosition(transform->GetPosition());
+						camera->SetRotation(transform->GetRotation());
+					}
 				}
 			}
 		}
 	}
 
-	void CameraSystem::SetViewportSize(const uint32_t& width, const uint32_t& height)
+	const uint32_t CameraSystem::GetActiveCameraEntityId()
 	{
-		m_ViewWidth = width;
-		m_ViewHeight = height;
+		std::shared_lock lock(m_Mutex);
+		return m_ActiveCameraEntityId;
 	}
 
-	void CameraSystem::SetViewportSize(const float& width, const float& height)
+	const glm::vec2 CameraSystem::GetViewportSize()
 	{
-		m_ViewWidth = static_cast<uint32_t>(width);
-		m_ViewHeight = static_cast<uint32_t>(height);
+		std::shared_lock lock(m_Mutex);
+		return m_ViewportSize;
+	}
+
+	void CameraSystem::SetActiveCamera(const uint32_t& entityId)
+	{
+		std::unique_lock lock(m_Mutex);
+		m_ActiveCameraEntityId = entityId;
+	}
+
+	void CameraSystem::SetActiveCamera(const Entity& entity)
+	{
+		SetActiveCamera(entity.GetID());
+	}
+
+	void CameraSystem::SetViewportSize(const glm::vec2& viewSize)
+	{
+		{
+			std::shared_lock lock(m_Mutex);
+			if (m_ViewportSize == viewSize)
+				return;
+		}
+		{
+			std::unique_lock lock(m_Mutex);
+			m_ViewportSize = viewSize;
+		}
 	}
 
 }

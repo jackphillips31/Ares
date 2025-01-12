@@ -2,29 +2,29 @@
 
 namespace Ares {
 
-	typedef enum class KeyCode : uint16_t
+	enum class KeyCode : uint16_t
 	{
 		// From glfw3.h
 		Space = 32,
-		Apostrophe = 39, /* ' */
-		Comma = 44, /* , */
-		Minus = 45, /* - */
-		Period = 46, /* . */
-		Slash = 47, /* / */
+		Apostrophe = 39,	/* ' */
+		Comma = 44,			/* , */
+		Minus = 45,			/* - */
+		Period = 46,		/* . */
+		Slash = 47,			/* / */
 
-		D0 = 48, /* 0 */
-		D1 = 49, /* 1 */
-		D2 = 50, /* 2 */
-		D3 = 51, /* 3 */
-		D4 = 52, /* 4 */
-		D5 = 53, /* 5 */
-		D6 = 54, /* 6 */
-		D7 = 55, /* 7 */
-		D8 = 56, /* 8 */
-		D9 = 57, /* 9 */
+		D0 = 48,			/* 0 */
+		D1 = 49,			/* 1 */
+		D2 = 50,			/* 2 */
+		D3 = 51,			/* 3 */
+		D4 = 52,			/* 4 */
+		D5 = 53,			/* 5 */
+		D6 = 54,			/* 6 */
+		D7 = 55,			/* 7 */
+		D8 = 56,			/* 8 */
+		D9 = 57,			/* 9 */
 
-		Semicolon = 59, /* ; */
-		Equal = 61, /* = */
+		Semicolon = 59,		/* ; */
+		Equal = 61,			/* = */
 
 		A = 65,
 		B = 66,
@@ -53,10 +53,10 @@ namespace Ares {
 		Y = 89,
 		Z = 90,
 
-		LeftBracket = 91,  /* [ */
-		Backslash = 92,  /* \ */
-		RightBracket = 93,  /* ] */
-		GraveAccent = 96,  /* ` */
+		LeftBracket = 91,	/* [ */
+		Backslash = 92,		/* \ */
+		RightBracket = 93,	/* ] */
+		GraveAccent = 96,	/* ` */
 
 		World1 = 161, /* non-US #1 */
 		World2 = 162, /* non-US #2 */
@@ -135,7 +135,9 @@ namespace Ares {
 		RightAlt = 346,
 		RightSuper = 347,
 		Menu = 348
-	} Key;
+	};
+
+	using Key = KeyCode;
 
 	inline std::ostream& operator<<(std::ostream& os, KeyCode keyCode)
 	{
@@ -189,12 +191,12 @@ namespace Ares {
 #define AR_KEY_X               ::Ares::Key::X
 #define AR_KEY_Y               ::Ares::Key::Y
 #define AR_KEY_Z               ::Ares::Key::Z
-#define AR_KEY_LEFT_BRACKET    ::Ares::Key::LeftBracket   /* [ */
-#define AR_KEY_BACKSLASH       ::Ares::Key::Backslash     /* \ */
-#define AR_KEY_RIGHT_BRACKET   ::Ares::Key::RightBracket  /* ] */
-#define AR_KEY_GRAVE_ACCENT    ::Ares::Key::GraveAccent   /* ` */
-#define AR_KEY_WORLD_1         ::Ares::Key::World1        /* non-US #1 */
-#define AR_KEY_WORLD_2         ::Ares::Key::World2        /* non-US #2 */
+#define AR_KEY_LEFT_BRACKET    ::Ares::Key::LeftBracket		/* [ */
+#define AR_KEY_BACKSLASH       ::Ares::Key::Backslash		/* \ */
+#define AR_KEY_RIGHT_BRACKET   ::Ares::Key::RightBracket	/* ] */
+#define AR_KEY_GRAVE_ACCENT    ::Ares::Key::GraveAccent		/* ` */
+#define AR_KEY_WORLD_1         ::Ares::Key::World1			/* non-US #1 */
+#define AR_KEY_WORLD_2         ::Ares::Key::World2			/* non-US #2 */
 
 #define AR_KEY_ESCAPE          ::Ares::Key::Escape
 #define AR_KEY_ENTER           ::Ares::Key::Enter

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
-#include "Engine/Core/Timestep.h"
-#include "Engine/Events/Event.h"
-
 namespace Ares {
+
+	class Event;
+	class Timestep;
 
 	class Layer
 	{
@@ -14,7 +13,7 @@ namespace Ares {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate(Timestep ts) {}
+		virtual void OnUpdate(const Timestep& ts) {}
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}

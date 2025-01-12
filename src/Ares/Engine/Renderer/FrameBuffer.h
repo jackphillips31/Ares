@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
-
 namespace Ares {
 
 	class FrameBuffer
@@ -9,16 +7,28 @@ namespace Ares {
 	public:
 		virtual ~FrameBuffer() = default;
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-		virtual void Resize(uint32_t width, uint32_t height) = 0;
-
+		// Core properties
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 
-		virtual uintptr_t GetColorAttachmentHandle() const = 0;
+		// Binding and state
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 
-		static Ref<FrameBuffer> Create(uint32_t width, uint32_t height);
+		// Utilities
+		virtual void Resize(const uint32_t width, const uint32_t height) = 0;
+
+		// TextureID access (for low-level operations)
+		virtual uintptr_t GetTextureHandle() const = 0;
+
+		// Creation method
+		static Scope<FrameBuffer> Create(const uint32_t width, const uint32_t height);
+
+		// Equality operator
+		inline bool operator==(const FrameBuffer& other) const
+		{
+			return GetTextureHandle() == other.GetTextureHandle();
+		}
 	};
 
 }

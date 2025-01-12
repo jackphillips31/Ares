@@ -1,20 +1,36 @@
 #pragma once
+#include <glm/vec2.hpp>
 
 #include "Engine/ECS/Core/System.h"
 
-namespace Ares::ECS::Systems {
+namespace Ares::ECS {
+	
+	class Entity;
 
-	class CameraSystem : public System
-	{
-	public:
-		void OnUpdate(Scene& scene, Timestep timestep) override;
+	namespace Systems {
 
-		void SetViewportSize(const uint32_t& width, const uint32_t& height);
-		void SetViewportSize(const float& width, const float& height);
+		class CameraSystem : public System
+		{
+		public:
+			CameraSystem();
 
-	private:
-		uint32_t m_ViewWidth = 1280;
-		uint32_t m_ViewHeight = 720;
-	};
+			void OnUpdate(const Scene& scene, const Timestep& timestep) override;
+
+			// Getters - Using shared locks for read operations
+			const uint32_t GetActiveCameraEntityId();
+			const glm::vec2 GetViewportSize();
+
+			// Setters - Using unique locks for write operations
+			void SetActiveCamera(const uint32_t& entityId);
+			void SetActiveCamera(const Entity& entity);
+			void SetViewportSize(const glm::vec2& viewSize);
+
+		private:
+			mutable std::shared_mutex m_Mutex;
+			glm::vec2 m_ViewportSize;
+			uint32_t m_ActiveCameraEntityId;
+		};
+	
+	}
 
 }

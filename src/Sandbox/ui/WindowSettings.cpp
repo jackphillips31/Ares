@@ -1,7 +1,8 @@
-#include <imgui.h>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "ui/WindowSettings.h"
+
+#include <bitset>
+#include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
 
 WindowSettingsElement::WindowSettingsElement()
 	: m_Window(Ares::Application::Get().GetWindow()),

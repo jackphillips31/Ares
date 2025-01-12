@@ -1,8 +1,11 @@
 #pragma once
-
-#include "Engine/Core/Utility.h"
+#include <shared_mutex>
+#include <typeindex>
 
 namespace Ares {
+
+	class AssetManager;
+	using MemoryDataKey = uint32_t;
 
 	enum class AssetState : uint8_t
 	{
@@ -16,31 +19,39 @@ namespace Ares {
 	class AssetBase
 	{
 	public:
+		AssetBase() = default;
 		virtual ~AssetBase() = default;
-	};
 
-	class AssetManager;
+		// Core property
+		virtual const std::string& GetName() const = 0;
+
+		// Delete copy constructor and operator
+		AssetBase(const AssetBase&) = delete;
+		AssetBase& operator=(const AssetBase&) = delete;
+	};
 
 	class Asset
 	{
 	private:
 		static Ref<Asset> Create(
 			const std::type_index& type,
-			const AssetState& state,
+			const AssetState state,
 			const std::string& filepath,
 			const std::vector<uint32_t>& dependencies,
-			const RawData& rawData
+			const MemoryDataKey dataKey
 		);
 		Asset(
 			const std::type_index& type,
-			const AssetState& state,
+			const AssetState state,
 			const std::string& filepath,
 			const std::vector<uint32_t>& dependencies,
-			const RawData& rawData
+			const MemoryDataKey dataKey
 		);
 		Asset();
 
 		friend class AssetManager;
+		friend class MainThreadQueue;
+		friend struct std::hash<Asset>;
 
 	public:
 		// Delete copy constructor and copy assignment operator
@@ -49,53 +60,56 @@ namespace Ares {
 		~Asset();
 
 		// Getters
-		inline const std::string& GetName() const { std::shared_lock lock(m_AssetMutex); return m_Name; }
-		inline const std::string& GetFilepath() const { std::shared_lock lock(m_AssetMutex); return m_Filepath; }
-		inline const std::string& GetTypeName() const { std::shared_lock lock(m_AssetMutex); return m_TypeName; }
-		inline const std::type_index& GetType() const { std::shared_lock lock(m_AssetMutex); return m_Type; }
-		inline const std::vector<uint32_t>& GetDependencies() const { std::shared_lock lock(m_AssetMutex); return m_Dependencies; }
-		inline const uint32_t& GetAssetId() const { std::shared_lock lock(m_AssetMutex); return m_AssetId; }
-		inline const bool HasFilepath() const { std::shared_lock lock(m_AssetMutex); return !m_Filepath.empty(); }
-		inline const bool IsLoaded() const { std::shared_lock lock(m_AssetMutex); return m_State == AssetState::Loaded; }
-		inline const AssetState& GetState() const { std::shared_lock lock(m_AssetMutex); return m_State; }
-		const std::string GetStateString() const;
-		const size_t GetHash() const;
+		inline std::string GetName() const { std::shared_lock lock(m_Mutex); return m_Name; }
+		inline std::string GetFilepath() const { std::shared_lock lock(m_Mutex); return m_Filepath; }
+		inline std::string GetTypeName() const { std::shared_lock lock(m_Mutex); return m_TypeName; }
+		inline std::type_index GetType() const { std::shared_lock lock(m_Mutex); return m_Type; }
+		inline std::vector<uint32_t> GetDependencies() const { std::shared_lock lock(m_Mutex); return m_Dependencies; }
+		inline uint32_t GetAssetId() const { std::shared_lock lock(m_Mutex); return m_AssetId; }
+		inline bool HasFilepath() const { std::shared_lock lock(m_Mutex); return !m_Filepath.empty(); }
+		inline bool IsLoaded() const { std::shared_lock lock(m_Mutex); return m_State == AssetState::Loaded; }
+		inline AssetState GetState() const { std::shared_lock lock(m_Mutex); return m_State; }
+		std::string GetStateString() const;
+		size_t GetDataSize() const;
 
 		template <typename AssetType>
-		inline const Ref<AssetType> GetAsset() const
+		inline AssetType* GetAsset() const
 		{
-			std::shared_lock lock(m_AssetMutex);
-			return static_pointer_cast<AssetType>(m_Asset);
+			std::shared_lock lock(m_Mutex);
+			return static_cast<AssetType*>(m_Asset.get());
 		}
-
-		inline const Ref<AssetBase>& GetAsset() const
+		inline const Scope<AssetBase>& GetAsset() const
 		{
-			std::shared_lock lock(m_AssetMutex);
+			std::shared_lock lock(m_Mutex);
 			return m_Asset;
 		}
 
 	private:
 		// Private setters for AssetManager to use
 		void SetName(const std::string& name);
-		void SetState(const AssetState& state);
-		void SetAssetId(const uint32_t& id);
-		void SetAsset(const Ref<AssetBase>& asset);
-		void SetRawData(const RawData& rawData);
+		void SetState(const AssetState state);
+		void SetAssetId(const uint32_t id);
+		void SetAsset(Scope<AssetBase>&& asset);
+		void SetDataKey(const MemoryDataKey dataKey);
 
 		// Private getters for AssetManager to use
-		inline const RawData& GetRawData() const { return m_RawData; }
+		inline const MemoryDataKey GetDataKey() const { std::shared_lock lock(m_Mutex); return m_DataKey; }
+
+		// Private methods for unloading and unstaging
+		void Unload();
+		void Unstage();
 
 	private:
+		mutable std::shared_mutex m_Mutex;
 		std::string m_Name;
 		std::string m_Filepath;
 		std::string m_TypeName;
 		std::type_index m_Type;
 		std::vector<uint32_t> m_Dependencies;
 		uint32_t m_AssetId;
-		Ref<AssetBase> m_Asset;
+		Scope<AssetBase> m_Asset;
 		AssetState m_State;
-		RawData m_RawData;
-		mutable std::shared_mutex m_AssetMutex;
+		MemoryDataKey m_DataKey;
 	};
 
 }

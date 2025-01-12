@@ -71,8 +71,7 @@ workspace "Ares"
 
 		defines
 		{
-			"FMT_UNICODE=0",
-			"GLM_ENABLE_EXPERIMENTAL"
+			"FMT_UNICODE=0"
 		}
 
 		filter "system:windows"
@@ -132,8 +131,7 @@ workspace "Ares"
 
 		defines
 		{
-			"FMT_UNICODE=0",
-			"GLM_ENABLE_EXPERIMENTAL"
+			"FMT_UNICODE=0"
 		}
 
 		filter "system:windows"

@@ -1,13 +1,12 @@
 #pragma once
+#include <glm/vec2.hpp>
 
-#include <glm/glm.hpp>
-
-#include "Engine/Core/Core.h"
 #include "Engine/Core/Flags.h"
-#include "Engine/Events/Event.h"
-#include "Engine/Renderer/GraphicsContext.h"
 
 namespace Ares {
+
+	class Event;
+	class GraphicsContext;
 
 	struct WindowProps
 	{

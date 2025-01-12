@@ -1,63 +1,66 @@
 #include <arespch.h>
-
 #include "Engine/Data/Asset.h"
+
+#include "Engine/Core/Utility.h"
+#include "Engine/Data/DataBuffer.h"
+#include "Engine/Data/MemoryDataProvider.h"
 
 namespace Ares {
 
 	Ref<Asset> Asset::Create(
 		const std::type_index& type,
-		const AssetState& state,
+		const AssetState state,
 		const std::string& filepath,
 		const std::vector<uint32_t>& dependencies,
-		const RawData& rawData
+		const MemoryDataKey dataKey
 	)
 	{
 		// CreateRef (std::make_shared) doesn't have access to private
 		// constructors, so we wrap a raw pointer with a smart pointer
 		// instead.
-		return Ref<Asset>(new Asset(type, state, filepath, dependencies, rawData));
+		return Ref<Asset>(new Asset(type, state, filepath, dependencies, dataKey));
 	}
 
 	Asset::Asset(
 		const std::type_index& type,
-		const AssetState& state,
+		const AssetState state,
 		const std::string& filepath,
 		const std::vector<uint32_t>& dependencies,
-		const RawData& rawData
+		const MemoryDataKey dataKey
 	)
 		: m_Name(""),
 		m_Filepath(filepath),
-		m_TypeName(Utility::Type::ExtractClassName(type.name())),
+		m_TypeName(Utility::ExtractClassName(type)),
 		m_Type(type),
 		m_Dependencies(dependencies),
 		m_AssetId(0),
 		m_Asset(nullptr),
 		m_State(state),
-		m_RawData(rawData)
+		m_DataKey(dataKey)
 	{
 	}
 
 	Asset::Asset()
 		: m_Name(""),
 		m_Filepath(""),
-		m_TypeName(""),
+		m_TypeName(Utility::ExtractClassName(typeid(void))),
 		m_Type(typeid(void)),
 		m_Dependencies({}),
 		m_AssetId(0),
 		m_Asset(nullptr),
 		m_State(AssetState::None),
-		m_RawData(RawData(nullptr, 0))
+		m_DataKey(0)
 	{
 	}
 
 	Asset::~Asset()
 	{
-		m_Asset = nullptr;
+		m_Asset.reset();
 	}
 
-	const std::string Asset::GetStateString() const
+	std::string Asset::GetStateString() const
 	{
-		std::shared_lock lock(m_AssetMutex);
+		std::shared_lock lock(m_Mutex);
 		switch (m_State)
 		{
 		case AssetState::None: return "None";
@@ -70,61 +73,69 @@ namespace Ares {
 		return "Unknown Asset State!";
 	}
 
-	const size_t Asset::GetHash() const
+	size_t Asset::GetDataSize() const
 	{
-		std::shared_lock lock(m_AssetMutex);
-		size_t hash = 0;
-
-		// Hash type
-		CombineHash<std::type_index>(hash, m_Type);
-
-		// Hash filepath (if not empty)
-		if (!m_Filepath.empty())
+		std::shared_lock lock(m_Mutex);
+		if (m_DataKey != 0)
 		{
-			CombineHash<std::string>(hash, m_Filepath);
+			const DataBuffer& data = MemoryDataProvider::GetData(m_DataKey);
+			return data.GetSize();
 		}
-
-		// Hash dependency ids (if not empty)
-		for (uint32_t id : m_Dependencies)
-		{
-			CombineHash<uint32_t>(hash, id);
-		}
-
-		// Hash raw data (if not empty)
-		if (m_RawData) {
-			CombineHash<std::string_view>(hash, std::string_view(static_cast<const char*>(m_RawData.Data), m_RawData.Size));
-		}
-
-		return hash;
+		return 0;
 	}
 
 	void Asset::SetName(const std::string& name)
 	{
-		std::unique_lock lock(m_AssetMutex);
+		std::unique_lock lock(m_Mutex);
 		m_Name = name;
 	}
 
-	void Asset::SetState(const AssetState& state)
+	void Asset::SetState(const AssetState state)
 	{
-		std::unique_lock lock(m_AssetMutex);
+		std::unique_lock lock(m_Mutex);
 		m_State = state;
 	}
 
-	void Asset::SetAssetId(const uint32_t& id)
+	void Asset::SetAssetId(const uint32_t id)
 	{
-		std::unique_lock lock(m_AssetMutex);
+		std::unique_lock lock(m_Mutex);
 		m_AssetId = id;
 	}
 
-	void Asset::SetAsset(const Ref<AssetBase>& asset)
+	void Asset::SetAsset(Scope<AssetBase>&& asset)
 	{
-		std::unique_lock lock(m_AssetMutex);
-		m_Asset = asset;
+		std::unique_lock lock(m_Mutex);
+		m_Asset = std::move(asset);
 	}
 
-	void Asset::SetRawData(const RawData& rawData) {
-		std::unique_lock lock(m_AssetMutex);
-		m_RawData = rawData;
+	void Asset::SetDataKey(const MemoryDataKey dataKey)
+	{
+		std::unique_lock lock(m_Mutex);
+		m_DataKey = dataKey;
+	}
+
+	void Asset::Unload()
+	{
+		std::unique_lock lock(m_Mutex);
+		if (!m_Filepath.empty())
+			m_DataKey = 0;
+
+		m_Asset.reset();
+		m_State = AssetState::Staged;
+	}
+
+	void Asset::Unstage()
+	{
+		std::unique_lock lock(m_Mutex);
+		m_Name = "";
+		m_Filepath = "";
+		m_Type = typeid(void);
+		m_TypeName = Utility::ExtractClassName(m_Type);
+		m_Dependencies.clear();
+		m_AssetId = 0;
+		m_Asset = nullptr;
+		m_State = AssetState::None;
+		m_DataKey = 0;
 	}
 
 }

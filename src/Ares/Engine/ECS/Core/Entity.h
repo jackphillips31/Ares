@@ -7,8 +7,11 @@ namespace Ares::ECS {
 	class Entity
 	{
 	public:
-		Entity() = default;
+		Entity();
 		Entity(uint32_t id, EntityManager* manager);
+
+		Entity(const Entity& other);
+		Entity& operator=(const Entity& other);
 
 		// Entity attributes
 		void SetName(const std::string& name);
@@ -25,6 +28,7 @@ namespace Ares::ECS {
 		ECSComponent* GetComponent();
 
 	private:
+		mutable std::shared_mutex m_Mutex;
 		uint32_t m_ID = 0;
 		EntityManager* m_Manager = nullptr;
 	};
@@ -44,6 +48,7 @@ namespace Ares::ECS {
 		}
 		return nullptr;
 	}
+
 	template <typename ECSComponent>
 	inline void Entity::RemoveComponent()
 	{
@@ -52,6 +57,7 @@ namespace Ares::ECS {
 			m_Manager->RemoveComponent<ECSComponent>(*this);
 		}
 	}
+
 	template <typename ECSComponent>
 	inline ECSComponent* Entity::GetComponent()
 	{
@@ -63,4 +69,3 @@ namespace Ares::ECS {
 	}
 
 }
-

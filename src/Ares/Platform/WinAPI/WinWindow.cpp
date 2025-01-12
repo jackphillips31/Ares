@@ -1,4 +1,6 @@
 #include <arespch.h>
+#include "Platform/WinAPI/WinWindow.h"
+
 #include <backends/imgui_impl_win32.h>
 #include <glad/wgl.h>
 
@@ -6,9 +8,8 @@
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
-
+#include "Engine/Renderer/GraphicsContext.h"
 #include "Platform/WinAPI/WinKeyCodes.h"
-#include "Platform/WinAPI/WinWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
