@@ -44,16 +44,24 @@ namespace Ares {
 
 		std::future<ReturnType> result = task->get_future();
 
+		if (!s_IsInitialized || s_Workers.empty())
 		{
-			std::lock_guard<std::mutex> lock(s_QueueMutex);
-			if (s_ShutdownRequested)
+			// Direct execution when no threads are available
+			(*task)();
+		}
+		else
+		{
 			{
-				AR_CORE_ASSERT(false, "ThreadPool is shutting down, cannot submit new task!");
+				std::lock_guard lock(s_QueueMutex);
+				if (s_ShutdownRequested)
+				{
+					AR_CORE_ASSERT(false, "ThreadPool is shutting down, cannot submit new task!");
+				}
+				s_TaskQueue.emplace([task]() { (*task)(); });
 			}
-			s_TaskQueue.emplace([task]() { (*task)(); });
+			s_Condition.notify_one();
 		}
 
-		s_Condition.notify_one();
 		return result;
 	}
 

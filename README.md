@@ -1,8 +1,15 @@
+<picture>
+	<source srcset="./docs/images/Ares_Banner_DM.png" media="(prefers-color-scheme: dark)">
+	<source srcset="./docs/images/Ares_Banner_LM.png" media="(prefers-color-scheme: light)">
+   <img src="./docs/images/Ares_Banner_DM.png" alt="Ares Banner">
+</picture>
+
 # Ares Game Engine
 
 Ares is a simple, extensible game engine designed to eventually support both 2D and 3D game development. Currently, Ares supports rendering ImGui elements, window management with customizable startup options, and an event system. The engine is designed to grow with your project and will eventually include full 2D and 3D rendering capabilities.
 
 ## Table of Contents
+
 1. [Introduction](#ares-game-engine)
 2. [Table of Contents](#table-of-contents)
 3. [Key Features](#key-features)
@@ -23,6 +30,7 @@ Ares is a simple, extensible game engine designed to eventually support both 2D 
 8. [Contact](#contact)
 
 ## Key Features
+
 - **ImGui Rendering**: Currently supports rendering ImGui UI elements.
 - **Window Management**: Allows for window style customization:
   - Windowed, Borderless, Fullscreen, Fullscreen Exclusive (changes resolution)
@@ -34,43 +42,53 @@ Ares is a simple, extensible game engine designed to eventually support both 2D 
 ## Installation
 
 ### Prerequisites
-- **Premake 5**: You’ll need [Premake 5](https://premake.github.io/download) to generate project files. 
+
+- **Premake 5**: You’ll need [Premake 5](https://premake.github.io/download) to generate project files.
 - **Git**: To clone the repository.
 
 ### Cloning the Repository
+
 ```bash
 git clone --recursive https://github.com/yourusername/ares.git
 cd ares
 ```
 
 ### Building the Project
+
 1. Download and install [Premake 5](https://premake.github.io/download) if you haven't already.
 2. Place premake5.exe inside the `/scripts` folder.
 3. In the scripts directory of the cloned repository, open a terminal and run Premake to generate project files for your development environment:
+
    ```bash
    premake5 --file=..\premake5.lua <your_environment>
    ```
+
    Replace `<your_environment>` with your desired build system, such as `vs2022` for Visual Studio 2022 or `gmake` for GNU Make.
 
 4. Open the generated project in your IDE and build the solution.
 
 ## Creating a New Blank Project
+
 The current `premake5.lua` is set up with the internal project named **Sandbox**. If you'd like to create a new blank project, such as **MyApplication**, follow these steps:
+
 1. Make sure you have downloaded [Premake 5](https://premake.github.io/download) and placed `premake5.exe` inside the `/scripts` folder.
 2. Run the `InitializeProjet.bat` script.
+
    - First, it will ask you what you want to name your project. In the current `premake5.lua` file it is **Ares**.
    - Then, it will ask you what you want the internal name of your project to be. In the current `premake5.lua` file it is **Sandbox**.
    - Using these, the script will create a `premake5.lua` just for you, overwriting the one cloned from the repo. The only things that are different are the names.
    - The script will then ask if you want it to generate a script for running **Premake**. If yes, it will create `GenerateProjectFiles.bat` in the `/scripts` folder.
    - Finally, the script will ask you if you would like to run the generated script to create your project files.
-  
+
 3. With your project files generated, you are ready to start working on your blank project!
 4. Please see [Create a New Application](#create-a-new-application) to learn the basics.
 
 ## Usage
 
 ### Create a New Application
+
 In your blank project, create a new file. For our example, it will be `MyApplication.cpp`. In `MyApplication.cpp` include Ares and the necessary entry point:
+
 ```cpp
 // MyApplication.cpp
 #include <Ares.h>
@@ -98,14 +116,16 @@ Ares::Application* Ares::CreateApplication()
 ```
 
 ### Set Window Style (Optional)
+
 You can customize the startup window style with macros:
+
 ```cpp
 Ares::ApplicationSettings settings;
 settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
 
 return new MyApplication(settings);
 ```
- 
+
 <details>
  <summary>MyApplication.cpp complete code.</summary>
  
@@ -114,32 +134,34 @@ return new MyApplication(settings);
  #include <Ares.h>
  #include <Engine/Core/EntryPoint.h>
 
- class MyApplication : public Ares::Application
- {
- public:
-    MyApplication(const Ares::ApplicationSettings& settings)
-       : Application(settings)
-    {
-       // Constructor code
-    }
-    ~MyApplication()
-    {
-       // Destructor code
-    }
- };
+class MyApplication : public Ares::Application
+{
+public:
+MyApplication(const Ares::ApplicationSettings& settings)
+: Application(settings)
+{
+// Constructor code
+}
+~MyApplication()
+{
+// Destructor code
+}
+};
 
- Ares::Application* Ares::CreateApplication()
- {
-    Ares::ApplicationSettings settings;
-    settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+Ares::Application\* Ares::CreateApplication()
+{
+Ares::ApplicationSettings settings;
+settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
 
     return new MyApplication(settings);
- }
- ```
+
+}
+
+````
 </details>
- 
+
 Here’s a list of available window styles:
- 
+
 | Value | Description |
 |--|--|
 | `AR_WINDOW_WINDOWED`<br>`Ares::WindowSettings::Windowed` | A standard window with a title bar and borders. |
@@ -162,53 +184,56 @@ Create a file `MyLayer.h` with a new class that inherits from `Ares::Layer`:
 class MyLayer : public Ares::Layer
 {
 public:
-  MyLayer(); 
-  virtual ~MyLayer() = default; 
+ MyLayer();
+ virtual ~MyLayer() = default;
 
-  virtual void OnAttach() override;
-  virtual void OnDetach() override;
-  void OnUpdate(Ares::Timestep ts) override;
-  void OnEvent(Ares::Event& e) override;
-  virtual void OnImGuiRender() override;
+ virtual void OnAttach() override;
+ virtual void OnDetach() override;
+ void OnUpdate(Ares::Timestep ts) override;
+ void OnEvent(Ares::Event& e) override;
+ virtual void OnImGuiRender() override;
 };
-```
+````
 
 <details>
  <summary>MyLayer.cpp complete code.</summary>
 
- ```c++
- // MyLayer.cpp
- #include "MyLayer.h"
+```c++
+// MyLayer.cpp
+#include "MyLayer.h"
 
- MyLayer::MyLayer()
-    : Layer("MyLayer")
- {
- }
+MyLayer::MyLayer()
+   : Layer("MyLayer")
+{
+}
 
- void MyLayer::OnAttach()
- {
- }
+void MyLayer::OnAttach()
+{
+}
 
- void MyLayer::OnDetach()
- {
- }
+void MyLayer::OnDetach()
+{
+}
 
- void MyLayer::OnUpdate(Ares::Timestep ts)
- {
- }
+void MyLayer::OnUpdate(Ares::Timestep ts)
+{
+}
 
- void MyLayer::OnEvent(Ares::Event& e)
- {
- }
+void MyLayer::OnEvent(Ares::Event& e)
+{
+}
 
- void MyLayer::OnImGuiRender()
- {
- }
- ```
+void MyLayer::OnImGuiRender()
+{
+}
+```
+
 </details>
 
 ### Push Layer to Application
+
 In `MyApplication.cpp`, push the layer:
+
 ```cpp
 // MyApplication.cpp
 MyApplication::MyApplication(const Ares::ApplicationSettings& settings)
@@ -217,44 +242,47 @@ MyApplication::MyApplication(const Ares::ApplicationSettings& settings)
   PushLayer(new MyLayer());
 }
 ```
-   
+
 <details>
   <summary>MyApplication.cpp complete code.</summary>
 
-  ```c++
-  // MyApplication.cpp
-  #include <Ares.h>
-  #include <Engine/Core/EntryPoint.h>
+```c++
+// MyApplication.cpp
+#include <Ares.h>
+#include <Engine/Core/EntryPoint.h>
 
-  #include "MyLayer.h"
+#include "MyLayer.h"
 
-  class MyApplication : public Ares::Application
-  {
-  public:
-     MyApplication(const Ares::ApplicationSettings& settings)
-        : Application(settings)
-     {
-        // Constructor code
-        PushLayer(new MyLayer());
-     }
-     ~MyApplication()
-     {
-        // Destructor code
-     }
-  };
+class MyApplication : public Ares::Application
+{
+public:
+   MyApplication(const Ares::ApplicationSettings& settings)
+      : Application(settings)
+   {
+      // Constructor code
+      PushLayer(new MyLayer());
+   }
+   ~MyApplication()
+   {
+      // Destructor code
+   }
+};
 
-  Ares::Application* Ares::CreateApplication()
-  {
-     Ares::ApplicationSettings settings;
-     settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+Ares::Application* Ares::CreateApplication()
+{
+   Ares::ApplicationSettings settings;
+   settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
 
-     return new MyApplication(settings);
-  }
-  ```
+   return new MyApplication(settings);
+}
+```
+
 </details>
 
 ### Handling Events
+
 Inside your layer, you can handle specific events, such as a key press:
+
 ```cpp
 // MyLayer.cpp
 void MyLayer::OnEvent(Ares::Event& e)
@@ -276,87 +304,91 @@ bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
 <details>
  <summary>MyLayer.h complete code.</summary>
 
- ```c++
- // MyLayer.h
- #pragma once
- #include <Ares.h>
+```c++
+// MyLayer.h
+#pragma once
+#include <Ares.h>
 
- class MyLayer : public Ares::Layer
- {
- public:
-    MyLayer(); 
-    virtual ~MyLayer() = default; 
+class MyLayer : public Ares::Layer
+{
+public:
+   MyLayer();
+   virtual ~MyLayer() = default;
 
-    virtual void OnAttach() override;
-    virtual void OnDetach() override;
-    void OnUpdate(Ares::Timestep ts) override;
-    void OnEvent(Ares::Event& e) override;
-    virtual void OnImGuiRender() override;
+   virtual void OnAttach() override;
+   virtual void OnDetach() override;
+   void OnUpdate(Ares::Timestep ts) override;
+   void OnEvent(Ares::Event& e) override;
+   virtual void OnImGuiRender() override;
 
- private:
-    bool OnKeyPressed(Ares::KeyPressedEvent& e);
- };
- ```
+private:
+   bool OnKeyPressed(Ares::KeyPressedEvent& e);
+};
+```
+
 </details>
 <details>
  <summary>MyLayer.cpp complete code.</summary>
 
- ```c++
- // MyLayer.cpp
- #include "MyLayer.h"
+```c++
+// MyLayer.cpp
+#include "MyLayer.h"
 
- MyLayer::MyLayer()
-    : Layer("MyLayer")
- {
- }
+MyLayer::MyLayer()
+   : Layer("MyLayer")
+{
+}
 
- void MyLayer::OnAttach()
- {
- }
+void MyLayer::OnAttach()
+{
+}
 
- void MyLayer::OnDetach()
- {
- }
+void MyLayer::OnDetach()
+{
+}
 
- void MyLayer::OnUpdate(Ares::Timestep ts)
- {
- }
+void MyLayer::OnUpdate(Ares::Timestep ts)
+{
+}
 
- void MyLayer::OnEvent(Ares::Event& e)
- {
-    Ares::EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<Ares::KeyPressedEvent>(AR_BIND_EVENT_FN(MyLayer::OnKeyPressed));
- }
+void MyLayer::OnEvent(Ares::Event& e)
+{
+   Ares::EventDispatcher dispatcher(e);
+   dispatcher.Dispatch<Ares::KeyPressedEvent>(AR_BIND_EVENT_FN(MyLayer::OnKeyPressed));
+}
 
- void MyLayer::OnImGuiRender()
- {
- }
+void MyLayer::OnImGuiRender()
+{
+}
 
- bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
- {
-    if (e.GetKeyCode() == AR_KEY_SPACE)
-    {
-       // Code for Space key
-    }
-    return false;
- }
- ```
+bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
+{
+   if (e.GetKeyCode() == AR_KEY_SPACE)
+   {
+      // Code for Space key
+   }
+   return false;
+}
+```
+
 </details>
 
 ### Logging
+
 Ares includes robust logging functionality to help developers track application behavior and debug efficiently. Logging in Ares is accessed through a set of predefined macros that support various log levels. These macros are simple to use and accept inputs in a format compatible with the fmt library, allowing for powerful and flexible message formatting.
 
 **Available Logging Macros:**
 | Macro | Definition |
 |--|--|
-| `AR_TRACE`    | For detailed information, typically used during development to trace program execution. |
-| `AR_BUG`      | Used for debugging. |
-| `AR_INFO`     | For general informational messages that highlight the progress of the application. |
-| `AR_WARN`     | For warning messages that indicate potentially harmful situations. |
-| `AR_ERROR`    | For error messages that indicate a significant problem, though the application can continue running. |
+| `AR_TRACE` | For detailed information, typically used during development to trace program execution. |
+| `AR_BUG` | Used for debugging. |
+| `AR_INFO` | For general informational messages that highlight the progress of the application. |
+| `AR_WARN` | For warning messages that indicate potentially harmful situations. |
+| `AR_ERROR` | For error messages that indicate a significant problem, though the application can continue running. |
 | `AR_CRITICAL` | For critical issues that likely require immediate attention or cause the application to terminate. |
 
 **Example Usage**
+
 ```c++
 int someValue = 42;
 std::string someString = "Ares Engine";
@@ -367,17 +399,21 @@ AR_TRACE("SomeValue: {} - Message: {}", someValue, someString);
 // Log an error
 AR_ERROR("An error occurred with value: {}", someValue);
 ```
+
 In the example above:
+
 - `{}` placeholders are replaced with the corresponding variables, just as with the `fmt` library.
 - This approach ensures that logging macros are flexible, concise, and easy to read.
 
 **Console or Windowed Application:**<br>
 Logging messages are displayed differently based on how the application is configured:
+
 - **Console Applications**: Logs are printed directly to the console window, providing immediate visibility.
 - **Windowed Applications**: Logs can be rendered to an ImGui-based console, allowing developers to view logs just as easily as with a Console Application.
 
 **Integrating the ImGui Console:**<br>
 To enable logging in a **Windowed Application**, add the following code to the `OnImGuiRender()` method in `MyLayer.cpp`.
+
 ```c++
 // MyLayer.cpp
 void MyLayer::OnImGuiRender()
@@ -385,137 +421,154 @@ void MyLayer::OnImGuiRender()
    Ares::Log::GetConsole()->Draw("Console", true);
 }
 ```
+
 This creates an ImGui window named `"Console"` where all log messages are displayed.
 
 **Advanced Use Case**:<br>
 You can also add logic to toggle the visibility of the ImGui console. For example:
+
 1. Add a member variable to track visibility:
-  ```c++
-  // MyLayer.h
-  ...
-  private:
-     bool m_ShowConsole;
-  ...
-  ```
+
+```c++
+// MyLayer.h
+...
+private:
+   bool m_ShowConsole;
+...
+```
+
 2. Toggle its state with a key press (e.g., the grave accent key "`"):
-  ```c++
-  // MyLayer.cpp
-  bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
-  {
-     if (e.GetKeyCode() == Ares::KeyCode::GraveAccent)
-     {
-        m_ShowConsole = !m_ShowConsole;
-     }
-     return false;
-  }
-  ```
+
+```c++
+// MyLayer.cpp
+bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
+{
+   if (e.GetKeyCode() == Ares::KeyCode::GraveAccent)
+   {
+      m_ShowConsole = !m_ShowConsole;
+   }
+   return false;
+}
+```
+
 3. Use the variable to conditionally render the console:
-  ```c++
-  // MyLayer.cpp
-  void MyLayer::OnImGuiRender()
-  {
-     Ares::Log::GetConsole()->Draw("Console", m_ShowConsole);
-  }
-  ```
+
+```c++
+// MyLayer.cpp
+void MyLayer::OnImGuiRender()
+{
+   Ares::Log::GetConsole()->Draw("Console", m_ShowConsole);
+}
+```
+
 By incorporating logging into your application, you can efficiently monitor runtime behavior, debug issues, and gain insight into the engine's internal operations.
 
 <details>
  <summary>MyLayer.h complete code.</summary>
 
- ```c++
- // MyLayer.h
- #pragma once
- #include <Ares.h>
+```c++
+// MyLayer.h
+#pragma once
+#include <Ares.h>
 
- class MyLayer : public Ares::Layer
- {
- public:
-    MyLayer(); 
-    virtual ~MyLayer() = default; 
+class MyLayer : public Ares::Layer
+{
+public:
+   MyLayer();
+   virtual ~MyLayer() = default;
 
-    virtual void OnAttach() override;
-    virtual void OnDetach() override;
-    void OnUpdate(Ares::Timestep ts) override;
-    void OnEvent(Ares::Event& e) override;
-    virtual void OnImGuiRender() override;
+   virtual void OnAttach() override;
+   virtual void OnDetach() override;
+   void OnUpdate(Ares::Timestep ts) override;
+   void OnEvent(Ares::Event& e) override;
+   virtual void OnImGuiRender() override;
 
- private:
-    bool OnKeyPressed(Ares::KeyPressedEvent& e);
-    bool m_ShowConsole;
- };
- ```
+private:
+   bool OnKeyPressed(Ares::KeyPressedEvent& e);
+   bool m_ShowConsole;
+};
+```
+
 </details>
 <details>
  <summary>MyLayer.cpp complete code.</summary>
 
- ```c++
- // MyLayer.cpp
- #include "MyLayer.h"
+```c++
+// MyLayer.cpp
+#include "MyLayer.h"
 
- MyLayer::MyLayer()
-    : Layer("MyLayer"), m_ShowConsole(false)
- {
-    int someValue = 42;
-    std::string someString = "Ares Engine";
+MyLayer::MyLayer()
+   : Layer("MyLayer"), m_ShowConsole(false)
+{
+   int someValue = 42;
+   std::string someString = "Ares Engine";
 
-    // Log a trace message with formatted values
-    AR_TRACE("SomeValue: {} - Message: {}", someValue, someString);
+   // Log a trace message with formatted values
+   AR_TRACE("SomeValue: {} - Message: {}", someValue, someString);
 
-    // Log an error
-    AR_ERROR("An error occurred with value: {}", someValue);
- }
+   // Log an error
+   AR_ERROR("An error occurred with value: {}", someValue);
+}
 
- void MyLayer::OnAttach()
- {
- }
+void MyLayer::OnAttach()
+{
+}
 
- void MyLayer::OnDetach()
- {
- }
+void MyLayer::OnDetach()
+{
+}
 
- void MyLayer::OnUpdate(Ares::Timestep ts)
- {
- }
+void MyLayer::OnUpdate(Ares::Timestep ts)
+{
+}
 
- void MyLayer::OnEvent(Ares::Event& e)
- {
-    Ares::EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<Ares::KeyPressedEvent>(AR_BIND_EVENT_FN(MyLayer::OnKeyPressed));
- }
+void MyLayer::OnEvent(Ares::Event& e)
+{
+   Ares::EventDispatcher dispatcher(e);
+   dispatcher.Dispatch<Ares::KeyPressedEvent>(AR_BIND_EVENT_FN(MyLayer::OnKeyPressed));
+}
 
- void MyLayer::OnImGuiRender()
- {
-    Ares::Log::GetConsole()->Draw("Console", m_ShowConsole);
- }
+void MyLayer::OnImGuiRender()
+{
+   Ares::Log::GetConsole()->Draw("Console", m_ShowConsole);
+}
 
- bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
- {
-    if (e.GetKeyCode() == Ares::KeyCode::GraveAccent)
-    {
-       m_ShowConsole = !m_ShowConsole;
-    }
-    return false;
- }
- ```
+bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
+{
+   if (e.GetKeyCode() == Ares::KeyCode::GraveAccent)
+   {
+      m_ShowConsole = !m_ShowConsole;
+   }
+   return false;
+}
+```
+
 </details>
 
 ### Rendering
+
 Ares currently includes basic rendering functionality. While it's still in the early stages, these features lay the groundwork for more advanced rendering capabilities to be added in the future.<br>
 
 **Current Features**:
+
 - `Ares::RenderCommand::SetClearColor`:
- Sets the clear color for the OpenGL viewport. You can specify a color using an RGBA vector, like so:
- ```c++
- Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
- ```
+  Sets the clear color for the OpenGL viewport. You can specify a color using an RGBA vector, like so:
+
+```c++
+Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+```
+
 - `Ares::RenderCommand::Clear`:
- Clears the OpenGL viewport buffers.
- ```c++
- Ares::RenderCommand::Clear();
- ```
+  Clears the OpenGL viewport buffers.
+
+```c++
+Ares::RenderCommand::Clear();
+```
+
 These commands can be used in your layer's `OnUpdate()` function to define the background color and refresh the viewport each frame.
 
 **Example Usage**:
+
 ```c++
 void MyLayer::OnUpdate(Ares::Timestep ts)
 {
@@ -523,126 +576,133 @@ void MyLayer::OnUpdate(Ares::Timestep ts)
    Ares::RenderCommand::Clear();
 }
 ```
+
 This may not seem like much yet, but these functions are just the beginning. The rendering system will continue to expand to include features for rendering 2D and 3D objects, lighting, shaders, and more. Stay tuned for future updates!
 
 ### Complete Code
+
 <details>
  <summary>MyApplication.cpp</summary>
 
- ```c++
- // MyApplication.cpp
- #include <Ares.h>
- #include <Engine/Core/EntryPoint.h>
+```c++
+// MyApplication.cpp
+#include <Ares.h>
+#include <Engine/Core/EntryPoint.h>
 
- #include "MyLayer.h"
+#include "MyLayer.h"
 
- class MyApplication : public Ares::Application
- {
- public:
-    MyApplication(const Ares::ApplicationSettings& settings)
-       : Application(settings)
-    {
-       // Constructor code
-       PushLayer(new MyLayer());
-    }
-    ~MyApplication()
-    {
-       // Destructor code
-    }
- };
+class MyApplication : public Ares::Application
+{
+public:
+   MyApplication(const Ares::ApplicationSettings& settings)
+      : Application(settings)
+   {
+      // Constructor code
+      PushLayer(new MyLayer());
+   }
+   ~MyApplication()
+   {
+      // Destructor code
+   }
+};
 
- Ares::Application* Ares::CreateApplication()
- {
-    Ares::ApplicationSettings settings;
-    settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+Ares::Application* Ares::CreateApplication()
+{
+   Ares::ApplicationSettings settings;
+   settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
 
-    return new MyApplication(settings);
- }
- ```
+   return new MyApplication(settings);
+}
+```
+
 </details>
 <details>
  <summary>MyLayer.h</summary>
 
- ```c++
- // MyLayer.h
- #pragma once
- #include <Ares.h>
+```c++
+// MyLayer.h
+#pragma once
+#include <Ares.h>
 
- class MyLayer : public Ares::Layer
- {
- public:
-    MyLayer(); 
-    virtual ~MyLayer() = default; 
+class MyLayer : public Ares::Layer
+{
+public:
+   MyLayer();
+   virtual ~MyLayer() = default;
 
-    virtual void OnAttach() override;
-    virtual void OnDetach() override;
-    void OnUpdate(Ares::Timestep ts) override;
-    void OnEvent(Ares::Event& e) override;
-    virtual void OnImGuiRender() override;
+   virtual void OnAttach() override;
+   virtual void OnDetach() override;
+   void OnUpdate(Ares::Timestep ts) override;
+   void OnEvent(Ares::Event& e) override;
+   virtual void OnImGuiRender() override;
 
- private:
-    bool OnKeyPressed(Ares::KeyPressedEvent& e);
-    bool m_ShowConsole;
- };
- ```
+private:
+   bool OnKeyPressed(Ares::KeyPressedEvent& e);
+   bool m_ShowConsole;
+};
+```
+
 </details>
 <details>
  <summary>MyLayer.cpp</summary>
 
- ```c++
- // MyLayer.cpp
- #include "MyLayer.h"
+```c++
+// MyLayer.cpp
+#include "MyLayer.h"
 
- MyLayer::MyLayer()
-    : Layer("MyLayer"), m_ShowConsole(false)
- {
-    int someValue = 42;
-    std::string someString = "Ares Engine";
+MyLayer::MyLayer()
+   : Layer("MyLayer"), m_ShowConsole(false)
+{
+   int someValue = 42;
+   std::string someString = "Ares Engine";
 
-    // Log a trace message with formatted values
-    AR_TRACE("SomeValue: {} - Message: {}", someValue, someString);
+   // Log a trace message with formatted values
+   AR_TRACE("SomeValue: {} - Message: {}", someValue, someString);
 
-    // Log an error
-    AR_ERROR("An error occurred with value: {}", someValue);
- }
+   // Log an error
+   AR_ERROR("An error occurred with value: {}", someValue);
+}
 
- void MyLayer::OnAttach()
- {
- }
+void MyLayer::OnAttach()
+{
+}
 
- void MyLayer::OnDetach()
- {
- }
+void MyLayer::OnDetach()
+{
+}
 
- void MyLayer::OnUpdate(Ares::Timestep ts)
- {
-    Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
-    Ares::RenderCommand::Clear();
- }
+void MyLayer::OnUpdate(Ares::Timestep ts)
+{
+   Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+   Ares::RenderCommand::Clear();
+}
 
- void MyLayer::OnEvent(Ares::Event& e)
- {
-    Ares::EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<Ares::KeyPressedEvent>(AR_BIND_EVENT_FN(MyLayer::OnKeyPressed));
- }
+void MyLayer::OnEvent(Ares::Event& e)
+{
+   Ares::EventDispatcher dispatcher(e);
+   dispatcher.Dispatch<Ares::KeyPressedEvent>(AR_BIND_EVENT_FN(MyLayer::OnKeyPressed));
+}
 
- void MyLayer::OnImGuiRender()
- {
-    Ares::Log::GetConsole()->Draw("Console", m_ShowConsole);
- }
+void MyLayer::OnImGuiRender()
+{
+   Ares::Log::GetConsole()->Draw("Console", m_ShowConsole);
+}
 
- bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
- {
-    if (e.GetKeyCode() == Ares::KeyCode::GraveAccent)
-    {
-       m_ShowConsole = !m_ShowConsole;
-    }
- }
- ```
+bool MyLayer::OnKeyPressed(Ares::KeyPressedEvent& e)
+{
+   if (e.GetKeyCode() == Ares::KeyCode::GraveAccent)
+   {
+      m_ShowConsole = !m_ShowConsole;
+   }
+}
+```
+
 </details>
 
 ## License
+
 This project is licensed under the MIT License.
 
 ## Contact
+
 For issues or feature requests, please create a new issue on the GitHub repository.
