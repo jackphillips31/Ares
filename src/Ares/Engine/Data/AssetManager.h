@@ -1,3 +1,8 @@
+/**
+ * @file AssetManager.h
+ * @brief Declaration of the AssetManager class for managing assets, including staging, loading,
+ * unloading, unstaging, and listener systems.
+ */
 #pragma once
 
 namespace Ares {
@@ -6,44 +11,167 @@ namespace Ares {
 	class Event;
 	struct RawData;
 
+	/**
+	 * @typedef AssetListener
+	 * @brief Listener ID stored as a 32 bit unsigned integer.
+	 */
 	using AssetListener = uint32_t;
 	using MemoryDataKey = uint32_t;
 
+	/**
+	 * @class AssetManager
+	 * @brief A static class for managing assets, including staging, loading, unloading, unstaging,
+	 * and event listeners.
+	 */
 	class AssetManager
 	{
-	private:
-		using AssetCallbackFn = std::function<void(Ref<Asset>)>;
-		using ListenerCallbackFn = std::function<void(Event&)>;
 	public:
-		// Public API
+		/**
+		 * @typedef AssetCallbackFn
+		 * @brief The callback function used in the Load method. It is a void function that takes a
+		 * Ref to an Asset object as the argument.
+		 */
+		using AssetCallbackFn = std::function<void(Ref<Asset>)>;
+		/**
+		 * @typedef AssetListenerCallbackFn
+		 * @brief The callback function used for listener callbacks. It is a void function that takes
+		 * a reference to an Event as the argument.
+		 */
+		using AssetListenerCallbackFn = std::function<void(Event&)>;
+	public:
+		/**
+		 * @brief Initializes the AssetManager.
+		 */
 		static void Init();
+
+		/**
+		 * @brief Shuts down the AssetManager and cleans up resources.
+		 */
 		static void Shutdown();
 
-		// Stage / Unstage methods
+		/**
+		 * @brief Stages an asset for loading.
+		 * 
+		 * @tparam AssetType The type of the asset.
+		 * @param name The name of the asset.
+		 * @param filepath The filepath of the asset.
+		 * @param dependencies A vector of dependencies required by the asset.
+		 * @param dataKey A key for memory data.
+		 * @return A Ref to the staged Asset object.
+		 */
 		template <typename AssetType>
 		static Ref<Asset> Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const MemoryDataKey dataKey);
+		
+		/**
+		 * @brief Stages an asset for loading using a filepath.
+		 * 
+		 * @tparam AssetType The type of the asset.
+		 * @param filepath The filepath of the asset.
+		 * @return A Ref to the staged Asset object.
+		 */
 		template <typename AssetType>
 		inline static Ref<Asset> Stage(const std::string& name, const std::string& filepath) { return Stage<AssetType>(name, filepath, {}, 0); }
+		
+		/**
+		 * @brief Stages an asset for loading using dependencies.
+		 * 
+		 * @tparam AssetType The type of the asset.
+		 * @param dependencies A vector of dependencies required by the asset.
+		 * @return A Ref to the staged Asset object.
+		 */
 		template <typename AssetType>
 		inline static Ref<Asset> Stage(const std::string& name, const std::vector<Ref<Asset>>& dependencies) { return Stage<AssetType>(name, "", dependencies, 0); }
+		
+		/**
+		 * @brief Stages an asset for loading using a MemoryDataKey.
+		 * 
+		 * @tparam AssetType The type of the asset.
+		 * @param dataKey A key for memory data.
+		 * @return A Ref to the staged Asset object.
+		 */
 		template <typename AssetType>
 		inline static Ref<Asset> Stage(const std::string& name, const MemoryDataKey dataKey) { return Stage<AssetType>(name, "", {}, dataKey); }
+		
+		/**
+		 * @brief Removes an asset completely from the AssetManager.
+		 * 
+		 * @param asset The asset to unstage.
+		 */
 		static void Unstage(const Ref<Asset>& asset);
 
-		// Load / Unload methods
+		/**
+		 * @brief Loads an asset asynchronously.
+		 * 
+		 * @param asset The asset to load.
+		 * @param callback An optional callback function to execute after loading.
+		 */
 		static void Load(const Ref<Asset>& asset, AssetCallbackFn&& = nullptr);
+
+		/**
+		 * @brief Loads multiple assets asynchronously.
+		 * 
+		 * @param assets A vector of assets to load.
+		 * @param callback An optional callback function to execute whenever an asset is loaded.
+		 */
 		static void Load(const std::vector<Ref<Asset>>& assets, AssetCallbackFn&& = nullptr);
+
+		/**
+		 * @brief Unloads an asset.
+		 * 
+		 * @param asset The asset to unload.
+		 */
 		static void Unload(const Ref<Asset>& asset);
 
-		// Getter functions
+		/**
+		 * @brief Retrieves an asset by its name.
+		 * 
+		 * @param name The name of the asset.
+		 * @return A Ref to the Asset object.
+		 */
 		static Ref<Asset> GetAsset(const std::string& name);
+
+		/**
+		 * @brief Retrieves an asset by its ID.
+		 * 
+		 * @param assetId The ID of the asset.
+		 * @return A Ref to the Asset object.
+		 */
 		static Ref<Asset> GetAsset(const uint32_t& assetId);
+
+		/**
+		 * @brief Retrieves a complete list of all assets.
+		 * 
+		 * @return A vector of Ref's to all Asset objects.
+		 */
 		static std::vector<Ref<Asset>> GetCompleteList();
 
-		// Listener functions & OnUpdate
-		static const AssetListener AddListener(const std::string& name, ListenerCallbackFn&& callback);
-		static const AssetListener AddListener(ListenerCallbackFn&& callback);
+		/**
+		 * @brief Adds a listener to an Asset by name.
+		 * 
+		 * @param name The name of the Asset object to be listened to.
+		 * @param callback The callback function of the listener.
+		 * @return The ID of the added listener.
+		 */
+		static const AssetListener AddListener(const std::string& name, AssetListenerCallbackFn&& callback);
+
+		/**
+		 * @brief Adds a global listener that listens to all Asset objects.
+		 * 
+		 * @param callback The callback function of the listener.
+		 * @return The ID of the added listener.
+		 */
+		static const AssetListener AddListener(AssetListenerCallbackFn&& callback);
+
+		/**
+		 * @brief Removes an event listener by its ID.
+		 * 
+		 * @param listenerId The ID of the listener to remove.
+		 */
 		static void RemoveListener(AssetListener& listenerId);
+
+		/**
+		 * @brief Processes queued events and callbacks.
+		 */
 		static void OnUpdate();
 
 	private:
@@ -83,9 +211,9 @@ namespace Ares {
 		static std::mutex s_CallbackQueueMutex;
 
 		static std::atomic<uint32_t> s_NextListenerId;
-		static std::unordered_map<std::string, std::unordered_map<uint32_t, ListenerCallbackFn>> s_Listeners;
+		static std::unordered_map<std::string, std::unordered_map<uint32_t, AssetListenerCallbackFn>> s_Listeners;
 		static std::unordered_map<uint32_t, std::string> s_ListenerNameMap;
-		static std::unordered_map<uint32_t, ListenerCallbackFn> s_GlobalListeners;
+		static std::unordered_map<uint32_t, AssetListenerCallbackFn> s_GlobalListeners;
 		static std::mutex s_ListenerMutex;
 
 		// Event listener callback queue

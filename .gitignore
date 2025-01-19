@@ -16,3 +16,8 @@
 **.bak
 /scripts/Win-GenProjects.bat
 /scripts/GenerateTemplate.bat
+
+# Documentation Files
+/docs/dot/
+/docs/Doxyfile
+/docs/**.md

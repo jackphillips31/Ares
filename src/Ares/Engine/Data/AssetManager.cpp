@@ -272,7 +272,7 @@ namespace Ares {
 		return result;
 	}
 
-	const AssetListener AssetManager::AddListener(const std::string& name, ListenerCallbackFn&& callback)
+	const AssetListener AssetManager::AddListener(const std::string& name, AssetListenerCallbackFn&& callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
 		uint32_t currentId = s_NextListenerId++;
@@ -281,7 +281,7 @@ namespace Ares {
 		return currentId;
 	}
 
-	const AssetListener AssetManager::AddListener(ListenerCallbackFn&& callback)
+	const AssetListener AssetManager::AddListener(AssetListenerCallbackFn&& callback)
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
 		uint32_t currentId = s_NextListenerId++;
@@ -726,9 +726,9 @@ namespace Ares {
 	std::mutex AssetManager::s_CallbackQueueMutex;
 
 	std::atomic<uint32_t> AssetManager::s_NextListenerId{ 1 };
-	std::unordered_map<std::string, std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn>> AssetManager::s_Listeners;
+	std::unordered_map<std::string, std::unordered_map<uint32_t, AssetManager::AssetListenerCallbackFn>> AssetManager::s_Listeners;
 	std::unordered_map<uint32_t, std::string> AssetManager::s_ListenerNameMap;
-	std::unordered_map<uint32_t, AssetManager::ListenerCallbackFn> AssetManager::s_GlobalListeners;
+	std::unordered_map<uint32_t, AssetManager::AssetListenerCallbackFn> AssetManager::s_GlobalListeners;
 	std::mutex AssetManager::s_ListenerMutex;
 
 	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;

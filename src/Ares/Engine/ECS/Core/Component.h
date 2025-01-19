@@ -1,6 +1,10 @@
 #pragma once
 
-struct Component
-{
-	virtual ~Component() = default;
-};
+namespace Ares::ECS {
+
+	struct Component
+	{
+		virtual ~Component() = default;
+	};
+
+}

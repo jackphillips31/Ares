@@ -37,6 +37,21 @@ namespace Ares {
 		s_NextListenerId = 1;
 	}
 
+	void EventQueue::OnUpdate()
+	{
+		SwapQueues();
+
+		std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
+		while (!s_ReadEventQueue.empty())
+		{
+			Scope<Event> event = std::move(s_ReadEventQueue.front());
+			s_ReadEventQueue.pop();
+			if (s_Callback != nullptr)
+				s_Callback(*event);
+			NotifyListeners(*event);
+		}
+	}
+
 	void EventQueue::RemoveListener(EventListener& listenerId)
 	{
 		// Check to see if listener is valid
@@ -71,19 +86,10 @@ namespace Ares {
 		}
 	}
 
-	void EventQueue::ProcessEvents()
+	void EventQueue::SetEventCallback(ApplicationEventCallbackFn&& callback)
 	{
-		SwapQueues();
-
-		Application& app = Application::Get();
-		std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
-		while (!s_ReadEventQueue.empty())
-		{
-			Scope<Event> event = std::move(s_ReadEventQueue.front());
-			s_ReadEventQueue.pop();
-			app.OnEvent(*event);
-			NotifyListeners(*event);
-		}
+		std::lock_guard<std::mutex> lock(s_CallbackMutex);
+		s_Callback = std::move(callback);
 	}
 
 	void EventQueue::NotifyListeners(Event& e)

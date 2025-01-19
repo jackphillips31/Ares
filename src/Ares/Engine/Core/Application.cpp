@@ -42,6 +42,7 @@ namespace Ares {
 		Renderer::Init();
 		MainThreadQueue::Init();
 
+		EventQueue::SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 		EventQueue::AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		EventQueue::AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
 
@@ -93,7 +94,7 @@ namespace Ares {
 						layer->OnUpdate(timestep);
 				}
 
-				EventQueue::ProcessEvents();
+				EventQueue::OnUpdate();
 			}
 
 			if (m_Minimized)
