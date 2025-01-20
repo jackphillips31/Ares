@@ -1,5 +1,5 @@
 -- template.lua was generated on: 
--- Dec. 11, 2024 - 04:36AM UTC 
+-- Jan. 20, 2025 - 09:59AM UTC 
 workspace "TEMPLATENAME"
 	architecture "x86_64"
 	configurations
@@ -18,11 +18,15 @@ workspace "TEMPLATENAME"
 	IncludeDir["glm"] = "src/Vendor/glm"
 	IncludeDir["fmt"] = "src/Vendor/fmt/include"
 	IncludeDir["stb_image"] = "src/Vendor/stb_image"
+	IncludeDir["EASTL"] = "src/Vendor/eastl/include"
+	IncludeDir["EABase"] = "src/Vendor/eabase/include/Common"
 	group "Dependencies"
 		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
 		include "src/Vendor/fmt"
 		include "src/Vendor/spdlog"
+		include "src/Vendor/eabase"
+		include "src/Vendor/eastl"
 	group ""
 	project "Ares"
 		location "src/Ares"
@@ -49,7 +53,9 @@ workspace "TEMPLATENAME"
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}",
 			"%{IncludeDir.fmt}",
-			"%{IncludeDir.stb_image}"
+			"%{IncludeDir.stb_image}",
+			"%{IncludeDir.EABase}",
+			"%{IncludeDir.EASTL}"
 		}
 		links
 		{
@@ -57,12 +63,12 @@ workspace "TEMPLATENAME"
 			"ImGui",
 			"fmt",
 			"spdlog",
+			"EASTL",
 			"opengl32.lib"
 		}
 		defines
 		{
-			"FMT_UNICODE=0",
-			"GLM_ENABLE_EXPERIMENTAL"
+			"FMT_UNICODE=0"
 		}
 		filter "system:windows"
 			systemversion "latest"
@@ -81,7 +87,7 @@ workspace "TEMPLATENAME"
 		filter "configurations:Dist"
 			defines "AR_DIST"
 			runtime "Release"
-			optimize "on"
+			optimize "speed"
 	project "TEMPLATEINTERNALNAME"
 		location "src/TEMPLATEINTERNALNAME"
 		kind "WindowedApp"
@@ -103,7 +109,9 @@ workspace "TEMPLATENAME"
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}",
-			"%{IncludeDir.fmt}"
+			"%{IncludeDir.fmt}",
+			"%{IncludeDir.EABase}",
+			"%{IncludeDir.EASTL}"
 		}
 		links
 		{
@@ -111,8 +119,7 @@ workspace "TEMPLATENAME"
 		}
 		defines
 		{
-			"FMT_UNICODE=0",
-			"GLM_ENABLE_EXPERIMENTAL"
+			"FMT_UNICODE=0"
 		}
 		filter "system:windows"
 			systemversion "latest"
@@ -131,4 +138,4 @@ workspace "TEMPLATENAME"
 		filter "configurations:Dist"
 			defines "AR_DIST"
 			runtime "Release"
-			optimize "on"
+			optimize "speed"

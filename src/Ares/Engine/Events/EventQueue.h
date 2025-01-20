@@ -6,6 +6,7 @@
  * It supports adding listeners for specific event types and propagating events to all listeners.
  */
 #pragma once
+#include <EASTL/queue.h>
 
 namespace Ares {
 
@@ -151,8 +152,8 @@ namespace Ares {
 		};
 
 	private:
-		static inline std::queue<Scope<Event>> s_ReadEventQueue;					///< Queue of events ready for processing. 
-		static inline std::queue<Scope<Event>> s_WriteEventQueue;					///< Queue of events waiting to be processed.
+		static inline eastl::queue<Scope<Event>> s_ReadEventQueue;					///< Queue of events ready for processing. 
+		static inline eastl::queue<Scope<Event>> s_WriteEventQueue;					///< Queue of events waiting to be processed.
 		static inline std::mutex s_ReadQueueMutex;									///< Mutex for the read queue.
 		static inline std::mutex s_WriteQueueMutex;									///< Mutex for the write queue.
 

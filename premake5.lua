@@ -20,12 +20,16 @@ workspace "Ares"
 	IncludeDir["glm"] = "src/Vendor/glm"
 	IncludeDir["fmt"] = "src/Vendor/fmt/include"
 	IncludeDir["stb_image"] = "src/Vendor/stb_image"
+	IncludeDir["EASTL"] = "src/Vendor/eastl/include"
+	IncludeDir["EABase"] = "src/Vendor/eabase/include/Common"
 
 	group "Dependencies"
 		include "src/Vendor/GLAD"
 		include "src/Vendor/imgui"
 		include "src/Vendor/fmt"
 		include "src/Vendor/spdlog"
+		include "src/Vendor/eabase"
+		include "src/Vendor/eastl"
 	group ""
 
 	project "Ares"
@@ -57,7 +61,9 @@ workspace "Ares"
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}",
 			"%{IncludeDir.fmt}",
-			"%{IncludeDir.stb_image}"
+			"%{IncludeDir.stb_image}",
+			"%{IncludeDir.EABase}",
+			"%{IncludeDir.EASTL}"
 		}
 
 		links
@@ -66,6 +72,7 @@ workspace "Ares"
 			"ImGui",
 			"fmt",
 			"spdlog",
+			"EASTL",
 			"opengl32.lib"
 		}
 
@@ -95,7 +102,7 @@ workspace "Ares"
 		filter "configurations:Dist"
 			defines "AR_DIST"
 			runtime "Release"
-			optimize "on"
+			optimize "speed"
 
 	project "Sandbox"
 		location "src/Sandbox"
@@ -121,7 +128,9 @@ workspace "Ares"
 			"%{IncludeDir.GLAD}",
 			"%{IncludeDir.ImGui}",
 			"%{IncludeDir.glm}",
-			"%{IncludeDir.fmt}"
+			"%{IncludeDir.fmt}",
+			"%{IncludeDir.EABase}",
+			"%{IncludeDir.EASTL}"
 		}
 
 		links
@@ -155,4 +164,4 @@ workspace "Ares"
 		filter "configurations:Dist"
 			defines "AR_DIST"
 			runtime "Release"
-			optimize "on"
+			optimize "speed"

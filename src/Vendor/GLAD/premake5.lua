@@ -31,6 +31,10 @@ project "GLAD"
 		runtime "Release"
 		optimize "on"
 
+	filter "configurations:Dist"
+		runtime "Release"
+		optimize "speed"
+
 --[[
 	Created using glen.glad.sh
 	Generator: C/C++

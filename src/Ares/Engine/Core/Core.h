@@ -14,7 +14,8 @@
  * the build configuration.
  */
 #pragma once
-#include <memory>
+#include <EASTL/unique_ptr.h>
+#include <EASTL/shared_ptr.h>
 
 /* Platform detection using predefined macros */
 #ifdef _WIN32
@@ -111,6 +112,14 @@
 	 * builds, although this is currently unsupported.
 	 */
 	#define AR_PROFILE 0
+
+	/**
+	 * @def EASTL_DEBUG
+	 * @brief Enabled debug features of EA Standard Library (if set to 1)
+	 * 
+	 * @details This macro is defined and set to one when debugging.
+	 */
+	#define EASTL_DEBUG 1
 #endif
 
 #ifdef AR_ENABLE_ASSERTS
@@ -209,7 +218,7 @@ namespace Ares {
 	 * @details This alias simplifies the usage of `std::unique_ptr` within the engine.
 	 */
 	template<typename T>
-	using Scope = std::unique_ptr<T>;
+	using Scope = eastl::unique_ptr<T>;
 
 	/**
 	 * @brief Creates a unique pointer to a new object.
@@ -223,7 +232,7 @@ namespace Ares {
 	template<typename T, typename ... Args>
 	constexpr Scope<T> CreateScope(Args&& ... args)
 	{
-		return std::make_unique<T>(std::forward<Args>(args)...);
+		return eastl::make_unique<T>(std::forward<Args>(args)...);
 	}
 
 	/**
@@ -233,7 +242,7 @@ namespace Ares {
 	 * @details This alias simplifies the usage of `std::shared_ptr` within the engine.
 	 */
 	template<typename T>
-	using Ref = std::shared_ptr<T>;
+	using Ref = eastl::shared_ptr<T>;
 
 	/**
 	 * @brief Creates a shared pointer to a new object.
@@ -247,7 +256,7 @@ namespace Ares {
 	template<typename T, typename ... Args>
 	constexpr Ref<T> CreateRef(Args&& ... args)
 	{
-		return std::make_shared<T>(std::forward<Args>(args)...);
+		return eastl::make_shared<T>(std::forward<Args>(args)...);
 	}
 
 }

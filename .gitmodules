@@ -13,3 +13,9 @@
 [submodule "src/Vendor/fmt"]
 	path = src/Vendor/fmt
 	url = https://github.com/jackphillips31/fmt.git
+[submodule "src/Vendor/eastl"]
+	path = src/Vendor/eastl
+	url = https://github.com/jackphillips31/EASTL
+[submodule "src/Vendor/eabase"]
+	path = src/Vendor/eabase
+	url = https://github.com/jackphillips31/EABase.git

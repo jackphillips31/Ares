@@ -1,9 +1,14 @@
 #pragma once
 
+// EA Standard Library
+#include <EABase/eabase.h>
+#include <EASTL/allocator.h>
+#include <EASTL/string.h>
+
 // Standard Library
 #include <iostream>				// I/O streams
 #include <fstream>				// File operations
-#include <string>				// String handling
+//#include <string>				// String handling
 #include <sstream>				// String streams
 #include <array>				// Fixed-size arrays
 #include <vector>				// Dynamic arrays
