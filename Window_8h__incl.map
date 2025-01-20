@@ -1,0 +1,7 @@
+<map id="Window.h" name="Window.h">
+<area shape="rect" id="Node000001" title="contains the declaration of the Window interface and associated data structures." alt="" coords="95,5,181,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,116,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="127,33,85,71,82,67,124,29"/>
+<area shape="rect" id="Node000003" href="$Flags_8h.html" title="Contains window configuration flags for the application." alt="" coords="140,79,291,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="152,29,194,67,191,71,149,33"/>
+</map>
