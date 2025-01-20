@@ -30,6 +30,7 @@ namespace Ares {
 
 		/**
 		 * @brief Constructs a DataBuffer with the given data and size.
+		 * 
 		 * @param data Pointer to the raw memory data.
 		 * @param size Size of the memory buffer in bytes.
 		 */
@@ -42,12 +43,14 @@ namespace Ares {
 
 		/**
 		 * @brief Move constructor. Transfers ownership of the buffer.
+		 * 
 		 * @param other The DataBuffer to move from.
 		 */
 		DataBuffer(DataBuffer&& other) noexcept;
 
 		/**
 		 * @brief Move assignment operator. Transfers ownership of the buffer.
+		 * 
 		 * @param other The DataBuffer to move from.
 		 * @return A reference to the assigned DataBuffer.
 		 */
@@ -65,18 +68,21 @@ namespace Ares {
 
 		/**
 		 * @brief Retrieves a const pointer to the buffer's data.
+		 * 
 		 * @return A pointer to the buffer's data.
 		 */
 		inline const void* GetBuffer() const { std::shared_lock lock(m_Mutex); return m_Data; }
 
 		/**
 		 * @brief Retrieves the size of the buffer.
+		 * 
 		 * @return The size of the buffer in bytes.
 		 */
 		inline size_t GetSize() const { std::shared_lock lock(m_Mutex); return m_Size; }
 
 		/**
 		 * @brief Resets the buffer with new data and size.
+		 * 
 		 * @param data Pointer to the new memory data.
 		 * @param size Size of the new memory buffer in bytes.
 		 */
@@ -84,7 +90,8 @@ namespace Ares {
 
 		/**
 		 * @brief Checks if the buffer contains valid data.
-		 * @return True if the buffer is non-null and has a positive size, false otherwise.
+		 * 
+		 * @return `true` if the buffer is non-null and has a positive size; otherwise, `false`.
 		 */
 		inline explicit operator bool() const
 		{
@@ -97,6 +104,7 @@ namespace Ares {
 
 		/**
 		 * @brief Provides mutable access to the buffer for internal use.
+		 * 
 		 * @return A pointer to the buffer's data.
 		 */
 		inline void* SetBuffer() const { return m_Data; }

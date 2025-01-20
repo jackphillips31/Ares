@@ -1,0 +1,55 @@
+name: Doxygen Documentation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  doxygen:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up doxygen
+      run: |
+        sudo apt-get update || echo "apt-get update failed, continuing with next steps"
+        sudo apt-get install -y doxygen graphviz # Install Graphvis along with Doxygen
+
+    - name: Generate Documentation
+      run: |
+        cd docs
+        doxygen Doxyfile
+
+    - name: Deploy to GitHub Pages
+      run: |
+        # Setup Git configuration
+        git config --global user.name "jackphillips31"
+        git config --global user.email "jack.p.phillips@gmail.com"
+
+        # Create a new branch 'gh-pages' and checkout
+        git checkout --orphan gh-pages
+
+        # Remove all files except for the generated docs
+        git rm -rf *
+        git checkout main -- docs/images
+        cp -r docs/images/* .
+        cp -r docs/html/* .
+
+        # Delete the 'docs' folder to clean up
+        rm -rf docs
+
+        # Commit and push the docs to the 'gh-pages' branch
+        git add -A
+        git commit -m "Deploy documentation to GitHub Pages"
+        git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:gh-pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Clean up
+      run: git checkout main

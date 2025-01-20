@@ -2,6 +2,25 @@
  * @file AssetManager.h
  * @brief Declaration of the AssetManager class for managing assets, including staging, loading,
  * unloading, unstaging, and listener systems.
+ * 
+ * @details The AssetManager is a static class responsible for handling all asset-related
+ * operations within the Ares engine.
+ * 
+ * ### Functionalities:
+ *  - Staging assets: Preparing assets for loading by specifying metadata.
+ *  - Loading assets: Asynchronously loading assets into memory with optional callback support.
+ *  - Unloading assets: Removing assets from memory to free resources.
+ *  - Managing dependencies: Ensuring assets can reference other required assets.
+ *  - Event-driven systems: Allowing listeners and callbacks for asset-related events.
+ * 
+ * ### Key Features:
+ *  - Thread-Safe: Utilizes mutexes and atomic operations to ensure thread safety.
+ *  - Caching: Maintains an asset cache for efficient retrieval by name or ID.
+ *  - Callback System: Enables event-driven operations through listener callbacks.
+ *  - Versatile Asset Handling: Supports various asset types through templates and dynamic indexing.
+ * 
+ * This class is integral to the resource management system in the engine, ensuring assets
+ * are efficiently handled throughout the application lifecycle.
  */
 #pragma once
 

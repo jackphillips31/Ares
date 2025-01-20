@@ -24,6 +24,7 @@ namespace Ares {
 	public:
 		/**
 		 * @brief Initializes the ThreadPool with a given number of threads. Called during application startup.
+		 * 
 		 * @param threadCount The number of worker threads to create (default: hardware concurrency).
 		 */
 		static void Init(size_t threadCount = std::thread::hardware_concurrency());
@@ -35,13 +36,14 @@ namespace Ares {
 
 		/**
 		 * @brief Submits a task to the ThreadPool for execution.
+		 * 
 		 * @tparam Func The callable type of the task.
 		 * @tparam Args The types of arguments to the task.
 		 * @param func The callable task.
 		 * @param args The arguments to the task.
 		 * @return A future object for retrieving the result of the task.
 		 * 
-		 * Example usage:
+		 * **Example usage**:
 		 * ```cpp
 		 * auto result = ThreadPool::SubmitTask([](int a, int b) { return a + b }, 5, 3);
 		 * int sum = result.get(); // sum = 8

@@ -25,6 +25,7 @@ namespace Ares {
 	public:
 		/**
 		 * @brief Constructs a Layer with an optional debug name.
+		 * 
 		 * @param name The name of the layer, used for debugging purposes.
 		 */
 		Layer(const std::string& name = "Layer");
@@ -46,6 +47,7 @@ namespace Ares {
 
 		/**
 		 * @brief Called during the application update cycle.
+		 * 
 		 * @param ts The timestep representing the delta time since the last update.
 		 */
 		virtual void OnUpdate(const Timestep& ts) {}
@@ -62,12 +64,14 @@ namespace Ares {
 
 		/**
 		 * @brief Handles events specific to this layer.
+		 * 
 		 * @param event The event to be handled.
 		 */
 		virtual void OnEvent(Event& event) {}
 
 		/**
 		 * @brief Retrieves the debug name of the layer.
+		 * 
 		 * @return The name of the layer.
 		 */
 		inline const std::string& GetName() const { return m_DebugName; }

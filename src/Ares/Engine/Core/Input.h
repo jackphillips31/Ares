@@ -7,7 +7,7 @@
  * and getting the position of the mouse. The actual implementation of these methods is platform-specific
  * and is provided by derived classes.
  * 
- * Example usage:
+ * **Example usage**:
  * ```cpp
  * if (Input::IsKeyPressed(KeyCode::W)) {
  *    // Do something when 'W' key is pressed
@@ -15,10 +15,10 @@
  * glm::ivec2 mousePos = Input::GetMousePosition();
  * ```
  * 
- * @note The Input class is a base class. To use it, a platform-specific subclass
- * must be created that implements the virtual methods.
+ * @note The Input class is a base class. A platform-specific instance is created on startup. <br> **Input.cpp**:
+ * @include Input.cpp
  * 
- * @see KeyCode, MouseCode
+ * @see Ares::KeyCode, Ares::MouseCode
  */
 #pragma once
 #include <glm/vec2.hpp>
@@ -38,6 +38,19 @@ namespace Ares {
 	 * is platform-specific and provided by derived classes. Input polling methods
 	 * are platform-independent and interact with the system-specific implementation
 	 * of `IsKeyPressedImpl`, `IsMouseButtonPressedImpl`, and other input handling methods.
+	 * 
+	 * **Example usage**:
+	 * ```cpp
+	 * if (Input::IsKeyPressed(KeyCode::W)) {
+	 *    // Do something when 'W' key is pressed
+	 * }
+	 * glm::ivec2 mousePos = Input::GetMousePosition();
+	 * ```
+	 *
+	 * @note The Input class is a base class. A platform-specific instance is created on startup. <br> **Input.cpp**:
+	 * @include Input.cpp
+	 *
+	 * @see Ares::KeyCode, Ares::MouseCode
 	 */
 	class Input
 	{
@@ -138,7 +151,7 @@ namespace Ares {
 		/**
 		 * @brief Shuts down the Input system.
 		 * 
-		 * @details This method releases the resources used by the Input system and resets the static
+		 * @details This method releases the resources used by the Input system and resets the static.
 		 * instance, cleaning up after the input system is no longer needed.
 		 */
 		inline static void Shutdown() { s_Instance.reset(); }
@@ -184,36 +197,36 @@ namespace Ares {
 
 		/**
 		 * @brief Platform specific method to get the mouse Y-coordinate in screen coordinates.
-		 *
+		 * 
 		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 *
+		 * 
 		 * @return The mouse Y-coordinate in screen coordinates.
 		 */
 		virtual int32_t GetMouseYImpl() = 0;
 
 		/**
 		 * @brief Platform specific method to get the mouse position in client coordinates.
-		 *
+		 * 
 		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 *
+		 * 
 		 * @return The mouse position in client coordinates as a `glm::ivec2`.
 		 */
 		virtual glm::ivec2 GetMouseClientPositionImpl() = 0;
 
 		/**
 		 * @brief Platform specific method to get the mouse X-coordinate in client coordinates.
-		 *
+		 * 
 		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 *
+		 * 
 		 * @return The mouse X-coordinate in client coordinates.
 		 */
 		virtual int32_t GetMouseClientXImpl() = 0;
 
 		/**
 		 * @brief Platform specific method to get the mouse Y-coordinate in client coordinates.
-		 *
+		 * 
 		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 *
+		 * 
 		 * @return The mouse Y-coordinate in client coordinates.
 		 */
 		virtual int32_t GetMouseClientYImpl() = 0;

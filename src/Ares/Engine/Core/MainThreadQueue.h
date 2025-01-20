@@ -26,12 +26,13 @@ namespace Ares {
 
 		/**
 		 * @brief Submits a task to the main thread queue.
+		 * 
 		 * @param function The task to be executed on the main thread.
 		 */
 		static void SubmitTask(std::function<void()>&& function);
 
 	private:
-		friend class Application;										///< Grants Application access to private members for managing the MainThreadQueue.
+		friend class Application;
 
 		/**
 		 * @brief Initializes the MainThreadQueue. Called during application startup.
@@ -45,7 +46,8 @@ namespace Ares {
 
 		/**
 		 * @brief Processes all tasks currently in the queue.
-		 * @details This should be called during the application's main loop.
+		 * 
+		 * @details This method should be called during the application's main loop.
 		 */
 		static void OnUpdate();
 

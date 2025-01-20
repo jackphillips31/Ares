@@ -167,6 +167,7 @@ namespace Ares {
 	using Key = KeyCode;
 	
 	/**
+	 * @anchor keycode_ostream_operator
 	 * @brief Overloads the stream insertion operator for KeyCode enum.
 	 * 
 	 * @details This function allows printing of the KeyCode values as integers.
@@ -178,8 +179,7 @@ namespace Ares {
 	 */
 	inline std::ostream& operator<<(std::ostream& os, KeyCode keyCode)
 	{
-		os << static_cast<int32_t>(keyCode);
-		return os;
+		return os << static_cast<int32_t>(keyCode);
 	}
 
 }

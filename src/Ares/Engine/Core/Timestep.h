@@ -32,19 +32,23 @@ namespace Ares {
 
 		/**
 		 * @brief Converts the Timestep to a double value.
+		 * 
 		 * @details Implicit conversion operator to double to get the time in seconds.
+		 * 
 		 * @return The time value in seconds.
 		 */
 		operator double() const { return m_Time; }
 
 		/**
 		 * @brief Returns the time in seconds.
+		 * 
 		 * @return The time in seconds as a double.
 		 */
 		double GetSeconds() const { return m_Time; }
 
 		/**
 		 * @brief Returns the time in milliseconds.
+		 * 
 		 * @return The time in milliseconds as a double.
 		 */
 		double GetMilliseconds() const { return m_Time * 1000.0f; }

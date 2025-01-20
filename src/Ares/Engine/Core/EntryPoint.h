@@ -9,6 +9,8 @@
  * 
  * On Windows platforms, the WinMain function is used as the entry point, while on other platforms,
  * the standard main function is used. Both function delegate to the shared EntryPoint function.
+ * 
+ * @see @ref usage
  */
 #pragma once
 #ifdef AR_PLATFORM_WINDOWS
@@ -65,7 +67,7 @@ int main(int argc, char** argv)
 /**
  * @brief Windows-specific entry point for the application
  * 
- * This function is the entry point for Windows applications, following the
+ * @details This function is the entry point for Windows applications, following the
  * WinMain convention. It calls the shared EntryPoint function, passing
  * the command-line arguments specific to Windows applications.
  * 

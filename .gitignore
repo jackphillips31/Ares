@@ -19,5 +19,4 @@
 
 # Documentation Files
 /docs/dot/
-/docs/Doxyfile
-/docs/**.md
+/docs/html/

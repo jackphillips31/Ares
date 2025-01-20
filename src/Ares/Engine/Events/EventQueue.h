@@ -2,7 +2,7 @@
  * @file EventQueue.h
  * @brief Defines the EventQueue class for managing event processing.
  * 
- * The EventQueue class is responsible for queuing and dispatching events in the application.
+ * @details The EventQueue class is responsible for queuing and dispatching events in the application.
  * It supports adding listeners for specific event types and propagating events to all listeners.
  */
 #pragma once
@@ -22,7 +22,7 @@ namespace Ares {
 	 * @class EventQueue
 	 * @brief Handles event queuing and dispatching in the application.
 	 * 
-	 * The EventQueue stores events and provides mechanisms to dispatch them to listeners.
+	 * @details The EventQueue stores events and provides mechanisms to dispatch them to listeners.
 	 * Listeners can register callbacks for specific event types.
 	 */
 	class EventQueue
@@ -31,6 +31,7 @@ namespace Ares {
 		/**
 		 * @typedef EventListenerCallbackFn
 		 * @brief The callback function used for listener callbacks in the EventQueue.
+		 * 
 		 * @details It is a boolean function that takes a reference to an Event as the argument.
 		 * 
 		 * @tparam EventTypeTemplate The type of event.
@@ -41,6 +42,7 @@ namespace Ares {
 		/**
 		 * @typedef ApplicationEventCallbackFn
 		 * @brief The callback function used for sending events out to the Application.
+		 * 
 		 * @details It is a void function that takes a reference to an Event as the argument.
 		 */
 		using ApplicationEventCallbackFn = std::function<void(Event&)>;
@@ -59,12 +61,14 @@ namespace Ares {
 
 		/**
 		 * @brief Processes all events currently in the queue.
-		 * This method should be called during the application's main loop.
+		 * 
+		 * @details This method should be called during the application's main loop.
 		 */
 		static void OnUpdate();
 
 		/**
 		 * @brief Dispatches an event to the EventQueue.
+		 * 
 		 * @tparam EventTypeTemplate The type of event being dispatched.
 		 * @param event The event to dispatch.
 		 */
@@ -73,11 +77,12 @@ namespace Ares {
 
 		/**
 		 * @brief Adds a listener for a specific event type.
+		 * 
 		 * @tparam EventTypeTemplate The type of event to listen for.
 		 * @param func The callback function to invoke when the event is processed.
 		 * @return The ID of the created listener.
 		 * 
-		 * Example usage:
+		 * **Example usage**:
 		 * ```cpp
 		 * EventListener listener = EventQueue::AddListener<WindowResizeEvent>([](WindowResizeEvent& event) {
 		 *    // Handle event
@@ -90,9 +95,10 @@ namespace Ares {
 
 		/**
 		 * @brief Removes a listener by its ID.
+		 * 
 		 * @param listenerId The ID of the listener to remove.
 		 * 
-		 * Example usage:
+		 * **Example usage**:
 		 * ```cpp
 		 * EventListener listener = EventQueue::AddListener<WindowResizeEvent>([](WindowResizeEvent& event) {});
 		 * EventQueue::RemoveListener(listener);
@@ -102,6 +108,7 @@ namespace Ares {
 
 		/**
 		 * @brief Sets the callback in which the EventQueue sends Events to.
+		 * 
 		 * @param callback The callback function to invoke when events are processed.
 		 */
 		static void SetEventCallback(ApplicationEventCallbackFn&& callback);
@@ -109,6 +116,7 @@ namespace Ares {
 	private:
 		/**
 		 * @brief Notifies all listeners of a given event.
+		 * 
 		 * @param e The event to notify listeners about.
 		 */
 		static void NotifyListeners(Event& e);
@@ -120,10 +128,10 @@ namespace Ares {
 
 	private:
 		/**
-		 * typedef EventCallbackFn
+		 * @typedef EventCallbackFn
 		 * @brief Alias for an event callback function type.
 		 * 
-		 * Defines the signature for callback function that process events.
+		 * @details Defines the signature for callback function that process events.
 		 * The function takes an `Event&` as a parameter and returns `bool` indicating
 		 * whether the event was successfully handled (`true`) or not (`false`).
 		 */
@@ -133,7 +141,7 @@ namespace Ares {
 		 * @struct EventListenerEntry
 		 * @brief Represents an entry for an event listener.
 		 * 
-		 * This structure is used to store information about an individual event listener,
+		 * @details This structure is used to store information about an individual event listener,
 		 * including its unique identifier and the callback function it uses to process events.
 		 */
 		struct EventListenerEntry

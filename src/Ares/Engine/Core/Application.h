@@ -1,8 +1,8 @@
 /**
  * @file Application.h
- * @brief Defines the core Application class for the Ares Engine.
+ * @brief Defines the core Application class for the Ares engine.
  * 
- * @details This class serves as the central hub for running an application built on the Ares Engine.
+ * @details This class serves as the central hub for running an application built on the Ares engine.
  * It manages the main loop, layers, event handling, and initialization of core systems like
  * rendering, thread pool, and asset management.
  */
@@ -28,6 +28,8 @@ namespace Ares {
 	 * 
 	 * @details This struct provides options for setting up the application window,
 	 * thread count, update rate, and other core properties.
+	 * 
+	 * @see Ares::WindowSettings::Flags
 	 */
 	struct ApplicationSettings
 	{
@@ -47,10 +49,10 @@ namespace Ares {
 		 * The constructor allows you to configure the application's name, window dimensions,
 		 * window style, and an optional icon.
 		 * 
-		 * @param name The name of the application (default: "Ares Engine").
-		 * @param width The width of the window (default: 1280).
-		 * @param height The height of the window (default: 720).
-		 * @param windowStyle The window style, represented by a WindowSettings constant (default: WindowSettings::DefaultWindow).
+		 * @param name The name of the application (default: `"Ares Engine"`).
+		 * @param width The width of the window (default: `1280`).
+		 * @param height The height of the window (default: `720`).
+		 * @param windowStyle The window style, represented by a WindowSettings constant (default: `WindowSettings::DefaultWindow`).
 		 * @param icon A pointer to the application icon (default: `nullptr`).
 		 */
 		ApplicationSettings(
@@ -66,7 +68,7 @@ namespace Ares {
 
 	/**
 	 * @class Application
-	 * @brief Main class for the Ares Engine application.
+	 * @brief Main class for the Ares engine application.
 	 * 
 	 * @details The Application class initializes and runs the main loop of an Ares-based application.
 	 * It handles events, layers, and updates core engine systems like the renderer,
@@ -77,6 +79,7 @@ namespace Ares {
 	public:
 		/**
 		 * @brief Constructor for the Application class.
+		 * 
 		 * @param settings The configuration settings for the application.
 		 */
 		Application(const ApplicationSettings& settings = ApplicationSettings());
@@ -88,24 +91,28 @@ namespace Ares {
 
 		/**
 		 * @brief Adds a new layer to the application.
+		 * 
 		 * @param layer The layer to add.
 		 */
 		void PushLayer(Ref<Layer> layer);
 
 		/**
 		 * @brief Adds a new overlay layer to the application.
+		 * 
 		 * @param overlay The overlay layer to add.
 		 */
 		void PushOverlay(Ref<Layer> overlay);
 
 		/**
 		 * @brief Retrieves the application window.
+		 * 
 		 * @return A reference to the Window object.
 		 */
 		inline Window& GetWindow() { return *m_Window; }
 
 		/**
 		 * @brief Retrieves the active Application instance.
+		 * 
 		 * @return A reference to the active Application object.
 		 */
 		inline static Application& Get() { return *s_Instance; }
@@ -118,21 +125,24 @@ namespace Ares {
 
 		/**
 		 * @brief Handles events dispatched to the application.
+		 * 
 		 * @param e Reference to the event being processed.
 		 */
 		void OnEvent(Event& e);
 
 		/**
 		 * @brief Handles the event triggered when the window is closed.
+		 * 
 		 * @param e The WindowCloseEvent triggering this callback.
-		 * @return true if the event is handled, false otherwise.
+		 * @return `true` if the event is handled; otherwise, `false`.
 		 */
 		bool OnWindowClose(WindowCloseEvent& e);
 
 		/**
 		 * @brief Handles the event triggered when the window is resized.
+		 * 
 		 * @param e The WindowResizeEvent triggering this callback.
-		 * @return true if the event is handled, false otherwise.
+		 * @return `true` if the event is handled; otherwise, `false`.
 		 */
 		bool OnWindowResize(WindowResizeEvent& e);
 	
@@ -155,9 +165,9 @@ namespace Ares {
 	/**
 	 * @brief Function to create an application instance.
 	 * Must be implemented in the client application.
-	 * @return A pointer to the created Application instance.
+	 * 
 	 * @details
-	 * Example usage:
+	 * **Example usage**:
 	 * ```cpp
 	 * // This MUST be implemented client-side.
 	 * Ares::Application* Ares::CreateApplication()
@@ -174,6 +184,8 @@ namespace Ares {
 	 *    return app;
 	 * }
 	 * ```
+	 * 
+	 * @return A pointer to the created Application instance.
 	 */
 	Application* CreateApplication();
 

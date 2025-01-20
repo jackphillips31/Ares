@@ -23,7 +23,6 @@
 		/**
 		 * @def AR_PLATFORM_WINDOWS
 		 * @brief Defined for Windows platforms (x64 only).
-		 * 
 		 * @details This macro is defined if the target platform is WIndows (x64).
 		 */
 		#define AR_PLATFORM_WINDOWS
@@ -45,7 +44,6 @@
 		/**
 		 * @def AR_PLATFORM_IOS
 		 * @brief Defined for iOS platforms.
-		 * 
 		 * @details This macro is defined for iOS platforms, although iOS is currently unsupported.
 		 */
 		#define AR_PLATFORM_IOS
@@ -54,7 +52,6 @@
 		/**
 		 * @def AR_PLATFORM_MACOS
 		 * @brief Defined for macOS platforms.
-		 * 
 		 * @details This macro is defined for macOS platforms, although macOS is currently unsupported.
 		 */
 		#define AR_PLATFORM_MACOS
@@ -71,7 +68,6 @@
 	/**
 	 * @def AR_PLATFORM_ANDROID
 	 * @brief Defined for Android platforms.
-	 * 
 	 * @details This macro is defined for Android platforms, although Android is currently unsupported.
 	 */
 	#define AR_PLATFORM_ANDROID
@@ -80,7 +76,6 @@
 	/**
 	 * @def AR_PLATFORM_LINUX
 	 * @brief Defined for Linux platforms.
-	 * 
 	 * @details This macro is defined for Linux platforms, although Linux is currently unsupported.
 	 */
 	#define AR_PLATFORM_LINUX
@@ -170,7 +165,7 @@
 
 /**
  * @def AR_STATIC_BIND_EVENT_FN
- * @brief binds a static event handler function.
+ * @brief Binds a static event handler function.
  * 
  * @details This macro creates a `std::bind` to bind a static event handler function
  * to the current object and passes the event as a parameter.

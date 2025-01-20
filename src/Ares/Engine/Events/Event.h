@@ -2,7 +2,7 @@
  * @file Event.h
  * @brief Defines the base Event class and event-related utilities.
  * 
- * Events are used to communicate between different parts of the engine, such as
+ * @details Events are used to communicate between different parts of the engine, such as
  * user input, window events, and application lifecycle events.
  */
 #pragma once
@@ -13,7 +13,7 @@ namespace Ares {
 	 * @enum EventType
 	 * @brief Represents the various types of events in the application.
 	 * 
-	 * This enumeration defines all possible event types that can occur within the
+	 * @details This enumeration defines all possible event types that can occur within the
 	 * application, such as window events, application lifecycle events, input events,
 	 * and asset-related events.
 	 */
@@ -48,7 +48,7 @@ namespace Ares {
 	 * @enum EventCategory
 	 * @brief Represents categories for classifying events.
 	 * 
-	 * This enumeration defines bitwise categories used to classify events in the application.
+	 * @details This enumeration defines bitwise categories used to classify events in the application.
 	 * Categories can be combined using bitwise OR to allow for flexible event filtering and handling.
 	 */
 	enum EventCategory : uint16_t
@@ -63,6 +63,7 @@ namespace Ares {
 	};
 
 	/**
+	 * @def EVENT_CLASS_TYPE
 	 * @brief A utility macro to define the event type.
 	 */
 	#define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::type; }\
@@ -70,6 +71,7 @@ namespace Ares {
 		virtual const char* GetName() const override { return #type; }
 
 	/**
+	 * @def EVENT_CLASS_CATEGORY
 	 * @brief A utility macro to define the event category.
 	 */
 	#define EVENT_CLASS_CATEGORY(category) virtual uint16_t GetCategoryFlags() const override { return category; }
@@ -78,7 +80,7 @@ namespace Ares {
 	 * @class Event
 	 * @brief Base class for all events in the engine.
 	 * 
-	 * Events are propagated through the application to allow systems to respond to
+	 * @details Events are propagated through the application to allow systems to respond to
 	 * user input, window changes, and other triggers.
 	 */
 	class Event
@@ -94,32 +96,37 @@ namespace Ares {
 
 		/**
 		 * @brief Retrieves the type of event.
+		 * 
 		 * @return The event type.
 		 */
 		virtual EventType GetEventType() const = 0;
 
 		/**
 		 * @brief Retrieves the name of the event.
+		 * 
 		 * @return The name of the event.
 		 */
 		virtual const char* GetName() const = 0;
 
 		/**
 		 * @brief Retrieves the category flags of the event.
+		 * 
 		 * @return The event category flags.
 		 */
 		virtual uint16_t GetCategoryFlags() const = 0;
 
 		/**
 		 * @brief Retrieves a string with event related information or the event name.
+		 * 
 		 * @return The event string.
 		 */
 		virtual std::string ToString() const { return GetName(); }
 
 		/**
 		 * @brief Tells whether an event is in a given category.
+		 * 
 		 * @param category The event category to test against.
-		 * @return true if an event has that category flag set, false otherwise.
+		 * @return `true` if an event has that category flag set; otherwise, `false`.
 		 */
 		inline bool IsInCategory(EventCategory category)
 		{
@@ -131,8 +138,24 @@ namespace Ares {
 	 * @class EventDispatcher
 	 * @brief A utility class for dispatching events to appropriate handlers based on event type.
 	 * 
-	 * The EventDispatcher simplifies event handling by allowing a specific function to
+	 * @details The EventDispatcher simplifies event handling by allowing a specific function to
 	 * to be executed only if the event type matches the type of the dispatched event.
+	 * 
+	 * **Example Usage**:
+	 * ```cpp
+	 * void MyLayer::OnEvent(Ares::Event& event)
+	 * {
+	 *     Ares::EventDispatcher dispatcher(event);
+	 * 
+	 *     dispatcher.Dispatch<WindowResizeEvent>(AR_BIND_EVENT_FN(Layer::OnWindowResize));
+	 * }
+	 * 
+	 * bool MyLayer::OnWindowResize(Ares::WindowResizeEvent& event)
+	 * {
+	 *     // Handle resize logic, return true if event is handled
+	 *     return true;
+	 * }
+	 * ```
 	 */
 	class EventDispatcher
 	{
@@ -159,14 +182,14 @@ namespace Ares {
 		/**
 		 * @brief Dispatches the event to the provided function if the event type matches.
 		 * 
-		 * The function is called only if the type of the event matches the template parameter `T`.
+		 * @details The function is called only if the type of the event matches the template parameter `T`.
 		 * If the event is handled by the function, the event's `Handled` flag is set to true.
 		 * 
 		 * @tparam T The type of event to be handled.
 		 * @tparam F The type of the handler function.
 		 * @param func The function to call if the event type matches.
 		 * It should take a reference to `T` and return a boolean indicating whether the event was handled.
-		 * @return True if the event type matches and the function is called; otherwise, false.
+		 * @return `true` if the event type matches and the function is called; otherwise, `false`.
 		 */
 		template<typename T, typename F>
 		bool Dispatch(const F& func)
@@ -184,11 +207,10 @@ namespace Ares {
 	};
 
 	/**
+	 * @anchor event_ostream_operator
 	 * @brief Outputs the string representation of an Event object to an output stream.
 	 * 
-	 * This operator allows an Event to be directly output to an `std::ostream`.
-	 * 
-	 * @anchor event_ostream_operator
+	 * @details This operator allows an Event to be directly output to an `std::ostream`.
 	 * 
 	 * @param os The output stream to write to.
 	 * @param e The event to output.

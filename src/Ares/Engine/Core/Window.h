@@ -31,7 +31,7 @@ namespace Ares {
 		uint32_t Height;		///< The window's height.
 		int32_t XPos;			///< The window's X position on screen.
 		int32_t YPos;			///< The window's Y position on screen.
-		uint16_t Flags;			///< The window's settings and flags. @see WindowSettings::Flags
+		uint16_t Flags;			///< The window's settings and flags. @see Ares::WindowSettings::Flags
 		void* Icon;				///< Pointer to the window's icon.
 
 		/**
@@ -102,7 +102,7 @@ namespace Ares {
 
 		/**
 		 * @brief Gets the height of the window.
-		 *
+		 * 
 		 * @return The height of the window in pixels.
 		 */
 		virtual uint32_t GetHeight() const = 0;
@@ -152,9 +152,8 @@ namespace Ares {
 		/**
 		 * @brief Gets the settings or flags for the window.
 		 * 
-		 * @return The window settings flags as uint16_t
-		 * 
-		 * @see WindowSettings::Flags
+		 * @return The window settings flags as an unsigned 16 bit integer.
+		 * @see Ares::WindowSettings::Flags
 		 */
 		virtual uint16_t GetWindowSettings() const = 0;
 
@@ -163,14 +162,14 @@ namespace Ares {
 		/**
 		 * @brief Enables or disables V-Sync.
 		 * 
-		 * @param enabled If true, V-Sycn will be enabled; otherwise, it will be disabled.
+		 * @param enabled If true, V-Sync will be enabled; otherwise, it will be disabled.
 		 */
 		virtual void SetVSync(bool enabled) = 0;
 
 		/**
 		 * @brief Checks if V-Sync is enabled.
 		 * 
-		 * @returns `true` if V-Sync is enabled, otherwise `false`.
+		 * @returns `true` if V-Sync is enabled; otherwise, `false`.
 		 */
 		virtual bool IsVSync() const = 0;
 
@@ -223,7 +222,7 @@ namespace Ares {
 		 * 
 		 * @param flags The new window settings flags.
 		 * 
-		 * @see WindowSettings::Flags
+		 * @see Ares::WindowSettings::Flags
 		 */
 		virtual void SetWindowSettings(uint16_t flags) = 0;
 
@@ -245,7 +244,6 @@ namespace Ares {
 		 * @brief Creates a new window.
 		 * 
 		 * @param props The window properties to initialize the window with.
-		 * 
 		 * @return A Scope<Window> to the newly created window.
 		 */
 		static Scope<Window> Create(const WindowProps& props = WindowProps());

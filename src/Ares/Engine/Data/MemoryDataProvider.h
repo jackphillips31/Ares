@@ -36,6 +36,7 @@ namespace Ares {
 
 		/**
 		 * @brief Registers a data buffer and generates a unique key for it.
+		 * 
 		 * @param data The data buffer to register (moved into the registry).
 		 * @return A unique key associated with the registered data buffer.
 		 */
@@ -43,6 +44,7 @@ namespace Ares {
 
 		/**
 		 * @brief Registers a raw memory buffer and generates a unique key for it.
+		 * 
 		 * @param data Pointer to the raw memory buffer.
 		 * @param size Size of the memory buffer in bytes.
 		 * @return A unique key associated with the registered memory buffer.
@@ -51,17 +53,20 @@ namespace Ares {
 
 		/**
 		 * @brief Retrieves a data buffer by its unique key.
+		 * 
 		 * @param key The unique key associated with the data buffer.
 		 * @return A reference to the data buffer.
+		 * 
 		 * @note Returns an empty DataBuffer object if the key does not exist.
 		 */
 		static const DataBuffer& GetData(const MemoryDataKey key);
 
 		/**
 		 * @brief Unregisters a data buffer by its unique key.
-		 * @param key The unique key of the data buffer to unregister.
 		 * 
 		 * @details Removes the data buffer from the registry, freeing associated resources.
+		 * 
+		 * @param key The unique key of the data buffer to unregister.
 		 */
 		static void UnregisterData(const MemoryDataKey key);
 
