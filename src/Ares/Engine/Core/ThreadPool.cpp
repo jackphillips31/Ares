@@ -6,7 +6,7 @@
 namespace Ares {
 
 	std::vector<std::thread> ThreadPool::s_Workers;
-	std::queue<std::function<void()>> ThreadPool::s_TaskQueue;
+	eastl::queue<std::function<void()>> ThreadPool::s_TaskQueue;
 	std::mutex ThreadPool::s_QueueMutex;
 	std::mutex ThreadPool::s_InitMutex;
 	std::condition_variable ThreadPool::s_Condition;

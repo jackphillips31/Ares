@@ -9,6 +9,8 @@
 
 namespace Ares {
 
+	enum class EventType : uint16_t;
+
 	template<typename T>
 	void CombineHash(size_t& seed, const T& value)
 	{
@@ -145,3 +147,27 @@ struct std::hash<glm::vec4>
 		return hash;
 	}
 };
+
+// Standard Library hashes
+
+namespace eastl {
+	
+	template<>
+	struct hash<std::type_index>
+	{
+		size_t operator()(const std::type_index& typeIndex) const
+		{
+			return std::hash<std::string>()(typeIndex.name());
+		}
+	};
+
+	template<>
+	struct hash<Ares::EventType>
+	{
+		size_t operator()(const Ares::EventType& eventType) const
+		{
+			return std::hash<uint16_t>()(static_cast<uint16_t>(eventType));
+		}
+	};
+
+}

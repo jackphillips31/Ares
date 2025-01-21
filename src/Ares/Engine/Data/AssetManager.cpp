@@ -722,7 +722,7 @@ namespace Ares {
 	std::unordered_map<std::type_index, uint32_t> AssetManager::s_TypeIdMap;
 	std::mutex AssetManager::s_TypeIdMutex;
 
-	std::queue<std::function<void()>> AssetManager::s_CallbackQueue;
+	eastl::queue<std::function<void()>> AssetManager::s_CallbackQueue;
 	std::mutex AssetManager::s_CallbackQueueMutex;
 
 	std::atomic<uint32_t> AssetManager::s_NextListenerId{ 1 };
@@ -731,7 +731,7 @@ namespace Ares {
 	std::unordered_map<uint32_t, AssetManager::AssetListenerCallbackFn> AssetManager::s_GlobalListeners;
 	std::mutex AssetManager::s_ListenerMutex;
 
-	std::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
+	eastl::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
 	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
 
 	// Template explicit instantiations

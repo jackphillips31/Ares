@@ -23,6 +23,7 @@
  * are efficiently handled throughout the application lifecycle.
  */
 #pragma once
+#include <EASTL/unordered_map.h>
 
 namespace Ares {
 
@@ -226,7 +227,7 @@ namespace Ares {
 		static std::mutex s_TypeIdMutex;
 
 		// Callback queue
-		static std::queue<std::function<void()>> s_CallbackQueue;
+		static eastl::queue<std::function<void()>> s_CallbackQueue;
 		static std::mutex s_CallbackQueueMutex;
 
 		static std::atomic<uint32_t> s_NextListenerId;
@@ -236,7 +237,7 @@ namespace Ares {
 		static std::mutex s_ListenerMutex;
 
 		// Event listener callback queue
-		static std::queue<std::function<void()>> s_ListenerCallbackQueue;
+		static eastl::queue<std::function<void()>> s_ListenerCallbackQueue;
 		static std::mutex s_ListenerCallbackQueueMutex;
 	};
 

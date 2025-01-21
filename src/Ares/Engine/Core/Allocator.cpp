@@ -1,102 +1,85 @@
 #include <arespch.h>
-#include "Engine/Core/Allocator.h"
 
 #include <EASTL/allocator.h>
 
 #include "Engine/Core/Core.h"
 
-// Platform-specific implementations of the custom new[] operators
 void* operator new[](size_t size, const char* pName, int flags, unsigned debugFlags, const char* file, int line)
 {
-	if (debugFlags)
+	if (void* ptr = new(0, 0, pName, flags, debugFlags, file, line) char[size])
 	{
-		std::cout << "Allocating " << size << " bytes at " << file << ":" << line << std::endl;
+		return ptr;
 	}
-
-	// Default allocation
-	void* ptr = malloc(size);
-
-	// Check if allocation was successful
-	if (!ptr)
-	{
-		throw std::bad_alloc();
-	}
-
-	return ptr;
+	throw std::bad_alloc();
 }
 
 void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags, unsigned debugFlags, const char* file, int line)
 {
-	if (debugFlags)
+	// Default alignment to AR_PLATFORM_PTR_SIZE if zero
+	size_t adjustedAlignment = (alignment > 0) ? alignment : AR_PLATFORM_MIN_MALLOC_ALIGNMENT;
+
+	// Ensure alignment meets the minimum requirement
+	adjustedAlignment = (adjustedAlignment < AR_PLATFORM_MIN_MALLOC_ALIGNMENT) ? AR_PLATFORM_MIN_MALLOC_ALIGNMENT : adjustedAlignment;
+
+	// Validate that alignment is a power of two
+	if ((adjustedAlignment & (adjustedAlignment - 1)) != 0)
 	{
-		std::cout << "Allocating " << size << " bytes at " << file << ":" << line << std::endl;
+		AR_CORE_ASSERT(false, "Alignment must be a power of two!");
+		throw std::invalid_argument("Alignment must be a power of two!");
 	}
 
-	// Check alignment constraints
-	if (alignment <= 0 || (alignment & (alignment - 1)) != 0)
+	// Validate alignmentOffset (it must be less than alignment)
+	if (alignmentOffset >= adjustedAlignment)
 	{
-		throw std::invalid_argument("Alignment must be a power of 2.");
+		AR_CORE_ASSERT(false, "Alignment offset must be less than alignment!");
+		throw std::invalid_argument("Alignment offset must be less than alignment!");
 	}
 
-	void* ptr = nullptr;
-
-#if defined(AR_PLATFORM_WINDOWS)
-	// On Windows, use _aligned_malloc for alignment
-	ptr = _aligned_malloc(size + alignmentOffset, alignment);
-#elif defined(AR_PLATFORM_LINUX) || defined(AR_PLATFORM_MACOS) || defined(AR_PLATFORM_IOS)
-	// On POSIX systems, use posix_memalign
-	if (posix_memalign(&ptr, alignment, size + alignmentOffset) != 0)
-	{
-		return nullptr;
-	}
-#else
-	// Default case, fallback to malloc without alignment
-	ptr = malloc(size);
-#endif
-
-	// Check if allocation was successful
+	// Allocate memory with space for alignment and metadata storage
+	void* ptr = malloc(size + adjustedAlignment + AR_PLATFORM_PTR_SIZE);
 	if (!ptr)
 	{
+		AR_CORE_ASSERT(false, "Memory allocation failed!");
 		throw std::bad_alloc();
 	}
 
-	// Adjust pointer to meet alignment offset
-	if (alignmentOffset > 0)
+	// Adjust pointer for alignment and offset
+	void* ptrPlusPtrSize = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + AR_PLATFORM_PTR_SIZE + alignmentOffset);
+	void* ptrAligned = reinterpret_cast<void*>(
+		(reinterpret_cast<uintptr_t>(ptrPlusPtrSize) + adjustedAlignment - 1) & ~(adjustedAlignment - 1)
+	);
+
+	// Store the original pointer just before the aligned pointer
+	void** ptrStoredPtr = reinterpret_cast<void**>(ptrAligned) - 1;
+
+	if (ptrStoredPtr < ptr)
 	{
-		void* alignedPtr = static_cast<void*>(reinterpret_cast<char*>(ptr) + alignmentOffset);
-		return alignedPtr;
+		AR_CORE_ASSERT(false, "Aligned pointer offset exceeds allocated memory range!");
+		std::free(ptr);
+		throw std::invalid_argument("Aligned pointer offset exceeds allocated memory range!");
 	}
 
-	return ptr;
+	*ptrStoredPtr = ptr;
+
+	// Ensure the aligned pointer meets the alignment requirement
+	if ((reinterpret_cast<size_t>(ptrAligned) & (adjustedAlignment - 1)) != 0)
+	{
+		AR_CORE_ASSERT(false, "Aligned pointer does not meet alignment requirement!");
+		std::free(ptr);
+		throw std::invalid_argument("Aligned pointer does not meet alignment requirement!");
+	}
+
+	return ptrAligned;
 }
 
 void operator delete[](void* ptr) noexcept
 {
-	free(ptr);
-}
+	if (!ptr) return;
 
-void operator delete[](void* ptr, const char* pName, int flags, unsigned debugFlags, const char* file, int line) noexcept
-{
-	if (debugFlags)
-	{
-		AR_CORE_DEBUG("Deallocating memory at {}:{}", file, line);
-	}
+	// Retrieve the original pointer stored just before the aligned pointer
+	void** ptrStoredPtr = reinterpret_cast<void**>(ptr) - 1;
+	void* originalPtr = *ptrStoredPtr;
 
-	operator delete[](ptr);
-}
-
-void operator delete[](void* ptr, size_t alignment, size_t alignmentOffset, const char* pName, int flags, unsigned debugFlags, const char* file, int line) noexcept
-{
-	if (debugFlags)
-	{
-		AR_CORE_DEBUG("Deallocating memory at {}:{}", file, line);
-	}
-
-#if defined(AR_PLATFORM_WINDOWS)
-	_aligned_free(ptr);
-#elif defined(AR_PLATFORM_LINUX) || defined(AR_PLATFORM_MACOS) || defined(AR_PLATFORM_IOS)
-	free(ptr);
-#else
-	free(ptr);
-#endif
+	// Free the original pointer
+	std::free(originalPtr);
 }

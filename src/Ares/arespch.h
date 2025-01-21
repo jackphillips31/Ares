@@ -1,14 +1,14 @@
 #pragma once
 
 // EA Standard Library
-#include <EABase/eabase.h>
-#include <EASTL/allocator.h>
-#include <EASTL/string.h>
+#include <EASTL/allocator.h>	// Allocation handling
+#include <EASTL/queue.h>		// Queue data structure
+#include <EASTL/string.h>		// String handling
+#include <EASTL/unordered_map.h>
 
 // Standard Library
 #include <iostream>				// I/O streams
 #include <fstream>				// File operations
-//#include <string>				// String handling
 #include <sstream>				// String streams
 #include <array>				// Fixed-size arrays
 #include <vector>				// Dynamic arrays
@@ -25,7 +25,6 @@
 #include <stdio.h>				// Generic file operation
 
 #include <future>				// Asynchronous programming
-#include <queue>				// Queue data structure
 #include <thread>				// Threading
 #include <mutex>				// Mutex for synchronization
 #include <shared_mutex>			// Shared mutex for synchronization

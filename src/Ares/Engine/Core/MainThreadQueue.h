@@ -6,7 +6,7 @@
  * Tasks are submitted from other threads and processed during the main loop.
  */
 #pragma once
-#include <queue>
+#include <EASTL/queue.h>
 
 namespace Ares {
 
@@ -59,8 +59,8 @@ namespace Ares {
 	private:
 		static inline std::mutex s_ReadMutex;							///< Mutex for protecting the read queue.
 		static inline std::mutex s_WriteMutex;							///< Mutex for protecting the write queue.
-		static inline std::queue<std::function<void()>> s_ReadQueue;	///< Queue of tasks ready for execution.
-		static inline std::queue<std::function<void()>> s_WriteQueue;	///< Queue of tasks waiting to be swapped.
+		static inline eastl::queue<std::function<void()>> s_ReadQueue;	///< Queue of tasks ready for execution.
+		static inline eastl::queue<std::function<void()>> s_WriteQueue;	///< Queue of tasks waiting to be swapped.
 	};
 
 }

@@ -44,7 +44,7 @@ namespace Ares {
 		std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
 		while (!s_ReadEventQueue.empty())
 		{
-			Scope<Event> event = std::move(s_ReadEventQueue.front());
+			Scope<Event> event = eastl::move(s_ReadEventQueue.front());
 			s_ReadEventQueue.pop();
 			if (s_Callback != nullptr)
 				s_Callback(*event);
@@ -89,7 +89,7 @@ namespace Ares {
 	void EventQueue::SetEventCallback(ApplicationEventCallbackFn&& callback)
 	{
 		std::lock_guard<std::mutex> lock(s_CallbackMutex);
-		s_Callback = std::move(callback);
+		s_Callback = eastl::move(callback);
 	}
 
 	void EventQueue::NotifyListeners(Event& e)
@@ -111,6 +111,6 @@ namespace Ares {
 		std::lock_guard<std::mutex> writeLock(s_WriteQueueMutex);
 		std::lock_guard<std::mutex> readLock(s_ReadQueueMutex);
 
-		std::swap(s_WriteEventQueue, s_ReadEventQueue);
+		eastl::swap(s_WriteEventQueue, s_ReadEventQueue);
 	}
 }

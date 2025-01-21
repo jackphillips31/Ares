@@ -54,7 +54,7 @@ namespace Ares {
 
 	private:
 		static std::vector<std::thread> s_Workers;				///< Vector of worker threads.
-		static std::queue<std::function<void()>> s_TaskQueue;	///< Queue of tasks to be executed.
+		static eastl::queue<std::function<void()>> s_TaskQueue;	///< Queue of tasks to be executed.
 		static std::mutex s_QueueMutex;							///< Mutex for synchronizing task queue access.
 		static std::mutex s_InitMutex;							///< Mutex for thread pool initialization/shutdown.
 		static std::condition_variable s_Condition;				///< Condition variable for task synchronization.

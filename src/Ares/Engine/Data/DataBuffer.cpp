@@ -1,19 +1,23 @@
 #include <arespch.h>
 #include "Engine/Data/DataBuffer.h"
 
+#include <EASTL/allocator.h>
+
 namespace Ares {
 
 	DataBuffer::DataBuffer(const void* data, const size_t size)
-		: m_Data(new uint8_t[size]), m_Size(size)
+		: m_Data(std::malloc(size)), m_Size(size)
 	{
-		if (data != nullptr)
+		if (data && m_Data && size)
+		{
 			std::memcpy(m_Data, data, size);
+		}
 	}
 
 	DataBuffer::~DataBuffer()
 	{
 		std::unique_lock lock(m_Mutex);
-		delete[] static_cast<uint8_t*>(m_Data);
+		std::free(m_Data);
 		m_Size = 0;
 	}
 

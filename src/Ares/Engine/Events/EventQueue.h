@@ -7,6 +7,7 @@
  */
 #pragma once
 #include <EASTL/queue.h>
+#include <EASTL/functional.h>
 
 namespace Ares {
 
@@ -38,7 +39,7 @@ namespace Ares {
 		 * @tparam EventTypeTemplate The type of event.
 		 */
 		template <typename EventTypeTemplate>
-		using EventListenerCallbackFn = std::function<bool(EventTypeTemplate&)>;
+		using EventListenerCallbackFn = eastl::function<bool(EventTypeTemplate&)>;
 
 		/**
 		 * @typedef ApplicationEventCallbackFn
@@ -46,7 +47,7 @@ namespace Ares {
 		 * 
 		 * @details It is a void function that takes a reference to an Event as the argument.
 		 */
-		using ApplicationEventCallbackFn = std::function<void(Event&)>;
+		using ApplicationEventCallbackFn = eastl::function<void(Event&)>;
 	public:
 		EventQueue() = delete;
 
@@ -136,7 +137,7 @@ namespace Ares {
 		 * The function takes an `Event&` as a parameter and returns `bool` indicating
 		 * whether the event was successfully handled (`true`) or not (`false`).
 		 */
-		using EventCallbackFn = std::function<bool(Event&)>;
+		using EventCallbackFn = eastl::function<bool(Event&)>;
 
 		/**
 		 * @struct EventListenerEntry
@@ -158,8 +159,8 @@ namespace Ares {
 		static inline std::mutex s_WriteQueueMutex;									///< Mutex for the write queue.
 
 		static inline std::atomic<uint32_t> s_NextListenerId{ 1 };					///< Next unique listener ID.
-		static inline std::unordered_map<EventType, std::unordered_map<uint32_t, EventCallbackFn>> s_Listeners;	///< Map of event types to their registered listeners.
-		static inline std::unordered_map<uint32_t, EventType> s_ListenerTypeMap;	///< Map of listener IDs to event types.
+		static inline std::unordered_map<EventType, eastl::hash_map<uint32_t, EventCallbackFn>> s_Listeners;	///< Map of event types to their registered listeners.
+		static inline eastl::hash_map<uint32_t, EventType> s_ListenerTypeMap;	///< Map of listener IDs to event types.
 		static inline std::mutex s_ListenerMutex;									///< Mutex for listener operations.
 		static inline std::mutex s_CallbackMutex;									///< Mutex for Application Event Callback.
 		static inline ApplicationEventCallbackFn s_Callback = nullptr;				///< Callback function that events are sent to during processing.
@@ -179,7 +180,7 @@ namespace Ares {
 	{
 		std::lock_guard<std::mutex> lock(s_ListenerMutex);
 		uint32_t currentId = s_NextListenerId++;
-		s_Listeners[EventTypeTemplate::GetStaticType()][currentId] = [func = std::move(func)](Event& e) { return func(static_cast<EventTypeTemplate&>(e)); };
+		s_Listeners[EventTypeTemplate::GetStaticType()][currentId] = [func = eastl::move(func)](Event& e) { return func(static_cast<EventTypeTemplate&>(e)); };
 		s_ListenerTypeMap[currentId] = EventTypeTemplate::GetStaticType();
 		return currentId;
 	}
