@@ -13,7 +13,7 @@
  * @see @ref usage
  */
 #pragma once
-#ifdef AR_PLATFORM_WINDOWS
+#if AR_PLATFORM_WINDOWS
 #include <windows.h>
 #endif
 
@@ -31,17 +31,28 @@
  */
 int EntryPoint(int argc, char** argv)
 {
-	// Initialize the logging system with a trace level.
-	Ares::Log::Init(spdlog::level::trace);
+	Ares::Application* app = nullptr;
+	try
+	{
+		// Initialize the logging system with a trace level.
+		Ares::Log::Init(spdlog::level::trace);
 
-	// Create the application instance.
-	Ares::Application* app = Ares::CreateApplication();
+		// Create the application instance.
+		app = Ares::CreateApplication();
 
-	// Run the application.
-	app->Run();
+		// Run the application.
+		app->Run();
+	}
+	catch (std::exception& e)
+	{
+		AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {}", e.what());
+		if (app) delete app;
+		__debugbreak();
+		return 1;
+	}
 
 	// Clean up by deleting the application instance.
-	delete app;
+	if (app) delete app;
 
 	// Return a successful exit code.
 	return 0;
@@ -62,8 +73,7 @@ int main(int argc, char** argv)
 	return EntryPoint(argc, argv);
 }
 
-#ifdef AR_PLATFORM_WINDOWS
-
+#if AR_PLATFORM_WINDOWS
 /**
  * @brief Windows-specific entry point for the application
  * 

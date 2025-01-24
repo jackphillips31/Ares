@@ -6,8 +6,7 @@
  * It supports adding listeners for specific event types and propagating events to all listeners.
  */
 #pragma once
-#include <EASTL/queue.h>
-#include <EASTL/functional.h>
+#include <EASTL/hash_map.h>
 
 namespace Ares {
 

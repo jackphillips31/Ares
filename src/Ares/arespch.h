@@ -2,9 +2,9 @@
 
 // EA Standard Library
 #include <EASTL/allocator.h>	// Allocation handling
+#include <EASTL/functional.h>	// Functions
+#include <EASTL/hash_map.h>		// Hash map
 #include <EASTL/queue.h>		// Queue data structure
-#include <EASTL/string.h>		// String handling
-#include <EASTL/unordered_map.h>
 
 // Standard Library
 #include <iostream>				// I/O streams
@@ -35,6 +35,6 @@
 #include "Engine/Debug/Log.h"	// Logging functionality
 
 // Platform-specific includes (Windows)
-#ifdef AR_PLATFORM_WINDOWS
+#if AR_PLATFORM_WINDOWS
 #include <Windows.h>			// Windows-specific functionality
 #endif

@@ -34,7 +34,7 @@ namespace Ares {
 	{
 		AR_CORE_INFO("Initializing OpenGLRendererAPI");
 
-	#ifdef AR_DEBUG
+	#if AR_BUILD_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(OpenGLMessageCallback, nullptr);

@@ -23,7 +23,6 @@
  * are efficiently handled throughout the application lifecycle.
  */
 #pragma once
-#include <EASTL/unordered_map.h>
 
 namespace Ares {
 

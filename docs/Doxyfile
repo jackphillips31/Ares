@@ -996,6 +996,7 @@ INPUT                   = ./MainPage.md \
                           ./pages/Usage.md \
                           ./pages/EventSystem.md \
                           ./pages/AssetManager.md \
+                          ./pages/Macros.md \
                           ../src/Ares/Ares.h \
                           ../src/Ares/Engine/Core/Application.h \
                           ../src/Ares/Engine/Core/Core.h \

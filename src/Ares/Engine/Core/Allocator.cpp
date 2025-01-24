@@ -1,85 +1,245 @@
 #include <arespch.h>
 
-#include <EASTL/allocator.h>
-
 #include "Engine/Core/Core.h"
 
-void* operator new[](size_t size, const char* pName, int flags, unsigned debugFlags, const char* file, int line)
+#if AR_PLATFORM_WINDOWS
+#include <malloc.h>
+#define AR_ALIGNED_MALLOC(size, alignment) _aligned_malloc(size, alignment);
+#define AR_ALIGNED_FREE(ptr) _aligned_free(ptr);
+#elif AR_PLATFORM_POSIX
+#include <malloc.h>
+
+inline void* PosixAlignedMalloc(size_t size, size_t alignment)
 {
-	if (void* ptr = new(0, 0, pName, flags, debugFlags, file, line) char[size])
+	void* ptr = nullptr;
+	if (memalign(&ptr, alignment, size) != 0)
 	{
-		return ptr;
-	}
-	throw std::bad_alloc();
-}
-
-void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags, unsigned debugFlags, const char* file, int line)
-{
-	// Default alignment to AR_PLATFORM_PTR_SIZE if zero
-	size_t adjustedAlignment = (alignment > 0) ? alignment : AR_PLATFORM_MIN_MALLOC_ALIGNMENT;
-
-	// Ensure alignment meets the minimum requirement
-	adjustedAlignment = (adjustedAlignment < AR_PLATFORM_MIN_MALLOC_ALIGNMENT) ? AR_PLATFORM_MIN_MALLOC_ALIGNMENT : adjustedAlignment;
-
-	// Validate that alignment is a power of two
-	if ((adjustedAlignment & (adjustedAlignment - 1)) != 0)
-	{
-		AR_CORE_ASSERT(false, "Alignment must be a power of two!");
-		throw std::invalid_argument("Alignment must be a power of two!");
-	}
-
-	// Validate alignmentOffset (it must be less than alignment)
-	if (alignmentOffset >= adjustedAlignment)
-	{
-		AR_CORE_ASSERT(false, "Alignment offset must be less than alignment!");
-		throw std::invalid_argument("Alignment offset must be less than alignment!");
-	}
-
-	// Allocate memory with space for alignment and metadata storage
-	void* ptr = malloc(size + adjustedAlignment + AR_PLATFORM_PTR_SIZE);
-	if (!ptr)
-	{
-		AR_CORE_ASSERT(false, "Memory allocation failed!");
 		throw std::bad_alloc();
 	}
-
-	// Adjust pointer for alignment and offset
-	void* ptrPlusPtrSize = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + AR_PLATFORM_PTR_SIZE + alignmentOffset);
-	void* ptrAligned = reinterpret_cast<void*>(
-		(reinterpret_cast<uintptr_t>(ptrPlusPtrSize) + adjustedAlignment - 1) & ~(adjustedAlignment - 1)
-	);
-
-	// Store the original pointer just before the aligned pointer
-	void** ptrStoredPtr = reinterpret_cast<void**>(ptrAligned) - 1;
-
-	if (ptrStoredPtr < ptr)
-	{
-		AR_CORE_ASSERT(false, "Aligned pointer offset exceeds allocated memory range!");
-		std::free(ptr);
-		throw std::invalid_argument("Aligned pointer offset exceeds allocated memory range!");
-	}
-
-	*ptrStoredPtr = ptr;
-
-	// Ensure the aligned pointer meets the alignment requirement
-	if ((reinterpret_cast<size_t>(ptrAligned) & (adjustedAlignment - 1)) != 0)
-	{
-		AR_CORE_ASSERT(false, "Aligned pointer does not meet alignment requirement!");
-		std::free(ptr);
-		throw std::invalid_argument("Aligned pointer does not meet alignment requirement!");
-	}
-
-	return ptrAligned;
+	return ptr;
 }
+#define AR_ALIGNED_MALLOC(size, alignment) PosixAlignedMalloc(size, alignment);
+#define AR_ALIGNED_FREE(ptr) free(ptr);
+#else
+#error "Platform not supported!"
+#endif
 
-void operator delete[](void* ptr) noexcept
+struct AllocationHeader
 {
-	if (!ptr) return;
+	bool IsAligned;
+	void* OriginalPtr;
+	#if AR_BUILD_DEBUG
+		void* UserPtr;
+	#endif
+};
 
-	// Retrieve the original pointer stored just before the aligned pointer
-	void** ptrStoredPtr = reinterpret_cast<void**>(ptr) - 1;
-	void* originalPtr = *ptrStoredPtr;
+namespace eastl {
 
-	// Free the original pointer
-	std::free(originalPtr);
+	allocator::allocator(const char* EASTL_NAME(pName))
+	{
+		#if EASTL_NAME_ENABLED
+			mpName = pName ? pName : EASTL_ALLOCATOR_DEFAULT_NAME;
+		#endif
+	}
+
+	allocator::allocator(const allocator& EASTL_NAME(alloc))
+	{
+		#if EASTL_NAME_ENABLED
+			mpName = alloc.mpName;
+		#endif
+	}
+
+	allocator::allocator(const allocator& other, const char* EASTL_NAME(pName))
+	{
+		#if EASTL_NAME_ENABLED
+			mpName = pName ? pName : EASTL_ALLOCATOR_DEFAULT_NAME;
+		#endif
+	}
+
+	void* allocator::allocate(size_t size, int flags)
+	{
+		constexpr size_t headerSize = sizeof(AllocationHeader);
+
+		// Calculate total size
+		const bool isBig = size > AR_CACHE_LINE_SIZE;
+		size_t totalSize = size + headerSize;
+		if (isBig)
+		{
+			totalSize += AR_CACHE_LINE_SIZE;
+		}
+
+		// Allocate memory
+		void* originalPtr = malloc(totalSize);
+		if (!originalPtr)
+		{
+			AR_CORE_ASSERT(false, "Memory allocation failure!");
+			throw std::bad_alloc();
+		}
+
+		AllocationHeader* header = nullptr;
+		if (isBig)
+		{
+			// Place header at the next cache line after user data
+			header = reinterpret_cast<AllocationHeader*>((reinterpret_cast<uintptr_t>(originalPtr) + size + AR_CACHE_LINE_SIZE - 1) & ~(AR_CACHE_LINE_SIZE - 1));
+		}
+		else
+		{
+			// Place the header at the end of user memory data
+			header = reinterpret_cast<AllocationHeader*>(static_cast<char*>(originalPtr) + size);
+		}
+
+		header->IsAligned = false;
+		header->OriginalPtr = originalPtr;
+
+		#if AR_BUILD_DEBUG
+			header->UserPtr = originalPtr;
+
+			#if AR_BUILD_DEBUG && AR_DEBUG_PRINT_ALLOCATIONS
+				if (Ares::Log::GetCoreLogger())
+				{
+					AR_CORE_DEBUG("[{:>18}] - ALLOCATION            - Size: [{:>8}]", fmt::format("{:#018x}", reinterpret_cast<uintptr_t>(userPtr)), totalSize);
+				}
+			#endif
+		#endif
+
+		return originalPtr;
+	}
+
+	void* allocator::allocate(size_t size, size_t alignment, size_t offset, int flags)
+	{
+		constexpr size_t headerSize = sizeof(AllocationHeader);
+
+		// Ensure alignment meets the minimum requirement
+		size_t adjustedAlignment = (alignment < AR_PLATFORM_MIN_MALLOC_ALIGNMENT) ? AR_PLATFORM_MIN_MALLOC_ALIGNMENT : alignment;
+
+		// Calculate total size
+		size_t totalSize = offset + size + headerSize;
+		const bool isBig = size > AR_CACHE_LINE_SIZE;
+		if (isBig)
+		{
+			totalSize += AR_CACHE_LINE_SIZE;
+		} 
+
+		#if AR_BUILD_DEBUG
+			// Validate that alignment is a power of 2
+			if ((adjustedAlignment & (adjustedAlignment - 1)) != 0)
+			{
+				AR_CORE_ASSERT(false, "Alignment must be a power of 2!");
+				throw std::invalid_argument("Alignment must be a power of 2!");
+			}
+
+			// Validate alignment (it must be greater than or equal to platform minimum)
+			if (adjustedAlignment < AR_PLATFORM_MIN_MALLOC_ALIGNMENT)
+			{
+				AR_CORE_ASSERT(false, "Alignment must be greater than: {}!", AR_PLATFORM_MIN_MALLOC_ALIGNMENT);
+				throw std::invalid_argument("Alignment is less than platform's minimum!");
+			}
+		#endif
+
+		// Allocate memory
+		void* originalPtr = AR_ALIGNED_MALLOC(totalSize, adjustedAlignment);
+		if (!originalPtr)
+		{
+			AR_CORE_ASSERT(false, "Memory allocation failure!");
+			throw std::bad_alloc();
+		}
+
+		// Offset the user pointer
+		void* userPtr = static_cast<void*>(static_cast<char*>(originalPtr) + offset);
+
+		AllocationHeader* header = nullptr;
+		if (isBig)
+		{
+			// Place header at the next cache line after user data
+			header = reinterpret_cast<AllocationHeader*>((reinterpret_cast<uintptr_t>(userPtr) + size + AR_CACHE_LINE_SIZE - 1) & ~(AR_CACHE_LINE_SIZE - 1));
+		}
+		else
+		{
+			// Place the header at the end of user memory data
+			header = reinterpret_cast<AllocationHeader*>(static_cast<char*>(userPtr) + size);
+		}
+
+		header->IsAligned = true;
+		header->OriginalPtr = originalPtr;
+
+		#if AR_BUILD_DEBUG
+			header->UserPtr = userPtr;
+
+			#if AR_DEBUG_PRINT_ALLOCATIONS
+				if (Ares::Log::GetCoreLogger())
+				{
+					AR_CORE_DEBUG("[{:>18}] - ALIGNED ALLOCATION    - Size: [{:>8}] - Alignment: [{:>4}]\n",
+						fmt::format("{:#018x}", reinterpret_cast<uintptr_t>(userPtr)), totalSize, adjustedAlignment);
+				}
+			#endif
+		#endif
+
+		return userPtr;
+	}
+
+	void allocator::deallocate(void* ptr, size_t size)
+	{
+		constexpr size_t headerSize = sizeof(AllocationHeader);
+		if (!ptr) return;
+
+		//AllocationHeader* header = reinterpret_cast<AllocationHeader*>(static_cast<char*>(ptr) + size);
+		AllocationHeader* header = nullptr;
+		if (size > AR_CACHE_LINE_SIZE)
+		{
+			header = reinterpret_cast<AllocationHeader*>((reinterpret_cast<uintptr_t>(ptr) + size + AR_CACHE_LINE_SIZE - 1) & ~(AR_CACHE_LINE_SIZE - 1));
+		}
+		else
+		{
+			header = reinterpret_cast<AllocationHeader*>(static_cast<char*>(ptr) + size);
+		}
+
+		#if AR_BUILD_DEBUG
+			if (header->UserPtr != ptr)
+			{
+				AR_CORE_ASSERT(false, "Memory corruption detected: header user pointer mismatch!");
+				return;
+			}
+		#endif
+
+		if (header->IsAligned)
+		{
+			AR_ALIGNED_FREE(header->OriginalPtr);
+		}
+		else
+		{
+			free(header->OriginalPtr);
+		}
+	}
+
+	allocator& allocator::operator=(const allocator& EASTL_NAME(alloc))
+	{
+		#if EASTL_NAME_ENABLED
+			mpName = alloc.mpName;
+		#endif
+		return *this;
+	}
+
+	const char* allocator::get_name() const
+	{
+		#if EASTL_NAME_ENABLED
+			return mpName;
+		#else
+			return EASTL_ALLOCATOR_DEFAULT_NAME;
+		#endif
+	}
+
+	void allocator::set_name(const char* EASTL_NAME(pName))
+	{
+		#if EASTL_NAME_ENABLED
+			mpName = pName;
+		#endif
+	}
+
+	allocator gDefaultAllocator;
+
+	allocator* GetDefaultAllocator()
+	{
+		return &gDefaultAllocator;
+	}
+
 }

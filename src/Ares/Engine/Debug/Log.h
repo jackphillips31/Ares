@@ -24,7 +24,7 @@ namespace Ares {
 
 }
 
-	// Add AR_LOG_LOCATION to Preprocessor Definitions
+	// Add AR_LOG_LOCATION=1 to Preprocessor Definitions
 	// to enable printing the source location information
 	// from which the log is called.
 
@@ -62,7 +62,7 @@ namespace LogDebug {
 
 }
 
-#ifdef AR_LOG_LOCATION
+#if AR_LOG_LOCATION
 	#define AR_CORE_CRITICAL(...) ::Ares::Log::GetCoreLogger()->critical("{:^40} {:>30}: {}", __FUNCTION__, LogDebug::FormatFileAndLine(LogDebug::ExtractFileName(__FILE__), __LINE__), LogDebug::ToString(__VA_ARGS__))
 	#define AR_CORE_ERROR(...) ::Ares::Log::GetCoreLogger()->error("{:^40} {:>30}: {}", __FUNCTION__, LogDebug::FormatFileAndLine(LogDebug::ExtractFileName(__FILE__), __LINE__), LogDebug::ToString(__VA_ARGS__))
 	#define AR_CORE_WARN(...) ::Ares::Log::GetCoreLogger()->warn("{:^40} {:>30}: {}", __FUNCTION__, LogDebug::FormatFileAndLine(LogDebug::ExtractFileName(__FILE__), __LINE__), LogDebug::ToString(__VA_ARGS__))

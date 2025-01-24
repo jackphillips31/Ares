@@ -1,5 +1,5 @@
 -- template.lua was generated on: 
--- Jan. 20, 2025 - 09:59AM UTC 
+-- Jan. 24, 2025 - 08:50AM UTC 
 workspace "TEMPLATENAME"
 	architecture "x86_64"
 	configurations
@@ -68,7 +68,8 @@ workspace "TEMPLATENAME"
 		}
 		defines
 		{
-			"FMT_UNICODE=0"
+			"FMT_UNICODE=0",
+			"EASTL_USER_DEFINED_ALLOCATOR"
 		}
 		filter "system:windows"
 			systemversion "latest"
@@ -77,15 +78,15 @@ workspace "TEMPLATENAME"
 				"IMGUI_IMPL_OPENGL_LOADER_GLAD"
 			}
 		filter "configurations:Debug"
-			defines "AR_DEBUG"
+			defines "AR_BUILD_DEBUG=1"
 			runtime "Debug"
 			symbols "on"
 		filter "configurations:Release"
-			defines "AR_RELEASE"
+			defines "AR_BUILD_RELEASE=1"
 			runtime "Release"
 			optimize "on"
 		filter "configurations:Dist"
-			defines "AR_DIST"
+			defines "AR_BUILD_DIST=1"
 			runtime "Release"
 			optimize "speed"
 	project "TEMPLATEINTERNALNAME"
@@ -119,7 +120,8 @@ workspace "TEMPLATENAME"
 		}
 		defines
 		{
-			"FMT_UNICODE=0"
+			"FMT_UNICODE=0",
+			"EASTL_USER_DEFINED_ALLOCATOR"
 		}
 		filter "system:windows"
 			systemversion "latest"
@@ -128,14 +130,14 @@ workspace "TEMPLATENAME"
 				"src/%{prj.name}/**.rc"
 			}
 		filter "configurations:Debug"
-			defines "AR_DEBUG"
+			defines "AR_BUILD_DEBUG=1"
 			runtime "Debug"
 			symbols "on"
 		filter "configurations:Release"
-			defines "AR_RELEASE"
+			defines "AR_BUILD_RELEASE=1"
 			runtime "Release"
 			optimize "on"
 		filter "configurations:Dist"
-			defines "AR_DIST"
+			defines "AR_BUILD_DIST=1"
 			runtime "Release"
 			optimize "speed"

@@ -31,7 +31,7 @@ namespace Ares {
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	#ifdef AR_CORE_DEBUG
+	#if AR_BUILD_DEBUG
 		io.ConfigDebugIsDebuggerPresent = true;
 	#endif
 

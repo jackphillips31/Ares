@@ -78,7 +78,8 @@ workspace "Ares"
 
 		defines
 		{
-			"FMT_UNICODE=0"
+			"FMT_UNICODE=0",
+			"EASTL_USER_DEFINED_ALLOCATOR"
 		}
 
 		filter "system:windows"
@@ -90,17 +91,17 @@ workspace "Ares"
 			}
 
 		filter "configurations:Debug"
-			defines "AR_DEBUG"
+			defines "AR_BUILD_DEBUG=1"
 			runtime "Debug"
 			symbols "on"
 
 		filter "configurations:Release"
-			defines "AR_RELEASE"
+			defines "AR_BUILD_RELEASE=1"
 			runtime "Release"
 			optimize "on"
 
 		filter "configurations:Dist"
-			defines "AR_DIST"
+			defines "AR_BUILD_DIST=1"
 			runtime "Release"
 			optimize "speed"
 
@@ -140,7 +141,8 @@ workspace "Ares"
 
 		defines
 		{
-			"FMT_UNICODE=0"
+			"FMT_UNICODE=0",
+			"EASTL_USER_DEFINED_ALLOCATOR"
 		}
 
 		filter "system:windows"
@@ -152,16 +154,16 @@ workspace "Ares"
 			}
 
 		filter "configurations:Debug"
-			defines "AR_DEBUG"
+			defines "AR_BUILD_DEBUG=1"
 			runtime "Debug"
 			symbols "on"
 
 		filter "configurations:Release"
-			defines "AR_RELEASE"
+			defines "AR_BUILD_RELEASE=1"
 			runtime "Release"
 			optimize "on"
 
 		filter "configurations:Dist"
-			defines "AR_DIST"
+			defines "AR_BUILD_DIST=1"
 			runtime "Release"
 			optimize "speed"

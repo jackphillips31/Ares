@@ -3,7 +3,7 @@
 
 #include "Engine/Renderer/Renderer.h"
 
-#ifdef AR_PLATFORM_WINDOWS
+#if AR_PLATFORM_WINDOWS
 #include "Platform/WinAPI/WinOpenGLContext.h"
 #endif
 
@@ -15,7 +15,7 @@ namespace Ares {
 		{
 			case RendererAPI::API::None: AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 			case RendererAPI::API::OpenGL: {
-			#ifdef AR_PLATFORM_WINDOWS
+			#if AR_PLATFORM_WINDOWS
 				return CreateScope<WinOpenGLContext>(window);
 			#else
 				AR_CORE_ASSERT(false, "Unknown platform!");
