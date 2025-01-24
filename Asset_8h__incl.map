@@ -1,0 +1,7 @@
+<map id="Asset.h" name="Asset.h">
+<area shape="rect" id="Node000001" title="Defines the Asset and AssetBase classes and related types for managing assets in the Ares Engine." alt="" coords="90,5,161,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,120,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,33,84,70,80,66,113,29"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="145,79,231,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="138,29,171,66,167,70,134,33"/>
+</map>

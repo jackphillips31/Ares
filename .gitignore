@@ -1,0 +1,22 @@
+# Binaries
+**/bin/
+
+# Visual Studio files and folders
+.vs/
+
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+
+# Specific Files
+/src/Sandbox/imgui.ini
+/src/Sandbox/imgui_log.txt
+**.aps
+**.bak
+/scripts/Win-GenProjects.bat
+/scripts/GenerateTemplate.bat
+
+# Documentation Files
+/docs/dot/
+/docs/html/

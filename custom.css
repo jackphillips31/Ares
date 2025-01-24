@@ -1,0 +1,89 @@
+.title_banner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100px;
+	overflow: hidden;
+}
+
+.banner_image {
+	height: 100%;
+	width: auto;
+}
+
+:root {
+	/* Dark Mode Palette */
+	--Ares_DM_PrimaryText: #e4e1dc;
+	--Ares_DM_SecondaryText: #b2b5b6;
+	--Ares_DM_PrimaryBG: #0A0A0C;
+	--Ares_DM_SecondaryBG: #161618;
+	--Ares_DM_TitleBG: #121214;
+	--Ares_DM_Accent: #9159ff;
+	--Ares_DM_AccentHovered: #bb8dff;
+	--Ares_DM_AccentActive: #582fbc;
+	--Ares_DM_Accent_Dark1: #371294;
+	--Ares_DM_Accent_Light1: #d1beff;
+	--Ares_DM_Accent_Light2: #dfcfff;
+	--Ares_DM_Separator: #343536;
+
+	/* Light Mode Palette */
+	--Ares_LM_PrimaryText: #050505;
+	--Ares_LM_SecondaryText: #0a0a0a;
+	--Ares_LM_PrimaryBG: #f4f5f6;
+	--Ares_LM_SecondaryBG: #f0eeee;
+	--Ares_LM_TitleBG: #e8e6e6;
+	--Ares_LM_Accent: #b572ff;
+	--Ares_LM_AccentHovered: #c7a4f9;
+	--Ares_LM_AccentActive: #9068d1;
+	--Ares_LM_Accent_Light1: #dfcfff;
+	--Ares_LM_Accent_Dark1: #4e22be;
+	--Ares_LM_Accent_Dark2: #371294;
+	--Ares_LM_Separator: #dedede;
+}
+
+html.dark-mode {
+
+	#projectlogo img {
+		content: url("./Ares_Logo_DM.png");
+	}
+
+	.banner_image {
+		content: url("./Ares_Banner_DM.png");
+	}
+
+	--primary-color: var(--Ares_DM_Accent);
+	--primary-dark-color: var(--Ares_DM_AccentActive);
+	--primary-light-color: var(--Ares_DM_AccentHovered);
+	--page-background-color: var(--Ares_DM_PrimaryBG);
+	--page-foreground-color: var(--Ares_DM_PrimaryText);
+	--side-nav-background: var(--Ares_DM_TitleBG);
+	--fragment-background: var(--Ares_DM_SecondaryBG);
+	--separator-color: var(--Ares_DM_Separator);
+	--note-color: var(--Ares_DM_Accent_Dark1);
+	--note-color-dark: var(--Ares_DM_Accent_Light1);
+	--note-color-darker: var(--Ares_DM_Accent_Light2);
+}
+
+html.light-mode {
+
+	#projectlogo img {
+		content: url("./Ares_Logo_LM.png");
+	}
+
+	.banner_image {
+		content: url("./Ares_Banner_LM.png");
+	}
+
+	--primary-color: var(--Ares_LM_Accent);
+	--primary-dark-color: var(--Ares_LM_AccentActive);
+	--primary-light-color: var(--Ares_LM_AccentHovered);
+	--page-background-color: var(--Ares_LM_PrimaryBG);
+	--page-foreground-color: var(--Ares_LM_PrimaryText);
+	--side-nav-background: var(--Ares_LM_TitleBG);
+	--fragment-background: var(--Ares_LM_SecondaryBG);
+	--separator-color: var(--Ares_LM_Separator);
+	--note-color: var(--Ares_LM_Accent_Light1);
+	--note-color-dark: var(--Ares_LM_Accent_Dark1);
+	--note-color-darker: var(--Ares_LM_Accent_Dark2);
+
+}
