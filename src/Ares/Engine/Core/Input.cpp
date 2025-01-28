@@ -5,18 +5,17 @@
 #include "Platform/WinAPI/WinInput.h"
 #endif
 
-namespace Ares {
+namespace Ares::Systems {
 
-	Scope<Input> Input::s_Instance = Input::Create();
-
-	Scope<Input> Input::Create()
+	Scope<Input> Input::Create(Window* window)
 	{
 	#if AR_PLATFORM_WINDOWS
-		return CreateScope<WinInput>();
+		return Scope<WinInput>(new WinInput(window));
 	#else
 		AR_CORE_ASSERT(false, "Unknown Platform!");
-		return nullptr;
+		throw std::runtime_error("Unknown Platform!");
 	#endif
+		return nullptr;
 	}
 
 }

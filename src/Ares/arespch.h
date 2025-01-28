@@ -5,6 +5,8 @@
 #include <EASTL/functional.h>	// Functions
 #include <EASTL/hash_map.h>		// Hash map
 #include <EASTL/queue.h>		// Queue data structure
+#include <EASTL/string.h>		// String
+#include <EASTL/vector.h>		// Vector
 
 // Standard Library
 #include <iostream>				// I/O streams

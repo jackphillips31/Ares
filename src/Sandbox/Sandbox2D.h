@@ -12,7 +12,7 @@
 class Sandbox2D : public Ares::Layer
 {
 public:
-	Sandbox2D();
+	Sandbox2D(Ares::Application& app);
 	virtual ~Sandbox2D() = default;
 
 	virtual void OnAttach() override;
@@ -32,7 +32,9 @@ public:
 	void LoadDefaultTexture();
 
 private:
-	Ares::Window& m_Window;
+	Ares::Application& m_Application;
+	Ares::Systems::Input* m_InputSystem;
+	Ares::Systems::AssetManager* m_AssetManager;
 	ImFont* myFont;
 
 private:

@@ -129,7 +129,7 @@ namespace Ares {
 		if (result.Positions.size() == 0 || result.Indices.size() == 0)
 		{
 			result.IsValid = false;
-			result.Error = "Position vertex data or index data was empty!";
+			result.Error = "Syntax Error: Position vertex data or index data was empty!";
 		}
 		else
 		{

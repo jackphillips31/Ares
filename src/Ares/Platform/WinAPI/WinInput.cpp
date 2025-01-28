@@ -3,30 +3,39 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Window.h"
+#include "Engine/Input/MousePosition.h"
 #include "Platform/WinAPI/WinMouseCodes.h"
 #include "Platform/WinAPI/WinKeyCodes.h"
 
-namespace Ares {
+namespace Ares::Systems {
 
-	bool WinInput::IsKeyPressedImpl(KeyCode keyCode)
+	WinInput::WinInput(Window* window)
 	{
-		auto window = static_cast<HWND>(Application::Get().GetWindow().GetNativeWindow());
-		auto winApiKey = KeyCodeToWinAPIKey(keyCode);
-		auto state = GetAsyncKeyState(winApiKey);
+		m_Window = static_cast<HWND>(window->GetNativeWindow());
+	}
+
+	WinInput::~WinInput()
+	{
+		m_Window = nullptr;
+	}
+
+	bool WinInput::IsKeyPressed(KeyCode key)
+	{
+		uint32_t winApiKey = KeyCodeToWinAPIKey(key);
+		SHORT state = GetAsyncKeyState(winApiKey);
 
 		return (state & 0x8000) != 0;
 	}
 
-	bool WinInput::IsMouseButtonPressedImpl(MouseCode button)
+	bool WinInput::IsMouseButtonPressed(MouseCode button)
 	{
-		auto window = static_cast<HWND>(Application::Get().GetWindow().GetNativeWindow());
-		auto winApiMouse = MouseCodeToWinAPIMouse(button);
-		auto state = GetAsyncKeyState(winApiMouse);
+		uint32_t winApiMouse = MouseCodeToWinAPIMouse(button);
+		SHORT state = GetAsyncKeyState(winApiMouse);
 
 		return (state & 0x8000) != 0;
 	}
 
-	glm::ivec2 WinInput::GetMousePositionImpl()
+	MousePosition WinInput::GetMousePosition()
 	{
 		POINT p;
 
@@ -36,50 +45,26 @@ namespace Ares {
 		}
 		else
 		{
-			AR_CORE_WARN("GetCursorPos failed while trying to get mouse position!");
+			AR_CORE_WARN("GetCursorPos failed while trying to get the mouse position!");
 			return { 0, 0 };
 		}
 	}
 
-	int32_t WinInput::GetMouseXImpl()
+	MousePosition WinInput::GetMouseClientPosition()
 	{
-		glm::ivec2 pos = GetMousePositionImpl();
-		return pos.x;
-	}
-
-	int32_t WinInput::GetMouseYImpl()
-	{
-		glm::ivec2 pos = GetMousePositionImpl();
-		return pos.y;
-	}
-
-	glm::ivec2 WinInput::GetMouseClientPositionImpl()
-	{
-		HWND window = static_cast<HWND>(Application::Get().GetWindow().GetNativeWindow());
 		POINT p;
 
 		if (GetCursorPos(&p))
 		{
-			ScreenToClient(window, &p);
+			if (!m_Window) return { 0, 0 };
+			ScreenToClient(m_Window, &p);
 			return { static_cast<int32_t>(p.x), static_cast<int32_t>(p.y) };
 		}
 		else
 		{
-			AR_CORE_WARN("GetCursorPos failed while trying to get mouse client position!");
+			AR_CORE_WARN("GetCursorPos failed while trying to get the mouse client position!");
 			return { 0, 0 };
 		}
-	}
-
-	int32_t WinInput::GetMouseClientXImpl()
-	{
-		glm::ivec2 pos = GetMouseClientPositionImpl();
-		return pos.x;
-	}
-
-	int32_t WinInput::GetMouseClientYImpl()
-	{
-		glm::ivec2 pos = GetMouseClientPositionImpl();
-		return pos.y;
 	}
 
 }

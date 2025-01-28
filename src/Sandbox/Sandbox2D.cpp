@@ -7,9 +7,13 @@ const uint32_t g_DefaultWhiteTexture = 0xffffffff;
 
 using namespace Ares::ECS;
 
-Sandbox2D::Sandbox2D()
+Sandbox2D::Sandbox2D(Ares::Application& app)
 	: Layer("Sandbox2D"),
-	m_Window(Ares::Application::Get().GetWindow()), myFont(nullptr)
+	m_Application(app),
+	m_InputSystem(app.GetSystem<Ares::Systems::Input>()),
+	m_AssetManager(app.GetSystem<Ares::Systems::AssetManager>()),
+	m_AssetListElement(app),
+	myFont(nullptr)
 {
 	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
 
@@ -90,6 +94,9 @@ void Sandbox2D::OnDetach()
 
 void Sandbox2D::OnUpdate(const Ares::Timestep& ts)
 {
+	if (m_InputSystem->IsKeyPressed(Ares::Key::A))
+		AR_CORE_TRACE("A IS PRESSED!");
+
 	m_FrameBufferElement.OnUpdate(ts);
 
 	m_EntityListElement.OnUpdate(ts);
@@ -194,8 +201,9 @@ void Sandbox2D::CreateQuadMeshEntities()
 
 	if (quadMeshData && quadMeshSize > 0)
 	{
-		Ares::MemoryDataKey meshKey = Ares::MemoryDataProvider::RegisterData(quadMeshData, static_cast<size_t>(quadMeshSize));
-		Ares::Ref<Ares::Asset> quadMeshAsset = Ares::AssetManager::Stage<Ares::MeshData>("QuadMesh", meshKey);
+		//Ares::MemoryDataKey meshKey = Ares::MemoryDataProvider::RegisterData(quadMeshData, static_cast<size_t>(quadMeshSize));
+		//Ares::Ref<Ares::Asset> quadMeshAsset = Ares::AssetManager::Stage<Ares::MeshData>("QuadMesh", meshKey);
+		Ares::Ref<Ares::Asset> quadMeshAsset = m_AssetManager->Stage<Ares::MeshData>("QuadMesh", quadMeshData, quadMeshSize);
 
 		EntityManager* entityManager = m_SandboxScene->GetEntityManager();
 
@@ -232,7 +240,8 @@ void Sandbox2D::CreateQuadMeshEntities()
 		quad3Transform->SetRotation({ 0.0f, 0.0f, 0.0f });
 		m_SquareEntity3.SetName("SquareMesh3");
 
-		Ares::AssetManager::Load(quadMeshAsset);
+		//Ares::AssetManager::Load(quadMeshAsset);
+		m_AssetManager->Load(quadMeshAsset);
 	}
 }
 
@@ -244,8 +253,9 @@ void Sandbox2D::CreateTeapotEntity()
 
 	if (teapotMeshData && teapotMeshSize > 0)
 	{
-		Ares::MemoryDataKey teapotDataKey = Ares::MemoryDataProvider::RegisterData(teapotMeshData, static_cast<size_t>(teapotMeshSize));
-		Ares::Ref<Ares::Asset> teapotMeshAsset = Ares::AssetManager::Stage<Ares::MeshData>("TeapotMesh", teapotDataKey);
+		//Ares::MemoryDataKey teapotDataKey = Ares::MemoryDataProvider::RegisterData(teapotMeshData, static_cast<size_t>(teapotMeshSize));
+		//Ares::Ref<Ares::Asset> teapotMeshAsset = Ares::AssetManager::Stage<Ares::MeshData>("TeapotMesh", teapotDataKey);
+		Ares::Ref<Ares::Asset> teapotMeshAsset = m_AssetManager->Stage<Ares::MeshData>("TeapotMesh", teapotMeshData, teapotMeshSize);
 
 		EntityManager* entityManager = m_SandboxScene->GetEntityManager();
 
@@ -258,7 +268,8 @@ void Sandbox2D::CreateTeapotEntity()
 		teapotTransform->SetScale({ 0.5f, 0.5f, 0.5f });
 		m_TeapotEntity.SetName("Teapot");
 
-		Ares::AssetManager::Load(teapotMeshAsset);
+		//Ares::AssetManager::Load(teapotMeshAsset);
+		m_AssetManager->Load(teapotMeshAsset);
 	}
 }
 
@@ -280,10 +291,11 @@ void Sandbox2D::LoadShaderProgram()
 
 	if (shaderData && shaderSize > 0)
 	{
-		Ares::MemoryDataKey shaderKey = Ares::MemoryDataProvider::RegisterData(shaderData, static_cast<size_t>(shaderSize));
-		Ares::Ref<Ares::Asset> shaderProgram = Ares::AssetManager::Stage<Ares::ShaderProgram>("ShaderProgram", shaderKey);
+		//Ares::MemoryDataKey shaderKey = Ares::MemoryDataProvider::RegisterData(shaderData, static_cast<size_t>(shaderSize));
+		//Ares::Ref<Ares::Asset> shaderProgram = Ares::AssetManager::Stage<Ares::ShaderProgram>("ShaderProgram", shaderKey);
+		Ares::Ref<Ares::Asset> shaderProgram = m_AssetManager->Stage<Ares::ShaderProgram>("ShaderProgram", shaderData, shaderSize);
 
-		Ares::AssetManager::Load(shaderProgram,
+		m_AssetManager->Load(shaderProgram,
 			[SE1 = m_SquareEntity, SE2 = m_SquareEntity2, SE3 = m_SquareEntity3, TE1 = m_TeapotEntity, scene = m_SandboxScene.get()](const Ares::Ref<Ares::Asset>& asset) {
 				if (asset->GetState() == Ares::AssetState::Loaded)
 				{
@@ -312,12 +324,12 @@ void Sandbox2D::LoadDefaultTexture()
 
 	if (textureData && textureSize > 0)
 	{
-		Ares::MemoryDataKey textureKey = Ares::MemoryDataProvider::RegisterData(textureData, static_cast<size_t>(textureSize));
-		Ares::MemoryDataKey whiteTextureKey = Ares::MemoryDataProvider::RegisterData(&defaultWhite, sizeof(uint32_t));
-		Ares::Ref<Ares::Asset> defaultTexture = Ares::AssetManager::Stage<Ares::Texture>("DefaultTexture", textureKey);
-		Ares::Ref<Ares::Asset> defaultWhiteTexture = Ares::AssetManager::Stage<Ares::Texture>("DefaultWhite", whiteTextureKey);
+		//Ares::MemoryDataKey textureKey = Ares::MemoryDataProvider::RegisterData(textureData, static_cast<size_t>(textureSize));
+		//Ares::MemoryDataKey whiteTextureKey = Ares::MemoryDataProvider::RegisterData(&defaultWhite, sizeof(uint32_t));
+		Ares::Ref<Ares::Asset> defaultTexture = m_AssetManager->Stage<Ares::Texture>("DefaultTexture", textureData, textureSize);
+		Ares::Ref<Ares::Asset> defaultWhiteTexture = m_AssetManager->Stage<Ares::Texture>("DefaultWhite", &defaultWhite, sizeof(uint32_t));
 
-		Ares::AssetManager::Load({defaultTexture, defaultWhiteTexture},
+		m_AssetManager->Load({defaultTexture, defaultWhiteTexture},
 			[SE1 = m_SquareEntity, SE2 = m_SquareEntity2, SE3 = m_SquareEntity3, TE1 = m_TeapotEntity, scene = m_SandboxScene.get()](const Ares::Ref<Ares::Asset>& asset) {
 				if (asset->GetState() == Ares::AssetState::Loaded)
 				{

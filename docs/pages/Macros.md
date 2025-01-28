@@ -672,10 +672,10 @@ General-purpose macros for simplifying common tasks.<br>
 @details This group contains a collection of versatile and reusable macros that help simplify common programming tasks. These macros may include functionality for string manipulation, mathematical calculations, type checks, and other helper utilities.<br><br>They are designed to improve code readability and reduce redundancy by encapsulating frequently used patterns into concise macro definitions.
 
 @section list_utility_defines List of Macros
-@ref BIT<br>
-@ref AR_BIND_EVENT_FN<br>
-@ref AR_STATIC_BIND_EVENT_FN<br>
-@ref AR_BIND_ASSET_FN<br>
+@ref BIT <br>
+@ref AR_BIND_EVENT_FN <br>
+@ref AR_STATIC_BIND_EVENT_FN <br>
+@ref AR_BIND_ASSET_FN <br>
 @ref AR_STATIC_BIND_ASSET_FN
 
 @subsection BIT

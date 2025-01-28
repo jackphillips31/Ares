@@ -45,9 +45,8 @@ int EntryPoint(int argc, char** argv)
 	}
 	catch (std::exception& e)
 	{
-		AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {}", e.what());
+		AR_CORE_EXCEPTION(e.what());
 		if (app) delete app;
-		__debugbreak();
 		return 1;
 	}
 

@@ -2,6 +2,7 @@
 #include "Engine/Core/Application.h"
 
 #include "Engine/Core/Input.h"
+#include "Engine/Core/Layer.h"
 #include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
@@ -9,7 +10,7 @@
 #include "Engine/Data/AssetManager.h"
 #include "Engine/Events/EventQueue.h"
 #include "Engine/Events/ApplicationEvent.h"
-#include "Engine/Layers/ImGuiLayer.h"
+#include "Engine/ImGui/ImGuiContext.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/RenderCommand.h"
 
@@ -18,8 +19,14 @@ namespace Ares {
 	Application* Application::s_Instance = nullptr;
 	
 	Application::Application(const ApplicationSettings& settings)
-		: m_Settings(settings)
+		: m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr)
 	{
+		if (s_Instance != nullptr)
+		{
+			AR_CORE_ASSERT(false, "Application already exists!");
+			throw std::exception("Application already exists!");
+		}
+
 		s_Instance = this;
 
 		m_LastFrameTime = std::chrono::duration<float>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -35,10 +42,12 @@ namespace Ares {
 		);
 
 		m_Window = Window::Create(windowProps);
+		m_ImGuiContext = ImGuiContext::Create();
 
-		ThreadPool::Init(settings.ThreadCount);
+		RegisterSystem<Systems::Input>(m_Window.get());
+		RegisterSystem<Systems::ThreadPool>(settings.ThreadCount);
+		RegisterSystem<Systems::AssetManager>(GetSystem<Systems::ThreadPool>());
 		EventQueue::Init();
-		AssetManager::Init();
 		Renderer::Init();
 		MainThreadQueue::Init();
 
@@ -46,18 +55,16 @@ namespace Ares {
 		EventQueue::AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		EventQueue::AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
 
-		m_ImGuiLayer = ImGuiLayer::Create();
-		PushOverlay(m_ImGuiLayer);
 	}
 
 	Application::~Application()
 	{
 		MainThreadQueue::Shutdown();
 		Renderer::Shutdown();
-		Input::Shutdown();
-		AssetManager::Shutdown();
 		EventQueue::Shutdown();
-		ThreadPool::Shutdown();
+		UnregisterSystem<Systems::AssetManager>();
+		UnregisterSystem<Systems::ThreadPool>();
+		UnregisterSystem<Systems::Input>();
 	}
 
 	void Application::PushLayer(Ref<Layer> layer)
@@ -70,6 +77,18 @@ namespace Ares {
 	{
 		m_LayerStack.PushOverlay(overlay);
 		overlay->OnAttach();
+	}
+
+	void Application::PopLayer(Ref<Layer> layer)
+	{
+		m_LayerStack.PopLayer(layer);
+		layer->OnDetach();
+	}
+
+	void Application::PopOverlay(Ref<Layer> overlay)
+	{
+		m_LayerStack.PopOverlay(overlay);
+		overlay->OnDetach();
 	}
 
 	void Application::Run()
@@ -85,11 +104,13 @@ namespace Ares {
 				m_LastFrameTime = currentTime;
 
 				m_Window->OnUpdate();
-				AssetManager::OnUpdate();
 				MainThreadQueue::OnUpdate();
 
 				if (!m_Minimized)
 				{
+					for (std::type_index& systemType : m_SystemOrder)
+						m_Systems[systemType]->OnUpdate(timestep);
+
 					for (Ref<Layer> layer : m_LayerStack)
 						layer->OnUpdate(timestep);
 				}
@@ -109,10 +130,10 @@ namespace Ares {
 			for (Ref<Layer> layer : m_LayerStack)
 				layer->OnRender();
 
-			m_ImGuiLayer->Begin();
+			m_ImGuiContext->Begin();
 			for (Ref<Layer> layer : m_LayerStack)
 				layer->OnImGuiRender();
-			m_ImGuiLayer->End();
+			m_ImGuiContext->End();
 
 			m_Window->SwapBuffers();
 		}

@@ -1005,6 +1005,7 @@ INPUT                   = ./MainPage.md \
                           ../src/Ares/Engine/Core/Input.h \
                           ../src/Ares/Engine/Core/Layer.h \
                           ../src/Ares/Engine/Core/MainThreadQueue.h \
+                          ../src/Ares/Engine/Core/System.h \
                           ../src/Ares/Engine/Core/ThreadPool.h \
                           ../src/Ares/Engine/Core/Timestep.h \
                           ../src/Ares/Engine/Core/Window.h \
@@ -1014,7 +1015,9 @@ INPUT                   = ./MainPage.md \
                           ../src/Ares/Engine/Data/MemoryDataProvider.h \
                           ../src/Ares/Engine/Events/Event.h \
                           ../src/Ares/Engine/Events/EventQueue.h \
-                          ../src/Ares/Engine/Events/KeyCodes.h
+                          ../src/Ares/Engine/Input/KeyCodes.h \
+                          ../src/Ares/Engine/Input/MouseCodes.h \
+                          ../src/Ares/Engine/Input/MousePosition.h 
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -2503,7 +2506,7 @@ PERLMOD_MAKEVAR_PREFIX =
 # C-preprocessor directives found in the sources and include files.
 # The default value is: YES.
 
-ENABLE_PREPROCESSING   = YES
+ENABLE_PREPROCESSING   = NO
 
 # If the MACRO_EXPANSION tag is set to YES, Doxygen will expand all macro names
 # in the source code. If set to NO, only conditional compilation will be

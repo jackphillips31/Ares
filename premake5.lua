@@ -154,16 +154,31 @@ workspace "Ares"
 			}
 
 		filter "configurations:Debug"
-			defines "AR_BUILD_DEBUG=1"
+			defines 
+			{
+				"AR_BUILD_DEBUG=1",
+				"AR_BUILD_RELEASE=0",
+				"AR_BUILD_DIST=0"
+			}
 			runtime "Debug"
 			symbols "on"
 
 		filter "configurations:Release"
-			defines "AR_BUILD_RELEASE=1"
+			defines
+			{
+				"AR_BUILD_DEBUG=0",
+				"AR_BUILD_RELEASE=1",
+				"AR_BUILD_DIST=0"
+			}
 			runtime "Release"
 			optimize "on"
 
 		filter "configurations:Dist"
-			defines "AR_BUILD_DIST=1"
+			defines 
+			{
+				"AR_BUILD_DEBUG=0",
+				"AR_BUILD_RELEASE=0",
+				"AR_BUILD_DIST=1"
+			}
 			runtime "Release"
 			optimize "speed"

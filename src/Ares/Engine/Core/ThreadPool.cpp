@@ -3,76 +3,69 @@
 
 #include "Engine/Core/Application.h"
 
-namespace Ares {
+namespace Ares::Systems {
 
-	std::vector<std::thread> ThreadPool::s_Workers;
-	eastl::queue<std::function<void()>> ThreadPool::s_TaskQueue;
-	std::mutex ThreadPool::s_QueueMutex;
-	std::mutex ThreadPool::s_InitMutex;
-	std::condition_variable ThreadPool::s_Condition;
-	std::atomic<bool> ThreadPool::s_ShutdownRequested = false;
-	bool ThreadPool::s_IsInitialized = false;
-
-	void ThreadPool::Init(size_t threadCount)
+	Scope<ThreadPool> ThreadPool::Create(size_t threadCount)
 	{
-		std::lock_guard<std::mutex> lock(s_InitMutex);
-		if (s_IsInitialized)
-			return;
+		return Scope<ThreadPool>(new ThreadPool(threadCount));
+	}
 
-		AR_CORE_INFO("Initializing ThreadPool");
-		s_IsInitialized = true;
+	ThreadPool::ThreadPool(size_t threadCount)
+		: m_ShutdownRequested(false)
+	{
+		std::unique_lock lock(m_WorkerMutex);
 
-		s_ShutdownRequested = false;
-		s_Workers.reserve(threadCount);
-
-		Application& app = Application::Get();
+		m_Workers.reserve(threadCount);
 
 		for (size_t i = 0; i < threadCount; i++)
 		{
-			s_Workers.emplace_back([i] {
-				while (true)
+			m_Workers.emplace_back([this, i]
 				{
-					std::function<void()> task;
+					while (true)
 					{
-						std::unique_lock<std::mutex> lock(s_QueueMutex);
-						s_Condition.wait(lock, [] {
-							return s_ShutdownRequested || !s_TaskQueue.empty();
-						});
+						eastl::function<void()> task;
+						{
+							std::unique_lock lock(m_QueueMutex);
+							m_Condition.wait(lock, [this]
+								{
+									return m_ShutdownRequested || !m_TaskQueue.empty();
+								});
 
-						if (s_ShutdownRequested && s_TaskQueue.empty())
-							return;
+							if (m_ShutdownRequested && m_TaskQueue.empty())
+								return;
 
-						task = std::move(s_TaskQueue.front());
-						s_TaskQueue.pop();
+							task = eastl::move(m_TaskQueue.front());
+							m_TaskQueue.pop();
+						}
+						task();
 					}
-					task();
-				}
-			});
-		};
+				});
+		}
 	}
 
-	void ThreadPool::Shutdown()
+	ThreadPool::~ThreadPool()
 	{
-		std::lock_guard<std::mutex> lock(s_InitMutex);
-		if (!s_IsInitialized)
-			return;
-		s_IsInitialized = false;
+		m_ShutdownRequested = true;
+		m_Condition.notify_all();
 
 		{
-			std::lock_guard<std::mutex> lock(s_QueueMutex);
-			s_ShutdownRequested = true;
+			std::unique_lock lock(m_WorkerMutex);
+
+			for (std::thread& thread : m_Workers)
+			{
+				if (thread.joinable())
+					thread.join();
+			}
+
+			m_Workers.clear();
 		}
 
-		s_Condition.notify_all();
-		for (std::thread& worker : s_Workers)
 		{
-			if (worker.joinable())
-				worker.join();
-		}
+			std::unique_lock lock(m_QueueMutex);
 
-		s_Workers.clear();
-		while (!s_TaskQueue.empty())
-			s_TaskQueue.pop();
+			while (!m_TaskQueue.empty())
+				m_TaskQueue.pop();
+		}
 	}
 
 }

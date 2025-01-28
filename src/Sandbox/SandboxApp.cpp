@@ -5,20 +5,6 @@
 
 #include "assets/resource.h"
 
-class SandboxApp : public Ares::Application
-{
-public:
-	SandboxApp(const Ares::ApplicationSettings& settings)
-		: Application(settings)
-	{
-		PushLayer(Ares::CreateRef<Sandbox2D>());
-	}
-	~SandboxApp()
-	{
-
-	}
-};
-
 Ares::Application* Ares::CreateApplication()
 {
 	int32_t appIcon = IDI_ICON1;
@@ -28,5 +14,8 @@ Ares::Application* Ares::CreateApplication()
 	settings.Icon = &appIcon;
 	settings.ThreadCount = 4;
 
-	return new SandboxApp(settings);
+	Ares::Application* app = new Application(settings);
+	app->PushLayer(Ares::CreateRef<Sandbox2D>(*app));
+
+	return app;
 }

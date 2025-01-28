@@ -2,15 +2,18 @@
  * @file KeyCodes.h
  * @brief Contains the key codes enumeration and key constants for input handling.
  * 
- * @details This file defines the KeyCode enum class that lists all the key codes used
- * by the application. These key codes are based on GLFW and are mapped to individual
- * keys on the keyboard. The KeyCode enum class allows for easy integration with input
- * handling systems in the Ares engine. Additionally, key constants are provided for more
- * concise access to specific keys.
+ * @details This file defines the [KeyCode](#Ares::KeyCode) enum class that lists all
+ * the key codes used by the application. These key codes are based on GLFW and are
+ * mapped to individual keys on the keyboard. The [KeyCode](#Ares::KeyCode) enum class
+ * allows for easy integration with the [input polling system](#Ares::Systems::Input)
+ * in the Ares engine. Additionally, key constants are provided for more concise
+ * access to specific keys.
  * 
- * The KeyCode enum is used throughout the engine to represent key presses.
- * These key codes are also mapped to key event processing logic and may be used
- * for user input handling in various systems like game controls, menus, etc.
+ * The [KeyCode](#Ares::KeyCode) enum is used throughout the engine to represent
+ * key presses. These key codes are also mapped to key event processing logic and
+ * may be used for user input handling in various systems like game controls, menus, etc.
+ * 
+ * @see [Input](#Ares::Systems::Input)
  */
 #pragma once
 
@@ -22,12 +25,13 @@ namespace Ares {
 	 * 
 	 * @details This enum defines all the key codes for the keyboard, including
 	 * letters, numbers, function keys, control keys, and keypad keys. The
-	 * key codes are designed to work with the Ares input system for easy
-	 * mapping and event detection.
+	 * key codes are designed to work with the [Input](#Ares::Systems::Input)
+	 * system for easy mapping and event detection.
 	 */
 	enum class KeyCode : uint16_t
 	{
 		// From glfw3.h
+		Unknown = 0,		/**< @htmlonly Key is unknown. @endhtmlonly */
 		Space = 32,
 		Apostrophe = 39,	/**< ``'`` key */
 		Comma = 44,			/**< `,` key */
@@ -168,13 +172,13 @@ namespace Ares {
 	
 	/**
 	 * @anchor keycode_ostream_operator
-	 * @brief Overloads the stream insertion operator for KeyCode enum.
+	 * @brief Overloads the stream insertion operator for the KeyCode enum.
 	 * 
 	 * @details This function allows printing of the KeyCode values as integers.
 	 * It is useful for debugging and logging key codes.
 	 * 
 	 * @param os The output stream to insert the key code into.
-	 * @param keyCode The key code to be printed.
+	 * @param keyCode The key code to be added to the stream.
 	 * @return The output stream with the key code inserted.
 	 */
 	inline std::ostream& operator<<(std::ostream& os, KeyCode keyCode)

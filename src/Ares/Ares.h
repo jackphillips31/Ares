@@ -62,7 +62,6 @@
  * 
  * @section imgui ImGui Integration
  * - ImGuiElement.h: Base class for custom ImGui elements.
- * - ImGuiLayer.h: Layer for integrating ImGui into the Ares engine.
  * 
  * @section renderer Renderer
  * - Renderer.h: Main rendering interface and setup.
@@ -114,13 +113,14 @@
 #include "Engine/Events/AssetEvent.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Events/EventQueue.h"
-#include "Engine/Events/KeyCodes.h"
 #include "Engine/Events/KeyEvent.h"
-#include "Engine/Events/MouseCodes.h"
 #include "Engine/Events/MouseEvent.h"
 
 #include "Engine/ImGui/ImGuiElement.h"
-#include "Engine/Layers/ImGuiLayer.h"
+
+#include "Engine/Input/KeyCodes.h"
+#include "Engine/Input/MouseCodes.h"
+#include "Engine/Input/MousePosition.h"
 
 //----------------- RENDERER ------------------
 //---------------------------------------------

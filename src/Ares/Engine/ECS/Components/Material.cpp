@@ -1,7 +1,7 @@
 #include <arespch.h>
 #include "Engine/ECS/Components/Material.h"
 
-#include "Engine/Data/AssetManager.h"
+#include "Engine/Data/Asset.h"
 #include "Engine/Renderer/Assets/Texture.h"
 #include "Engine/Renderer/Assets/Shader.h"
 
@@ -45,7 +45,7 @@ namespace Ares::ECS::Components {
 	{
 		std::shared_lock lock(m_Mutex);
 		if (m_ShaderAsset != nullptr)
-			return m_ShaderAsset->GetName();
+			return m_ShaderAsset->GetName().c_str();
 
 		return "NULL";
 	}
@@ -131,13 +131,13 @@ namespace Ares::ECS::Components {
 		std::shared_lock lock(m_Mutex);
 		if (m_ShaderAsset != nullptr && m_ShaderAsset->GetState() == AssetState::Staged)
 		{
-			AssetManager::Load(m_ShaderAsset);
+			m_ShaderAsset->Load();
 		}
 		for (auto& texture : m_TextureAssets)
 		{
 			if (texture.second != nullptr && texture.second->GetState() == AssetState::Staged)
 			{
-				AssetManager::Load(texture.second);
+				m_ShaderAsset->Load();
 			}
 		}
 	}

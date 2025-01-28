@@ -7,15 +7,20 @@
  * rendering, thread pool, and asset management.
  */
 #pragma once
+#include <EASTL/hash_map.h>
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
+#include "Engine/Core/System.h"
+#include "Engine/Core/Utility.h"
 
 int EntryPoint(int argc, char** argv);
 
 namespace Ares {
 
+	class AppSystem;
 	class Event;
 	class EventQueue;
+	class ImGuiContext;
 	class ImGuiLayer;
 	class Layer;
 	class Window;
@@ -37,7 +42,7 @@ namespace Ares {
 		uint32_t Width = 1280;									///< The width of the application window in pixels.
 		uint32_t Height = 720;									///< The height of the application window in pixels.
 		uint32_t UpdatesPerSecond = 120;						///< The update rate (ticks per second).
-		uint8_t ThreadCount = 4;								///< Number of worker threads in the ThreadPool.
+		uint8_t ThreadCount = 4;								///< Number of worker threads in the Application's ThreadPool.
 
 		uint16_t WindowStyle = WindowSettings::DefaultWindow;	///< Style flags for the window.
 		void* Icon = nullptr;									///< Pointer to the window icon resource.
@@ -52,6 +57,7 @@ namespace Ares {
 		 * @param name The name of the application (default: `"Ares Engine"`).
 		 * @param width The width of the window (default: `1280`).
 		 * @param height The height of the window (default: `720`).
+		 * @param threadCount The number of worker threads in the Application's ThreadPool (default: `hardware_concurrency()`).
 		 * @param windowStyle The window style, represented by a WindowSettings constant (default: `WindowSettings::DefaultWindow`).
 		 * @param icon A pointer to the application icon (default: `nullptr`).
 		 */
@@ -59,9 +65,10 @@ namespace Ares {
 			const std::string& name = "Ares Engine",
 			uint32_t width = 1280,
 			uint32_t height = 720,
+			uint8_t threadCount = std::thread::hardware_concurrency(),
 			uint16_t windowStyle = WindowSettings::DefaultWindow,
 			void* icon = nullptr
-		) : Name(name), Width(width), Height(height), WindowStyle(windowStyle), Icon(icon)
+		) : Name(name), Width(width), Height(height), ThreadCount(threadCount), WindowStyle(windowStyle), Icon(icon)
 		{
 		}
 	};
@@ -104,6 +111,20 @@ namespace Ares {
 		void PushOverlay(Ref<Layer> overlay);
 
 		/**
+		 * @brief Removes a layer from the application.
+		 * 
+		 * @param layer The layer to remove.
+		 */
+		void PopLayer(Ref<Layer> layer);
+
+		/**
+		 * @brief Removes an overlay from the application.
+		 * 
+		 * @param overlay The overlay to remove.
+		 */
+		void PopOverlay(Ref<Layer> overlay);
+
+		/**
 		 * @brief Retrieves the application window.
 		 * 
 		 * @return A reference to the Window object.
@@ -116,6 +137,9 @@ namespace Ares {
 		 * @return A reference to the active Application object.
 		 */
 		inline static Application& Get() { return *s_Instance; }
+
+		template <typename SystemType>
+		SystemType* GetSystem();
 
 	private:
 		/**
@@ -145,16 +169,24 @@ namespace Ares {
 		 * @return `true` if the event is handled; otherwise, `false`.
 		 */
 		bool OnWindowResize(WindowResizeEvent& e);
+
+		template <typename SystemType, typename... Args>
+		bool RegisterSystem(Args&&... args);
+
+		template <typename SystemType>
+		void UnregisterSystem();
 	
 	private:
 		ApplicationSettings m_Settings;		// Application configuration settings.
 		Scope<Window> m_Window;				// The main application window.
-		Ref<ImGuiLayer> m_ImGuiLayer;		// ImGui overlay for debugging/UI.
+		Scope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
 		bool m_Running = true;				// Flag to indicate if the application is running.
 		bool m_Minimized = false;			// Flag to indicate if the application is minimized.
 		LayerStack m_LayerStack;			// Stack of active layers in the application.
 		double m_LastFrameTime = 0.0f;		// Timestamp of the last frame update.
 
+		eastl::hash_map<std::type_index, Scope<Internal::System>> m_Systems;
+		eastl::vector<std::type_index> m_SystemOrder;
 	private:
 		static Application* s_Instance;		// Static reference to the active Application instance.
 
@@ -188,5 +220,43 @@ namespace Ares {
 	 * @return A pointer to the created Application instance.
 	 */
 	Application* CreateApplication();
+
+	template <typename SystemType, typename... Args>
+	bool Application::RegisterSystem(Args&&... args)
+	{
+		if (m_Systems[typeid(SystemType)] = SystemType::Create(std::forward<Args>(args)...))
+		{
+			m_SystemOrder.emplace_back(typeid(SystemType));
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template <typename SystemType>
+	SystemType* Application::GetSystem()
+	{
+		auto it = m_Systems.find(typeid(SystemType));
+		if (it != m_Systems.end())
+			return static_cast<SystemType*>(it->second.get());
+		else
+			return nullptr;
+	}
+
+	template <typename SystemType>
+	void Application::UnregisterSystem()
+	{
+		auto it = m_Systems.find(typeid(SystemType));
+		if (it != m_Systems.end())
+		{
+			it->second.reset();
+			m_Systems.erase(it);
+		}
+		auto orderIt = std::find(m_SystemOrder.begin(), m_SystemOrder.end(), typeid(SystemType));
+		if (orderIt != m_SystemOrder.end())
+		{
+			m_SystemOrder.erase(orderIt);
+		}
+	}
 
 }

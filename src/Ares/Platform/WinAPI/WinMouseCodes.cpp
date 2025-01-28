@@ -1,51 +1,41 @@
 #include <arespch.h>
 #include "Platform/WinAPI/WinMouseCodes.h"
 
-#include "Engine/Events/MouseCodes.h"
+#include "Engine/Input/MouseCodes.h"
 
 namespace Ares {
 
-	static std::unordered_map<uint32_t, MouseCode> WinMouseMap = {
-		{WM_LBUTTONDOWN, MouseCode::Button0},
-		{WM_LBUTTONUP, MouseCode::Button0},
-		{WM_RBUTTONDOWN, MouseCode::Button1},
-		{WM_RBUTTONUP, MouseCode::Button1},
-		{WM_MBUTTONDOWN, MouseCode::Button2},
-		{WM_MBUTTONUP, MouseCode::Button2},
-		{WM_XBUTTONDOWN, MouseCode::Button3},
-		{WM_XBUTTONUP, MouseCode::Button3}
-	};
-
-	static std::unordered_map<MouseCode, uint32_t> ReversedWinMouseMap = {
-		{MouseCode::Button0, WM_LBUTTONDOWN},
-		{MouseCode::Button1, WM_RBUTTONDOWN},
-		{MouseCode::Button2, WM_MBUTTONDOWN},
-		{MouseCode::Button3, WM_XBUTTONDOWN}
-	};
-
 	MouseCode WinAPIMouseToMouseCode(uint32_t winApiMouse)
 	{
-		auto it = WinMouseMap.find(winApiMouse);
-		if (it != WinMouseMap.end())
+		switch (winApiMouse)
 		{
-			return it->second;
+		case VK_LBUTTON: return MouseCode::Button1;
+		case VK_RBUTTON: return MouseCode::Button2;
+		case VK_MBUTTON: return MouseCode::Button3;
+		case VK_XBUTTON1: return MouseCode::ButtonX1;
+		case VK_XBUTTON2: return MouseCode::ButtonX2;
+		default:
+		{
+			AR_CORE_WARN("Mouse Code not found.");
+			return MouseCode::Unknown;
 		}
-		else
-		{
-			return MouseCode::Button7;
 		}
 	}
 
 	uint32_t MouseCodeToWinAPIMouse(MouseCode mouseCode)
 	{
-		auto it = ReversedWinMouseMap.find(mouseCode);
-		if (it != ReversedWinMouseMap.end())
+		switch (mouseCode)
 		{
-			return it->second;
-		}
-		else
+		case MouseCode::Button1: return VK_LBUTTON;
+		case MouseCode::Button2: return VK_RBUTTON;
+		case MouseCode::Button3: return VK_MBUTTON;
+		case MouseCode::ButtonX1: return VK_XBUTTON1;
+		case MouseCode::ButtonX2: return VK_XBUTTON2;
+		default:
 		{
+			AR_CORE_WARN("Mouse Code not found.");
 			return 0;
+		}
 		}
 	}
 

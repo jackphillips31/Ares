@@ -1,9 +1,11 @@
 #include <arespch.h>
 #include "Engine/Data/AssetManager.h"
 
+#include <EASTL/functional.h>
+
+#include "Engine/Core/Application.h"
 #include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
-#include "Engine/Core/Utility.h"
 #include "Engine/Data/DataBuffer.h"
 #include "Engine/Data/FileIO.h"
 #include "Engine/Data/MemoryDataProvider.h"
@@ -16,150 +18,79 @@
 #include "Engine/Renderer/Assets/Shader.h"
 #include "Engine/Renderer/Assets/Texture.h"
 
-namespace Ares {
+namespace Ares::Systems {
 
-	void AssetManager::Init()
+	Scope<AssetManager> AssetManager::Create(Systems::ThreadPool* threadPool)
 	{
-		AR_CORE_INFO("Initializing AssetManager");
-		Shutdown();
+		return Scope<AssetManager>(new AssetManager(threadPool));
 	}
 
-	void AssetManager::Shutdown()
+	AssetManager::AssetManager(Systems::ThreadPool* threadPool)
+		: m_NextAssetId(1), m_NextListenerId(1), m_ThreadPool(threadPool), m_MemoryDataProvider()
 	{
-		// Clear the asset cache
-		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			s_AssetCache.clear();
-			s_NextAssetId = 1;
-		}
-
-		// Clear secondary maps
-		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			s_NameIdMap.clear();
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_HashIdMutex);
-			s_HashIdMap.clear();
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
-			s_TypeIdMap.clear();
-		}
-
-		// Clear callback queue
-		{
-			std::lock_guard<std::mutex> lock(s_CallbackQueueMutex);
-			while (!s_CallbackQueue.empty()) s_CallbackQueue.pop();
-		}
-
-		// Clear listener callback queue
-		{
-			std::lock_guard<std::mutex> lock(s_ListenerCallbackQueueMutex);
-			while (!s_ListenerCallbackQueue.empty()) s_ListenerCallbackQueue.pop();
-		}
-
-		// Clear all listeners
-		{
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
-			s_Listeners.clear();
-			s_GlobalListeners.clear();
-		}
+		m_ListenerOrder.reserve(100);
 	}
 
-	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const std::string& name, const std::string& filepath, const std::vector<Ref<Asset>>& dependencies, const MemoryDataKey dataKey)
+	AssetManager::~AssetManager()
 	{
-		if (filepath.empty() && dependencies.size() == 0 && dataKey == 0)
 		{
-			AR_CORE_ASSERT(false, "Asset needs either filepath, dependencies or raw data to be staged!");
-		}
-
-		// Convert dependencies into IDs
-		std::vector<uint32_t> dependencyIds;
-		for (const Ref<Asset>& dep : dependencies)
-		{
-			dependencyIds.push_back(dep->GetAssetId());
-		}
-
-		// Compute content hash and check cache
-		Ref<Asset> asset = nullptr;
-		const size_t contentHash = GetHash(typeid(AssetType), filepath, dependencyIds, dataKey);
-		asset = FindExistingAsset(contentHash);
-		if (asset)
-			return asset;
-
-		// Ensure unique asset name
-		std::string assetName = name;
-		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			while (s_NameIdMap[assetName] != 0)
-				assetName = Utility::IncrementStringSuffix(assetName);
-		}
-
-		// Create and initialize the asset
-		const uint32_t currentId = s_NextAssetId++;
-		asset = Asset::Create(typeid(AssetType), AssetState::Staged, filepath, dependencyIds, dataKey);
-		asset->SetName(assetName);
-		asset->SetAssetId(currentId);
-
-		// Update maps for name, hash, and type associations
-		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			s_NameIdMap[assetName] = currentId;
+			std::unique_lock lock(m_CacheMutex);
+			m_AssetCache.clear();
 		}
 		{
-			std::lock_guard<std::mutex> lock(s_HashIdMutex);
-			s_HashIdMap[contentHash] = currentId;
+			std::unique_lock lock(m_MapMutex);
+			m_NameIdMap.clear();
+			m_HashIdMap.clear();
 		}
 		{
-			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
-			s_TypeIdMap[typeid(AssetType)] = currentId;
+			std::unique_lock lock1(m_ReadCallbackMutex);
+			std::unique_lock lock2(m_WriteCallbackMutex);
+			while (!m_ReadCallbackQueue.empty()) m_ReadCallbackQueue.pop();
+			while (!m_WriteCallbackQueue.empty()) m_WriteCallbackQueue.pop();
 		}
-
-		// Add asset to cache
 		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			s_AssetCache[currentId] = asset;
+			std::unique_lock lock(m_ListenerMutex);
+			m_Listeners.clear();
+			m_GlobalListeners.clear();
+			m_ListenerOrder.clear();
+			m_ListenerNameMap.clear();
 		}
-
-		// Dispatch Event, notify listeners, and return
-		DispatchAssetEvent<AssetStagedEvent>(asset);
-		return asset;
 	}
 
 	void AssetManager::Unstage(const Ref<Asset>& asset)
 	{
+#if AR_BUILD_DEBUG || AR_BUILD_RELEASE
 		// Check for references outside AssetManager
 		if (asset.use_count() > 1)
 		{
-			AR_CORE_WARN("Asset: {} has {} reference(s) outside Asset Cache!", asset->GetName(), asset.use_count() - 1);
+			AR_CORE_WARN("Asset: {} has {} reference(s) outside the Asset Cache!", asset->GetName(), asset.use_count() - 1);
 		}
 
 		// Check to see if asset has been unloaded first
-		if (asset->GetAsset() != nullptr)
+		if (asset->GetState() == AssetState::Loaded)
 		{
 			AR_CORE_WARN("Asset: {} has not been unloaded! Current State: {} - Asset will be removed regardless...", asset->GetName(), asset->GetStateString());
+			Unload(asset);
 		}
+#endif
 
 		// Remove from secondary lookup maps
 		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			s_NameIdMap.erase(asset->GetName());
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_HashIdMutex);
-			s_HashIdMap.erase(std::hash<Asset>()(asset));
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_TypeIdMutex);
-			s_TypeIdMap.erase(asset->GetType());
+			std::unique_lock lock(m_MapMutex);
+			m_NameIdMap.erase(asset->GetName().c_str());
+			m_HashIdMap.erase(std::hash<Asset>()(asset));
 		}
 
 		// Remove from asset cache
 		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			s_AssetCache.erase(asset->GetAssetId());
+			std::unique_lock lock(m_CacheMutex);
+			m_AssetCache.erase(asset->GetAssetId());
+		}
+
+		// Remove data from memory provider
+		if (asset->GetDataKey())
+		{
+			m_MemoryDataProvider.UnregisterData(asset->GetDataKey());
 		}
 
 		asset->Unstage();
@@ -169,236 +100,189 @@ namespace Ares {
 
 	void AssetManager::Load(const Ref<Asset>& asset, AssetCallbackFn&& callback)
 	{
-		Load(std::vector<Ref<Asset>>({ asset }), std::move(callback));
+		if (!asset)
+		{
+			AR_CORE_ASSERT(false, "Asset is either corrupted or not staged!");
+			throw std::invalid_argument("Asset is either corrupted or not staged!");
+		}
+		if (asset->GetState() == AssetState::Staged)
+		{
+			// Load standalone asset with no dependencies
+			if (asset->GetDependencies().size() == 0)
+			{
+				LoadRawAsset(asset, eastl::move(callback));
+			}
+			// Load asset with dependencies
+			else
+			{
+				eastl::vector<AssetId> assetDependencies = asset->GetDependencies();
+				for (AssetId& currentId : assetDependencies)
+				{
+					Ref<Asset> currentDep = GetAsset(currentId);
+
+					// Load staged dependency recursively
+					if (currentDep->GetState() == AssetState::Staged)
+					{
+						LoadRawAsset(currentDep, [this, asset, callback](Ref<Asset> asset) mutable { Load(asset, eastl::move(callback)); });
+						return;
+					}
+					// Log if dependency failed
+					else if (currentDep->GetState() == AssetState::Failed)
+					{
+						AR_CORE_ERROR("Asset Dependency: {} failed to load!", currentDep->GetName());
+					}
+				}
+				// Load the asset after dependencies
+				LoadRawAsset(asset, eastl::move(callback));
+			}
+		}
 	}
 
-	void AssetManager::Load(const std::vector<Ref<Asset>>& assets, AssetCallbackFn&& callback)
+	void AssetManager::Load(const eastl::vector<Ref<Asset>>& assets, AssetCallbackFn&& callback)
 	{
 		for (const Ref<Asset>& asset : assets)
 		{
-			if (asset == nullptr)
-			{
-				AR_CORE_ASSERT(false, "Asset has not been staged!");
-				continue;
-			}
-			if (asset->GetState() == AssetState::Staged)
-			{
-				// Load standalone asset with no dependencies
-				if (asset->GetDependencies().size() == 0)
-				{
-					LoadRawAsset(asset, std::move(callback));
-				}
-				// Load asset with dependencies
-				else
-				{
-					std::vector<uint32_t> assetDependencies = asset->GetDependencies();
-					for (uint32_t& currentDependency : assetDependencies)
-					{
-						Ref<Asset> currentDep = GetAsset(currentDependency);
-
-						// Load staged dependency recursively
-						if (currentDep->GetState() == AssetState::Staged)
-						{
-							LoadRawAsset(currentDep, [assets, callback](Ares::Ref<Asset> asset) mutable { Load(assets, std::move(callback)); });
-							return;
-						}
-						// Log if dependency failed
-						else if (currentDep->GetState() == AssetState::Failed)
-						{
-							AR_CORE_ASSERT(false, "Asset: {} failed to load!", currentDep->GetName());
-						}
-					}
-					// Load the asset after dependencies
-					LoadRawAsset(asset, std::move(callback));
-				}
-			}
+			AssetCallbackFn callbackCopy = callback;
+			Load(asset, eastl::move(callbackCopy));
 		}
 	}
 
 	void AssetManager::Unload(const Ref<Asset>& asset)
 	{
 		// Unload asset
-		if (asset->HasFilepath() && asset->GetDataKey() != 0)
+		if (asset->HasFilepath() && asset->GetDataKey())
 		{
-			MemoryDataProvider::UnregisterData(asset->GetDataKey());
+			m_MemoryDataProvider.UnregisterData(asset->GetDataKey());
+			asset->SetDataKey(0);
 		}
 		asset->Unload();
 		DispatchAssetEvent<AssetUnloadedEvent>(asset);
 	}
 
-	Ref<Asset> AssetManager::GetAsset(const std::string& name)
+	void AssetManager::Unload(const eastl::vector<Ref<Asset>>& assets)
 	{
-		uint32_t cachedId = 0;
-		{
-			std::lock_guard<std::mutex> lock(s_NameIdMutex);
-			auto it = s_NameIdMap.find(name);
-			if (it != s_NameIdMap.end())
-				cachedId = it->second;
-			else
-				return nullptr;
-		}
-		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			auto it = s_AssetCache.find(cachedId);
-			if (it != s_AssetCache.end())
-				return it->second;
-			else
-				return nullptr;
-		}
+		for (const Ref<Asset>& asset : assets)
+			Unload(asset);
 	}
 
-	Ref<Asset> AssetManager::GetAsset(const uint32_t& assetId)
+	Ref<Asset> AssetManager::GetAsset(const eastl::string& name)
 	{
-		std::lock_guard<std::mutex> lock(s_CacheMutex);
-		auto it = s_AssetCache.find(assetId);
-		if (it != s_AssetCache.end())
+		AssetId cacheId = 0;
+		{
+			std::shared_lock lock(m_MapMutex);
+			auto it = m_NameIdMap.find(name);
+			if (it != m_NameIdMap.end())
+				cacheId = it->second;
+			else
+				return nullptr;
+		}
+		return GetAsset(cacheId);
+	}
+
+	Ref<Asset> AssetManager::GetAsset(const AssetId& assetId)
+	{
+		std::shared_lock lock(m_CacheMutex);
+		auto it = m_AssetCache.find(assetId);
+		if (it != m_AssetCache.end())
 			return it->second;
 		else
 			return nullptr;
 	}
-	
-	std::vector<Ref<Asset>> AssetManager::GetCompleteList()
+
+	eastl::vector<Ref<Asset>> AssetManager::GetCompleteList()
 	{
-		std::vector<Ref<Asset>> result;
-		std::unordered_map<uint32_t, Ref<Asset>> tempCache;
+		eastl::vector<Ref<Asset>> result;
+		std::shared_lock lock(m_CacheMutex);
+		result.reserve(m_AssetCache.size());
+		for (auto& entry : m_AssetCache)
 		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			tempCache = s_AssetCache;
-		}
-		for (auto& entry : tempCache)
-		{
-			result.emplace_back(entry.second);
+			result.push_back(entry.second);
 		}
 		return result;
 	}
 
-	const AssetListener AssetManager::AddListener(const std::string& name, AssetListenerCallbackFn&& callback)
+	const AssetListener AssetManager::AddListener(const eastl::string& name, AssetListenerCallbackFn&& callback)
 	{
-		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-		uint32_t currentId = s_NextListenerId++;
-		s_Listeners[name][currentId] = std::move(callback);
-		s_ListenerNameMap[currentId] = name;
+		std::unique_lock lock(m_ListenerMutex);
+		AssetListener currentId = m_NextListenerId++;
+		m_Listeners[currentId] = eastl::move(callback);
+		m_ListenerNameMap[currentId] = name;
+		m_ListenerOrder.push_back(currentId);
 		return currentId;
 	}
 
 	const AssetListener AssetManager::AddListener(AssetListenerCallbackFn&& callback)
 	{
-		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-		uint32_t currentId = s_NextListenerId++;
-		s_GlobalListeners[currentId] = std::move(callback);
+		std::unique_lock lock(m_ListenerMutex);
+		AssetListener currentId = m_NextListenerId++;
+		m_Listeners[currentId] = eastl::move(callback);
+		m_GlobalListeners.insert(currentId);
+		m_ListenerOrder.push_back(currentId);
 		return currentId;
 	}
 
 	void AssetManager::RemoveListener(AssetListener& listenerId)
 	{
-		// Check to see if Listener is valid
+		// Check to see if listener is valid
 		if (!listenerId)
 		{
-			AR_CORE_WARN("Asset listener has already been removed!");
+			AR_CORE_WARN("Asset Listener has already been removed!");
 			return;
 		}
 
+		bool isRemoved = false;
+
 		// Remove listener
 		{
-			size_t listenersRemoved = 0;
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
+			std::unique_lock lock(m_ListenerMutex);
 
-			// Find asset name for this listener if not global
-			auto nameIt = s_ListenerNameMap.find(listenerId);
-			if (nameIt != s_ListenerNameMap.end())
+			// Check to see if listener exists
+			auto listenerIt = m_Listeners.find(listenerId);
+			if (listenerIt != m_Listeners.end())
 			{
-				// Erase name based listener
-				auto& listeners = s_Listeners[nameIt->second];
-				listenersRemoved += listeners.erase(listenerId);
-				s_ListenerNameMap.erase(nameIt);
-			}
-			else
-			{
-				// Erase global listener
-				listenersRemoved += s_GlobalListeners.erase(listenerId);
-			}
+				// Erase from global listeners
+				m_GlobalListeners.erase(listenerId);
 
-			// Check to see if a listener was removed
-			if (!listenersRemoved)
-			{
-				AR_CORE_WARN("Did not find any asset listeners with id: {}", listenerId);
+				// Erase from listener secondary maps
+				m_ListenerNameMap.erase(listenerId);
+
+				// Erase listener
+				m_Listeners.erase(listenerIt);
+
+				isRemoved = true;
 			}
-			else
-				listenerId = 0;
+		}
+
+		if (!isRemoved)
+		{
+			AR_CORE_WARN("Did not find any asset listeners with id: {}", listenerId);
+		}
+		else
+		{
+			listenerId = 0;
 		}
 	}
 
-	void AssetManager::OnUpdate()
+	void AssetManager::OnUpdate(Timestep& ts)
 	{
-		ProcessCallbacks();
-		ProcessListenerCallbacks();
-	}
-
-	template <typename AssetEventType>
-	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const std::string& message)
-	{
-		// Make sure AssetEventType is an asset event
-		if (!std::is_base_of_v<AssetBaseEvent, AssetEventType>)
 		{
-			AR_CORE_ASSERT(false, "Tried to dispatch non-asset event: {}", typeid(AssetEventType).name());
+			std::unique_lock lock1(m_ReadCallbackMutex);
+			std::unique_lock lock2(m_WriteCallbackMutex);
+			eastl::swap(m_ReadCallbackQueue, m_WriteCallbackQueue);
 		}
 
-		// Create event
-		AssetEventType tempEvent(asset, message);
-		Ref<AssetEventType> event = CreateRef<AssetEventType>(tempEvent);
-
-		// Dispatch to event queue
-		EventQueue::Dispatch<AssetEventType>(tempEvent);
-
-		// Dispatch to asset listeners
+		while (!m_ReadCallbackQueue.empty())
 		{
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
-
-			// Queue name-specific listeners
-			if (s_Listeners.find(asset->GetName()) != s_Listeners.end())
-			{
-				for (auto& listener : s_Listeners[asset->GetName()])
-					QueueListenerCallback([func = listener.second, event]() { func(*event); });
-			}
-
-			// Queue global listeners
-			for (auto& globalListener : s_GlobalListeners)
-				QueueListenerCallback([func = globalListener.second, event]() { func(*event); });
-		}
-	}
-
-	void AssetManager::QueueListenerCallback(std::function<void()> callback)
-	{
-		std::lock_guard<std::mutex> lock(s_ListenerCallbackQueueMutex);
-		s_ListenerCallbackQueue.emplace(std::move(callback));
-	}
-
-	void AssetManager::QueueCallback(std::function<void()> callback)
-	{
-		std::lock_guard<std::mutex> lock(s_CallbackQueueMutex);
-		s_CallbackQueue.emplace(std::move(callback));
-	}
-
-	void AssetManager::ProcessListenerCallbacks()
-	{
-		std::lock_guard<std::mutex> lock(s_ListenerCallbackQueueMutex);
-		while (!s_ListenerCallbackQueue.empty())
-		{
-			auto callback = std::move(s_ListenerCallbackQueue.front());
-			s_ListenerCallbackQueue.pop();
+			eastl::function<void()> callback = m_ReadCallbackQueue.front();
+			m_ReadCallbackQueue.pop();
 			callback();
 		}
 	}
 
-	void AssetManager::ProcessCallbacks()
+	void AssetManager::QueueCallback(StoredCallbackFn&& callback)
 	{
-		std::lock_guard<std::mutex> lock(s_CallbackQueueMutex);
-		while (!s_CallbackQueue.empty())
-		{
-			auto callback = std::move(s_CallbackQueue.front());
-			s_CallbackQueue.pop();
-			callback();
-		}
+		std::unique_lock lock(m_WriteCallbackMutex);
+		m_WriteCallbackQueue.emplace(eastl::move(callback));
 	}
 
 	void AssetManager::LoadRawAsset(const Ref<Asset>& asset, AssetCallbackFn&& callback)
@@ -409,341 +293,305 @@ namespace Ares {
 		// Dispatch AssetLoadingEvent
 		DispatchAssetEvent<AssetLoadingEvent>(asset);
 
-		// Submit the task to the ThreadPool for async loading
-		ThreadPool::SubmitTask([asset, callback]() mutable
+		// Create loading task
+		auto loadTask = [this, asset, callback]() mutable
 		{
-			//Scope<AssetBase> rawAsset = nullptr;
-			std::string eventMessage;
+			eastl::string eventMessage;
 
 			// Retrieve the asset type ID to determine how to process the asset
 			const Utility::AssetType assetType = Utility::GetAssetType(asset->GetType());
 			try
 			{
 				// Check if asset is valid
-				if (asset->GetDependencies().size() == 0 && !asset->HasFilepath() && asset->GetDataKey() == 0)
+				if (asset->GetDependencies().size() == 0 && !asset->HasFilepath() && !asset->GetDataKey())
 				{
-					throw std::runtime_error("Staged [" + asset->GetName() + "] " + asset->GetTypeName() + " asset doesn't have valid metadata (no dependencies & no filepath & no MemoryDataKey)");
+					eastl::string errorMsg("Staged [" + asset->GetName() + "] " + asset->GetTypeName() + " asset doesn't have valid metadata (no dependencies, no filepath, and no MemoryDataKey)!");
+					throw std::runtime_error(errorMsg.c_str());
 				}
 
 				// Load file (if provided) into MemoryDataProvider
 				if (asset->HasFilepath())
 				{
-					DataBuffer fileData = FileIO::LoadFile(asset->GetFilepath());
-					MemoryDataKey fileKey = MemoryDataProvider::RegisterData(std::move(fileData));
-					if (fileKey == 0)
+					DataBuffer fileData = FileIO::LoadFile(asset->GetFilepath().c_str());
+					MemoryDataKey fileKey = m_MemoryDataProvider.RegisterData(eastl::move(fileData));
+					if (!fileKey)
 					{
-						throw std::runtime_error("Something went wrong... Asset DataKey is still 0!");
+						throw std::runtime_error("Failed to register data with the MemoryDataProvider!");
 					}
 					asset->SetDataKey(fileKey);
 				}
 
 				// Handle asset loading based on its type
-				if (assetType == Utility::AssetType::VertexShader || assetType == Utility::AssetType::FragmentShader)
+				switch (assetType)
 				{
-					const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
-					std::string_view shaderData(static_cast<const char*>(data.GetBuffer()), data.GetSize());
+				case Utility::AssetType::VertexShader:
+				case Utility::AssetType::FragmentShader:
+				{
+					MemoryDataKey dataKey = asset->GetDataKey();
+					const DataBuffer& dataBuffer = m_MemoryDataProvider.GetDataBuffer(dataKey);
+					std::string_view shaderData(static_cast<const char*>(dataBuffer.GetBuffer()), dataBuffer.GetSize());
 
-					MainThreadQueue::SubmitTask([asset, callback = std::move(callback), shaderData, assetType]() {
-						Scope<Shader> result = nullptr;
-						try
+					MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), shaderData, assetType]()
 						{
-							if (assetType == Utility::AssetType::VertexShader)
+							Scope<Shader> result = nullptr;
+							try
 							{
-								result = VertexShader::Create(asset->GetName(), shaderData);
-							}
-							else if (assetType == Utility::AssetType::FragmentShader)
-							{
-								result = FragmentShader::Create(asset->GetName(), shaderData);
-							}
+								switch (assetType)
+								{
+								case Utility::AssetType::VertexShader:
+								{
+									result = VertexShader::Create(asset->GetName().c_str(), shaderData);
+									break;
+								}
+								case Utility::AssetType::FragmentShader:
+								{
+									result = FragmentShader::Create(asset->GetName().c_str(), shaderData);
+									break;
+								}
+								default: throw std::runtime_error("Asset Type not found!");
+								}
 
-							if (result == nullptr)
-							{
-								throw std::runtime_error("Something went wrong when creating the raw asset!");
-							}
+								if (!result)
+									throw std::runtime_error("Failed to create Shader asset!");
 
-							if (assetType == Utility::AssetType::VertexShader)
-							{
-								asset->SetAsset(Scope<VertexShader>(static_cast<VertexShader*>(result.release())));
-							}
-							else if (assetType == Utility::AssetType::FragmentShader)
-							{
-								asset->SetAsset(Scope<FragmentShader>(static_cast<FragmentShader*>(result.release())));
-							}
-							else
-							{
-								throw std::runtime_error("Asset was not set!");
-							}
+								switch (assetType)
+								{
+								case Utility::AssetType::VertexShader:
+								{
+									asset->SetAsset(eastl::move(result));
+									break;
+								}
+								case Utility::AssetType::FragmentShader:
+								{
+									asset->SetAsset(eastl::move(result));
+									break;
+								}
+								}
 
-							asset->SetState(AssetState::Loaded);
-							DispatchAssetEvent<AssetLoadedEvent>(asset);
-						}
-						catch (std::exception& e)
-						{
-							AR_CORE_CRITICAL("{} Creation Error: {}", asset->GetTypeName(), e.what());
-							asset->SetState(AssetState::Failed);
-							DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
-						}
-						if (callback)
-							QueueCallback([callback, asset]() { callback(asset); });
-					});
+								asset->SetState(AssetState::Loaded);
+								DispatchAssetEvent<AssetLoadedEvent>(asset);
+							}
+							catch (std::exception& e)
+							{
+								AR_CORE_ERROR("Shader Creation Error: {}", e.what());
+								asset->SetState(AssetState::Failed);
+								DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+							}
+							if (callback)
+								QueueCallback([callback = eastl::move(callback), asset]() { callback(asset); });
+						});
+					break;
 				}
-				else if (assetType == Utility::AssetType::ShaderProgram)
+				case Utility::AssetType::ShaderProgram:
 				{
 					if (asset->GetDependencies().size() > 0)
 					{
 						std::vector<Shader*> shaders;
-						for (const uint32_t& assetId : asset->GetDependencies())
+						shaders.reserve(asset->GetDependencies().size());
+						for (const AssetId& assetId : asset->GetDependencies())
 						{
-							Ref<Asset> dependency = AssetManager::GetAsset(assetId);
+							Ref<Asset> dependency = GetAsset(assetId);
 							if (dependency->GetState() != AssetState::Loaded)
-								throw std::runtime_error("Shader Program dependency is not loaded!");
+								throw std::runtime_error("Shader Program dependency not loaded!");
 
 							if (dependency->GetType() == typeid(VertexShader))
 							{
 								shaders.push_back(dependency->GetAsset<VertexShader>());
 								continue;
 							}
-							if (dependency->GetType() == typeid(FragmentShader))
+							else if (dependency->GetType() == typeid(FragmentShader))
 							{
 								shaders.push_back(dependency->GetAsset<FragmentShader>());
 								continue;
 							}
 						}
-						MainThreadQueue::SubmitTask([asset, callback = std::move(callback), shaders]() {
-							Scope<ShaderProgram> result = nullptr;
-							try
-							{
-								result = ShaderProgram::Create(asset->GetName(), shaders);
-								if (result == nullptr)
-									throw std::runtime_error("Something went wrong when creating the raw asset!");
 
-								asset->SetAsset(std::move(result));
-								asset->SetState(AssetState::Loaded);
-								DispatchAssetEvent<AssetLoadedEvent>(asset);
-							}
-							catch (std::exception& e)
+						MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), shaders]()
 							{
-								AR_CORE_CRITICAL("Shader Program Creation Error: {}", e.what());
-								asset->SetState(AssetState::Failed);
-								DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
-							}
-							if (callback)
-								QueueCallback([callback, asset]() { callback(asset); });
-						});
+								Scope<ShaderProgram> result = nullptr;
+								try
+								{
+									result = ShaderProgram::Create(asset->GetName().c_str(), shaders);
+
+									if (!result)
+										throw std::runtime_error("Failed to create the ShaderProgram asset!");
+
+									asset->SetAsset(eastl::move(result));
+									asset->SetState(AssetState::Loaded);
+									DispatchAssetEvent<AssetLoadedEvent>(asset);
+								}
+								catch (std::exception& e)
+								{
+									AR_CORE_ERROR("Shader Program Creation Error: {}", e.what());
+									asset->SetState(AssetState::Failed);
+									DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+								}
+								if (callback)
+									QueueCallback([callback = eastl::move(callback), asset]() { callback(asset); });
+							});
 					}
 					else
 					{
-						const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
-						Ref<ParsedShaderData> shaderData = CreateRef<ParsedShaderData>(ShaderParser::ParseShaders(data));
+						Ref<ParsedShaderData> shaderData = CreateRef<ParsedShaderData>(
+							ShaderParser::ParseShaders(m_MemoryDataProvider.GetDataBuffer(asset->GetDataKey()))
+						);
 
-						if (shaderData == nullptr)
-							throw std::runtime_error("Shader Data was not parsed!");
+						if (!shaderData)
+							throw std::runtime_error("Failed to parse shader data!");
 
 						if (!shaderData->IsValid)
-							throw std::runtime_error("Error while parsing shaders: " + shaderData->Error);
+							throw std::runtime_error("Shader Parsing Error - " + shaderData->Error);
 
-						MainThreadQueue::SubmitTask([asset, callback = std::move(callback), shaderData]() {
-							Scope<ShaderProgram> result = nullptr;
+						MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), shaderData]()
+							{
+								Scope<ShaderProgram> result = nullptr;
+								try
+								{
+									result = ShaderProgram::Create(asset->GetName().c_str(), shaderData);
+									if (!result)
+										throw std::runtime_error("Failed to create the ShaderProgram asset!");
+
+									asset->SetAsset(eastl::move(result));
+									asset->SetState(AssetState::Loaded);
+									DispatchAssetEvent<AssetLoadedEvent>(asset);
+								}
+								catch (std::exception& e)
+								{
+									AR_CORE_ERROR("Shader Program Creation Error: {}", e.what());
+									asset->SetState(AssetState::Failed);
+									DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+								}
+								if (callback)
+									QueueCallback([callback = eastl::move(callback), asset]() { callback(asset); });
+							});
+					}
+					break;
+				}
+				case Utility::AssetType::MeshData:
+				{
+					/**
+						* TODO: We need to be able to parse different formats.
+						* For the time being, we are taking any asset that is
+						* MeshData and parsing it in the OBJ format.
+						*/
+					Ref<ParsedMeshData> meshData = CreateRef<ParsedMeshData>(
+						OBJParser::ParseMesh(m_MemoryDataProvider.GetDataBuffer(asset->GetDataKey()))
+					);
+
+					if (!meshData)
+						throw std::runtime_error("Failed to parse Mesh Data!");
+
+					if (!meshData->IsValid)
+						throw std::runtime_error("Mesh Data Parsing Error - " + meshData->Error);
+
+					MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), meshData]()
+						{
+							Scope<MeshData> result = nullptr;
 							try
 							{
-								result = ShaderProgram::Create(asset->GetName(), shaderData);
-								if (result == nullptr)
-									throw std::runtime_error("Something went wrong when creating the raw asset!");
+								result = MeshData::Create(asset->GetName().c_str(), meshData);
+								if (!result)
+									throw std::runtime_error("Failed to create the MeshData asset!");
 
-								asset->SetAsset(std::move(result));
+								asset->SetAsset(eastl::move(result));
 								asset->SetState(AssetState::Loaded);
 								DispatchAssetEvent<AssetLoadedEvent>(asset);
 							}
 							catch (std::exception& e)
 							{
-								AR_CORE_CRITICAL("Shader Program Creation Error: {}", e.what());
+								AR_CORE_ERROR("Mesh Data Creation Error: {}", e.what());
 								asset->SetState(AssetState::Failed);
 								DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
 							}
 							if (callback)
-								QueueCallback([callback, asset]() { callback(asset); });
+								QueueCallback([callback = eastl::move(callback), asset]() { callback(asset); });
 						});
-					}
+					break;
 				}
-				else if (assetType == Utility::AssetType::MeshData)
+				case Utility::AssetType::Texture:
 				{
-					const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
-					Ref<ParsedMeshData> meshData = nullptr;
-
-					if (Utility::GetFileExtension(asset->GetFilepath()) == "obj")
-					{
-						meshData = CreateRef<ParsedMeshData>(OBJParser::ParseMesh(data));
-					}
-					else
-					{
-						// TODO: We need to be able to parse different formats.
-						//		 For the time being, we are taking any asset
-						//		 thats MeshData and parsing it as if its an OBJ.
-						meshData = CreateRef<ParsedMeshData>(OBJParser::ParseMesh(data));
-					}
-
-					if (meshData == nullptr)
-						throw std::runtime_error("Mesh Data was not parsed!");
-
-					if (!meshData->IsValid)
-						throw std::runtime_error("Error while parsing Mesh Data: " + meshData->Error);
-
-					MainThreadQueue::SubmitTask([asset, callback = std::move(callback), meshData]() {
-						Scope<MeshData> result = nullptr;
-						try
+					const DataBuffer& dataBuffer = m_MemoryDataProvider.GetDataBuffer(asset->GetDataKey());
+					MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), data = RawData(dataBuffer.GetBuffer(), dataBuffer.GetSize())]()
 						{
-							result = MeshData::Create(asset->GetName(), meshData);
-							if (result == nullptr)
-								throw std::runtime_error("Something went wrong when creating the raw asset!");
+							Scope<Texture> result = nullptr;
+							try
+							{
+								result = Texture::Create(asset->GetName().c_str(), data);
+								if (!result)
+									throw std::runtime_error("Failed to create the Texture asset!");
 
-							asset->SetAsset(std::move(result));
-							asset->SetState(AssetState::Loaded);
-							DispatchAssetEvent<AssetLoadedEvent>(asset);
-						}
-						catch (std::exception& e)
-						{
-							AR_CORE_CRITICAL("Mesh Data Creation Error: {}", e.what());
-							asset->SetState(AssetState::Failed);
-							DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
-						}
-						if (callback)
-							QueueCallback([callback, asset]() { callback(asset); });
-					});
+								asset->SetAsset(eastl::move(result));
+								asset->SetState(AssetState::Loaded);
+								DispatchAssetEvent<AssetLoadedEvent>(asset);
+							}
+							catch (std::exception& e)
+							{
+								AR_CORE_ERROR("Texture Creation Error: {}", e.what());
+								asset->SetState(AssetState::Failed);
+								DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
+							}
+							if (callback)
+								QueueCallback([callback = eastl::move(callback), asset]() { callback(asset); });
+						});
+					break;
 				}
-				else if (assetType == Utility::AssetType::Texture)
-				{
-					const DataBuffer& data = MemoryDataProvider::GetData(asset->GetDataKey());
-
-					MainThreadQueue::SubmitTask([asset, callback = std::move(callback), data = RawData(data.GetBuffer(), data.GetSize())]() {
-						Scope<Texture> result = nullptr;
-						try
-						{
-							result = Texture::Create(asset->GetName(), data);
-							if (result == nullptr)
-								throw std::runtime_error("Something went wrong when creating the raw asset!");
-
-							asset->SetAsset(std::move(result));
-							asset->SetState(AssetState::Loaded);
-							DispatchAssetEvent<AssetLoadedEvent>(asset);
-						}
-						catch (std::exception& e)
-						{
-							AR_CORE_CRITICAL("Texture Creation Error: {}", e.what());
-							asset->SetState(AssetState::Failed);
-							DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
-						}
-						if (callback)
-							QueueCallback([callback, asset]() { callback(asset); });
-					});
-				}
-				else
-				{
-					throw std::runtime_error("Unknown Asset Type!");
+				default: throw std::runtime_error("Unknown Asset Type!");
 				}
 			}
 			catch (std::exception& e)
 			{
-				// Log any errors
-				AR_CORE_CRITICAL("Asset Loading Error: {}", e.what());
+				AR_CORE_ERROR("Asset Loading Error: {}", e.what());
 				asset->SetState(AssetState::Failed);
 				DispatchAssetEvent<AssetFailedEvent>(asset, e.what());
 			}
-		});
+		};
+
+		// Run task if thread pool is absent
+		if (!m_ThreadPool)
+			loadTask();
+		// Send to thread pool if present
+		else
+			m_ThreadPool->SubmitTask(loadTask);
 	}
 
-	const size_t AssetManager::GetHash(
-		const std::type_index& type,
-		const std::string& filepath,
-		const std::vector<uint32_t>& dependencies,
-		const MemoryDataKey dataKey
-	)
+	const size_t AssetManager::GetHash(const std::type_index& type, const eastl::string& filepath, const eastl::vector<AssetId>& dependencies, const MemoryDataKey& dataKey)
 	{
-		size_t hash = 0;
+		size_t seed = type.hash_code();
 
-		// Hash type
-		CombineHash<std::type_index>(hash, type);
-
-		// Hash filepath (if not empty)
 		if (!filepath.empty())
+			CombineHashEASTL<eastl::string>(seed, filepath);
+		else if (dataKey)
+			CombineHashEASTL<uint32_t>(seed, dataKey);
+
+		for (const uint32_t& assetId : dependencies)
 		{
-			CombineHash<std::string>(hash, filepath);
-		}
-		// Only hash data key if filepath is empty
-		else
-		{
-			if (dataKey != 0)
-			{
-				CombineHash<uint32_t>(hash, dataKey);
-			}
+			CombineHashEASTL<uint32_t>(seed, assetId);
 		}
 
-		// Hash dependency ids (if not empty)
-		for (uint32_t id : dependencies)
-		{
-			CombineHash<uint32_t>(hash, id);
-		}
-
-		return hash;
+		return seed;
 	}
 
 	Ref<Asset> AssetManager::FindExistingAsset(const size_t& contentHash)
 	{
-		std::unordered_map<size_t, uint32_t> tempHashIdMap;
-		std::unordered_map<uint32_t, Ref<Asset>> tempAssetCache;
+		AssetId assetId = 0;
 		{
-			std::lock_guard<std::mutex> lock(s_HashIdMutex);
-			tempHashIdMap = s_HashIdMap;
+			std::shared_lock lock(m_MapMutex);
+			auto it = m_HashIdMap.find(contentHash);
+			if (it != m_HashIdMap.end())
+				assetId = it->second;
+			else
+				return nullptr;
 		}
-
-		auto it = tempHashIdMap.find(contentHash);
-		if (it != tempHashIdMap.end())
 		{
-			std::lock_guard<std::mutex> lock(s_CacheMutex);
-			auto assetIt = s_AssetCache.find(it->second);
-			if (assetIt != s_AssetCache.end())
-			{
-				if (std::hash<Asset>()(assetIt->second) == contentHash)
-					return assetIt->second;
-			}
+			std::shared_lock lock(m_CacheMutex);
+			auto it = m_AssetCache.find(assetId);
+			if (it != m_AssetCache.end() && eastl::hash<Ref<Asset>>()(it->second) == contentHash)
+				return it->second;
+			else
+				return nullptr;
 		}
 
 		return nullptr;
 	}
 
-	// Private members
-	std::unordered_map<uint32_t, Ref<Asset>> AssetManager::s_AssetCache;
-	std::mutex AssetManager::s_CacheMutex;
-	std::atomic<uint32_t> AssetManager::s_NextAssetId{ 1 };
-
-	std::unordered_map<std::string, uint32_t> AssetManager::s_NameIdMap;
-	std::mutex AssetManager::s_NameIdMutex;
-	std::unordered_map<size_t, uint32_t> AssetManager::s_HashIdMap;
-	std::mutex AssetManager::s_HashIdMutex;
-	std::unordered_map<std::type_index, uint32_t> AssetManager::s_TypeIdMap;
-	std::mutex AssetManager::s_TypeIdMutex;
-
-	eastl::queue<std::function<void()>> AssetManager::s_CallbackQueue;
-	std::mutex AssetManager::s_CallbackQueueMutex;
-
-	std::atomic<uint32_t> AssetManager::s_NextListenerId{ 1 };
-	std::unordered_map<std::string, std::unordered_map<uint32_t, AssetManager::AssetListenerCallbackFn>> AssetManager::s_Listeners;
-	std::unordered_map<uint32_t, std::string> AssetManager::s_ListenerNameMap;
-	std::unordered_map<uint32_t, AssetManager::AssetListenerCallbackFn> AssetManager::s_GlobalListeners;
-	std::mutex AssetManager::s_ListenerMutex;
-
-	eastl::queue<std::function<void()>> AssetManager::s_ListenerCallbackQueue;
-	std::mutex AssetManager::s_ListenerCallbackQueueMutex;
-
-	// Template explicit instantiations
-	template Ref<Asset> AssetManager::Stage<VertexShader>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
-	template Ref<Asset> AssetManager::Stage<FragmentShader>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
-	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
-	template Ref<Asset> AssetManager::Stage<Texture>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
-	template Ref<Asset> AssetManager::Stage<MeshData>(const std::string&, const std::string&, const std::vector<Ref<Asset>>&, const MemoryDataKey dataKey);
-
-	template void AssetManager::DispatchAssetEvent<AssetStagedEvent>(const Ref<Asset>&, const std::string&);
-	template void AssetManager::DispatchAssetEvent<AssetUnstagedEvent>(const Ref<Asset>&, const std::string&);
-	template void AssetManager::DispatchAssetEvent<AssetLoadedEvent>(const Ref<Asset>&, const std::string&);
-	template void AssetManager::DispatchAssetEvent<AssetUnloadedEvent>(const Ref<Asset>&, const std::string&);
-	template void AssetManager::DispatchAssetEvent<AssetFailedEvent>(const Ref<Asset>&, const std::string&);
 }

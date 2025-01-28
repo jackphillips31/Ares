@@ -7,6 +7,7 @@
  * is identified by a unique key, facilitating efficient and organized management.
  */
 #pragma once
+#include "Engine/Data/DataBuffer.h"
 
 namespace Ares {
 
@@ -17,6 +18,28 @@ namespace Ares {
 	 * @brief Data Key stored as a 32 bit unsigned integer.
 	 */
 	using MemoryDataKey = uint32_t;
+
+	namespace Internal {
+
+		class MemoryDataProviderSys
+		{
+		public:
+			MemoryDataProviderSys();
+			~MemoryDataProviderSys();
+
+			MemoryDataKey RegisterData(DataBuffer&& data);
+			MemoryDataKey RegisterData(const void* data, const size_t& size);
+			bool UnregisterData(MemoryDataKey& key);
+
+			const DataBuffer& GetDataBuffer(const MemoryDataKey& key);
+
+		private:
+			mutable std::shared_mutex m_Mutex;
+			eastl::atomic<uint32_t> m_NextDataKey;
+			eastl::hash_map<MemoryDataKey, DataBuffer> m_DataRegistry;
+		};
+
+	}
 
 	/**
 	 * @class MemoryDataProvider

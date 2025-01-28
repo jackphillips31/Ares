@@ -3,11 +3,16 @@
 
 namespace Ares {
 
-	class AssetManager;
 	class VertexBuffer;
 	class IndexBuffer;
 	enum class VertexDataType : uint8_t;
 	struct ParsedMeshData;
+
+	namespace Systems {
+
+		class AssetManager;
+
+	}
 
 	class MeshData : public AssetBase
 	{
@@ -33,7 +38,7 @@ namespace Ares {
 
 	private:
 		// Only Asset Manager can create MeshData
-		friend class AssetManager;
+		friend class Systems::AssetManager;
 		MeshData(const std::string& name, const Ref<ParsedMeshData>& meshData);
 		static Scope<MeshData> Create(const std::string& name, const Ref<ParsedMeshData>& meshData);
 

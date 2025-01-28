@@ -2,9 +2,10 @@
 
 #include <imgui.h>
 
-AssetListElement::AssetListElement()
+AssetListElement::AssetListElement(Ares::Application& app)
+	: m_AssetManager(app.GetSystem<Ares::Systems::AssetManager>())
 {
-	m_AssetList = Ares::AssetManager::GetCompleteList();
+	m_AssetList = m_AssetManager->GetCompleteList();
 	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(AssetListElement::OnAssetLoaded));
 }
 
@@ -16,7 +17,7 @@ void AssetListElement::Draw()
 
 	if (ImGui::Button("Refresh List", ImVec2(buttonWidth, 0)))
 	{
-		m_AssetList = Ares::AssetManager::GetCompleteList();
+		m_AssetList = m_AssetManager->GetCompleteList();
 	}
 
 	ImGui::Separator();
@@ -36,25 +37,32 @@ void AssetListElement::Draw()
 		if (ImGui::BeginPopup(("pop up" + std::to_string(i)).c_str()))
 		{
 			ImGui::Text("Asset ID: %u", currentAsset->GetAssetId());
-			std::string filepath = currentAsset->HasFilepath() ? currentAsset->GetFilepath() : "N/A";
+			std::string filepath = currentAsset->HasFilepath() ? currentAsset->GetFilepath().c_str() : "N/A";
 			ImGui::Text("Filepath:");
 			ImGui::Text(filepath.c_str());
 			ImGui::Text("Asset State: %s", currentAsset->GetStateString().c_str());
 			ImGui::Text("Asset Ref Count: %u", currentAsset.use_count());
 			ImGui::Separator();
 			std::string loadLabel = [currentAsset]() {
+				if (currentAsset->GetState() == Ares::AssetState::Loading)
+					return "Loading Asset";
 				if (currentAsset->GetState() == Ares::AssetState::Loaded)
 					return "Unload Asset";
 				if (currentAsset->GetState() == Ares::AssetState::Staged)
 					return "Load Asset";
+				if (currentAsset->GetState() == Ares::AssetState::Failed)
+					return "Failed";
+				if (currentAsset->GetState() == Ares::AssetState::None)
+					return "None";
+
 				return "Unknown State";
 			}();
 			if (ImGui::MenuItem(loadLabel.c_str()))
 			{
 				if (currentAsset->GetState() == Ares::AssetState::Loaded)
-					Ares::AssetManager::Unload(currentAsset);
+					m_AssetManager->Unload(currentAsset);
 				else if (currentAsset->GetState() == Ares::AssetState::Staged)
-					Ares::AssetManager::Load(currentAsset);
+					m_AssetManager->Load(currentAsset);
 			}
 			if (currentAsset->HasFilepath())
 			{
@@ -75,6 +83,6 @@ void AssetListElement::Draw()
 
 bool AssetListElement::OnAssetLoaded(Ares::AssetLoadedEvent& result)
 {
-	m_AssetList = Ares::AssetManager::GetCompleteList();
+	m_AssetList = m_AssetManager->GetCompleteList();
 	return false;
 }

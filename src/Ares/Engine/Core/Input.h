@@ -7,237 +7,167 @@
  * and getting the position of the mouse. The actual implementation of these methods is platform-specific
  * and is provided by derived classes.
  * 
- * **Example usage**:
+ * **Example Usage with Application**:
  * ```cpp
- * if (Input::IsKeyPressed(KeyCode::W)) {
- *    // Do something when 'W' key is pressed
+ * #include <Ares.h>
+ *
+ * using namespace Ares;
+ *
+ * Systems::Input* inputSys = Application::Get().GetSystem<Systems::Input>();
+ *
+ * if (inputSys->IsKeyPressed(Key::W)) {
+ *     // Do something when 'W' key is pressed
  * }
- * glm::ivec2 mousePos = Input::GetMousePosition();
+ *
+ * MousePosition mousePos = inputSys->GetMousePosition();
  * ```
- * 
- * @note The Input class is a base class. A platform-specific instance is created on startup. <br> **Input.cpp**:
- * @include Input.cpp
- * 
- * @see Ares::KeyCode, Ares::MouseCode
+ *
+ * **Example Usage without Application**:
+ * ```cpp
+ * #include <Engine/Core/Input.h>
+ * #include <Engine/Core/Window.h>
+ *
+ * using namespace Ares;
+ *
+ * Scope<Window> window = Window::Create();
+ * Scope<Systems::Input> inputSys = Systems::Input::Create(window.get());
+ *
+ * if (inputSys->IsKeyPressed(Key::W)
+ * {
+ *     // Do something when 'W' key is pressed.
+ * }
+ * ```
+ *
+ * @note The Input class is a base class. A platform-specific instance is created using the [Create](#Input::Create) method.
+ * <br> **Current Platform Implementations**:
+ * @li Windows
+ * @warning On **Windows** platforms, [GetMouseClientPosition](#Input::GetMouseClientPosition)
+ * requires a valid Window instance. If `nullptr` is passed in the [Create](#Input::Create) method,
+ * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.
  */
 #pragma once
-#include <glm/vec2.hpp>
+#include "Engine/Core/System.h"
 
 namespace Ares {
 
 	enum class KeyCode : uint16_t;
-	enum class MouseCode : uint16_t;
+	enum class MouseCode : uint8_t;
+	struct MousePosition;
+	class Window;
 
-	/**
-	 * @class Input
-	 * @brief Interface class for handling user input (keyboard and mouse).
-	 * 
-	 * @details The Input class provides an interface to handle user input, such as
-	 * checking if a key is pressed or obtaining mouse position. It includes static
-	 * methods for easy access to these input functions. The actual implementation
-	 * is platform-specific and provided by derived classes. Input polling methods
-	 * are platform-independent and interact with the system-specific implementation
-	 * of `IsKeyPressedImpl`, `IsMouseButtonPressedImpl`, and other input handling methods.
-	 * 
-	 * **Example usage**:
-	 * ```cpp
-	 * if (Input::IsKeyPressed(KeyCode::W)) {
-	 *    // Do something when 'W' key is pressed
-	 * }
-	 * glm::ivec2 mousePos = Input::GetMousePosition();
-	 * ```
-	 *
-	 * @note The Input class is a base class. A platform-specific instance is created on startup. <br> **Input.cpp**:
-	 * @include Input.cpp
-	 *
-	 * @see Ares::KeyCode, Ares::MouseCode
-	 */
-	class Input
-	{
-	public:
-		/**
-		 * @brief Checks if a specific key is currently pressed.
-		 * 
-		 * @details This is a static method that checks the key state by calling the platform-specific
-		 * implementation method `IsKeyPressedImpl`.
-		 * 
-		 * @param key The key code to check.
-		 * @return `true` if the key is pressed, otherwise `false`.
-		 */
-		inline static bool IsKeyPressed(KeyCode key) { return s_Instance->IsKeyPressedImpl(key); }
+	namespace Systems {
 
 		/**
-		 * @brief Checks if a specific mouse button is currently pressed.
-		 * 
-		 * @details This is a static method that checks the mouse button state by calling the platform-specific
-		 * implementation method `IsMouseButtonPressedImpl`.
-		 * 
-		 * @param button The mouse button code to check.
-		 * @return `true` if the mouse button is pressed, otherwise `false`.
-		 */
-		inline static bool IsMouseButtonPressed(MouseCode button) { return s_Instance->IsMouseButtonPressedImpl(button); }
-
-		/**
-		 * @brief Gets the current mouse position in screen coordinates.
-		 * 
-		 * @details This is a static method that retrieves the mouse position by calling the platform-specific
-		 * implementation method `GetMousePositionImpl`.
-		 * 
-		 * @return The current mouse position in screen coordinates as a `glm::ivec2` (x, y).
-		 */
-		inline static glm::ivec2 GetMousePosition() { return s_Instance->GetMousePositionImpl(); }
-
-		/**
-		 * @brief Gets the current mouse position's X-coordinate in screen coordinates.
-		 * 
-		 * @details This is a static method that retrieves the X-coordinate of the mouse position
-		 * by calling the platform-specific implementation method `GetMouseXImpl`.
-		 * 
-		 * @return The current mouse X-coordinate in screen coordinates.
-		 */
-		inline static int32_t GetMouseX() { return s_Instance->GetMouseXImpl(); }
-
-		/**
-		 * @brief Gets the current mouse position's Y-coordinate in screen coordinates.
+		 * @class Input
+		 * @brief Interface class for handling user input (keyboard and mouse).
 		 *
-		 * @details This is a static method that retrieves the Y-coordinate of the mouse position
-		 * by calling the platform-specific implementation method `GetMouseYImpl`.
+		 * @details Provides methods to check key states, mouse button states, and
+		 * retrieve mouse positions.<br>
+		 * Platform-specific implementations are provided by derived classes through
+		 * the [Create](#Input::Create) method.
 		 *
-		 * @return The current mouse Y-coordinate in screen coordinates.
-		 */
-		inline static int32_t GetMouseY() { return s_Instance->GetMouseYImpl(); }
-
-		/**
-		 * @brief Gets the current mouse position in client coordinates (relative to the application window).
-		 * 
-		 * @details This is a static method that retrieves the mouse position in client coordinates
-		 * by calling the platform-specific implementation method `GetMouseClientPositionImpl`.
-		 * 
-		 * @return The current mouse position in client coordinates as a `glm::ivec2` (x, y).
-		 */
-		inline static glm::ivec2 GetMouseClientPosition() { return s_Instance->GetMouseClientPositionImpl(); }
-
-		/**
-		 * @brief Gets the current mouse position's X-coordinate in client coordinates.
-		 * 
-		 * @details This is a static method that retrieves the X-coordinate of the mouse position
-		 * in client coordinates by calling the platform-specific implementation method `GetMouseClientXImpl`.
-		 * 
-		 * @return The current mouse X-coordinate in client coordinates.
-		 */
-		inline static int32_t GetMouseClientX() { return s_Instance->GetMouseClientXImpl(); }
-
-		/**
-		 * @brief Gets the current mouse position's Y-coordinate in client coordinates.
+		 * **Example Usage with Application**:
+		 * ```cpp
+		 * #include <Ares.h>
 		 *
-		 * @details This is a static method that retrieves the Y-coordinate of the mouse position
-		 * in client coordinates by calling the platform-specific implementation method `GetMouseClientYImpl`.
+		 * using namespace Ares;
 		 *
-		 * @return The current mouse Y-coordinate in client coordinates.
+		 * Systems::Input* inputSys = Application::Get().GetSystem<Systems::Input>();
+		 *
+		 * if (inputSys->IsKeyPressed(Key::W)) {
+		 *     // Do something when 'W' key is pressed
+		 * }
+		 *
+		 * MousePosition mousePos = inputSys->GetMousePosition();
+		 * ```
+		 * 
+		 * **Example Usage without Application**:
+		 * ```cpp
+		 * #include <Engine/Core/Input.h>
+		 * #include <Engine/Core/Window.h>
+		 * 
+		 * using namespace Ares;
+		 * 
+		 * Scope<Window> window = Window::Create();
+		 * Scope<Systems::Input> inputSys = Systems::Input::Create(window.get());
+		 * 
+		 * if (inputSys->IsKeyPressed(Key::W)
+		 * {
+		 *     // Do something when 'W' key is pressed.
+		 * }
+		 * ```
+		 *
+		 * @note The Input class is a base class. A platform-specific instance is created using the [Create](#Input::Create) method.
+		 * <br> **Current Platform Implementations**:
+		 * @li Windows
+		 * @warning On **Windows** platforms, [GetMouseClientPosition](#Input::GetMouseClientPosition)
+		 * requires a valid Window instance. If `nullptr` is passed in the [Create](#Input::Create) method,
+		 * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.
+		 * @see Ares::KeyCode, Ares::MouseCode
 		 */
-		inline static int32_t GetMouseClientY() { return s_Instance->GetMouseClientYImpl(); }
+		class Input : public Internal::System
+		{
+		public:
+			virtual ~Input() = default;
 
-		/**
-		 * @brief Creates an instance of Input class.
-		 * 
-		 * @details This static method creates and returns a new instance of the Input class, which
-		 * is platform-specific. It ensures that the platform-specific input functionality
-		 * is properly initialized.
-		 * 
-		 * @return A Scope<Input> representing the created instance.
-		 */
-		static Scope<Input> Create();
+			/**
+			 * @brief Checks if a specific key is currently pressed.
+			 *
+			 * @details This method check the state of the specified key and returns whether it
+			 * is currently pressed.
+			 *
+			 * @param key The key code to check.
+			 * @return `true` if the key is pressed; otherwise, `false`.
+			 */
+			virtual bool IsKeyPressed(KeyCode key) = 0;
 
-		/**
-		 * @brief Shuts down the Input system.
-		 * 
-		 * @details This method releases the resources used by the Input system and resets the static.
-		 * instance, cleaning up after the input system is no longer needed.
-		 */
-		inline static void Shutdown() { s_Instance.reset(); }
+			/**
+			 * @brief Checks if a specific mouse button is currently pressed.
+			 *
+			 * @details This method checks the state of the specified mouse button and returns
+			 * whether it is currently pressed.
+			 *
+			 * @param button The mouse button code to check.
+			 * @return `true` if the mouse button is pressed; otherwise, `false`.
+			 */
+			virtual bool IsMouseButtonPressed(MouseCode button) = 0;
 
-	protected:
-		/**
-		 * @brief Platform-specific method to check if a specific key is pressed.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @param key The key code to check.
-		 * @return `true` if the key is pressed, otherwise `false`.
-		 */
-		virtual bool IsKeyPressedImpl(KeyCode key) = 0;
+			/**
+			 * @brief Gets the current mouse position in screen coordinates.
+			 *
+			 * @details This method retrieves the current position of the mouse cursor
+			 * in screen coordinates.
+			 *
+			 * @return The current mouse position in screen coordinates as MousePosition.
+			 */
+			virtual MousePosition GetMousePosition() = 0;
 
-		/**
-		 * @brief Platform specific method to check if a specific mouse button is pressed.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @param button The mouse button code to be checked.
-		 * @return `true` if the mouse button is pressed, otherwise `false`.
-		 */
-		virtual bool IsMouseButtonPressedImpl(MouseCode button) = 0;
+			/**
+			 * @brief Gets the current mouse position in client coordinates (relative to the application window).
+			 *
+			 * @details This method retrieves the current position of the mouse cursor
+			 * in client coordinates.
+			 *
+			 * @return The current mouse position in client coordinates as MousePosition.
+			 * @warning On **Windows** platforms, this method requires that a valid Window
+			 * instance is provided during the creation of the Input system. Otherwise, it
+			 * will not function correctly and will return; `{ 0, 0 }`.
+			 */
+			virtual MousePosition GetMouseClientPosition() = 0;
 
-		/**
-		 * @brief Platform specific method to get the mouse position in screen coordinates.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @return The mouse position in screen coordinates as a `glm::ivec2`.
-		 */
-		virtual glm::ivec2 GetMousePositionImpl() = 0;
+			/**
+			 * @brief Creates a platform-specific instance of the Input class. Called during Application construction.
+			 *
+			 * @details This static method creates a platform-specific instance of the Input class.
+			 * It ensures that the platform-specific input functionality is properly initialized.
+			 * 
+			 * @param app A pointer to a Window instance.
+			 * @return A Scope to the created Input object.
+			 * @throws std::runtime_error If platform-specific implementation is unavailable.
+			 */
+			static Scope<Input> Create(Window* app = nullptr);
+		};
 
-		/**
-		 * @brief Platform specific method to get the mouse X-coordinate in screen coordinates.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @return The mouse X-coordinate in screen coordinates.
-		 */
-		virtual int32_t GetMouseXImpl() = 0;
+	}
 
-		/**
-		 * @brief Platform specific method to get the mouse Y-coordinate in screen coordinates.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @return The mouse Y-coordinate in screen coordinates.
-		 */
-		virtual int32_t GetMouseYImpl() = 0;
-
-		/**
-		 * @brief Platform specific method to get the mouse position in client coordinates.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @return The mouse position in client coordinates as a `glm::ivec2`.
-		 */
-		virtual glm::ivec2 GetMouseClientPositionImpl() = 0;
-
-		/**
-		 * @brief Platform specific method to get the mouse X-coordinate in client coordinates.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @return The mouse X-coordinate in client coordinates.
-		 */
-		virtual int32_t GetMouseClientXImpl() = 0;
-
-		/**
-		 * @brief Platform specific method to get the mouse Y-coordinate in client coordinates.
-		 * 
-		 * @details This virtual method is meant to be implemented by derived classes for platform-specific input handling.
-		 * 
-		 * @return The mouse Y-coordinate in client coordinates.
-		 */
-		virtual int32_t GetMouseClientYImpl() = 0;
-
-	private:
-		/**
-		 * @brief The static instance of the Input class.
-		 * 
-		 * @details This static variable holds the instance of the platform-specific Input class.
-		 * It is used to call the input methods in a platform-independent manner.
-		 */
-		static Scope<Input> s_Instance;
-	};
 }

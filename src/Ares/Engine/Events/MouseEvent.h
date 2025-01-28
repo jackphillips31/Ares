@@ -1,24 +1,26 @@
 #pragma once
 #include "Engine/Events/Event.h"
-#include "Engine/Events/MouseCodes.h"
+#include "Engine/Input/MouseCodes.h"
+#include "Engine/Input/MousePosition.h"
 
 namespace Ares {
-	
+
 	class MouseMovedEvent : public Event
 	{
 	public:
 		MouseMovedEvent(int32_t x, int32_t y)
-			: m_MouseX(x), m_MouseY(y)
+			: m_MousePos(x, y)
 		{
 		}
 
-		inline int32_t GetX() const { return m_MouseX; }
-		inline int32_t GetY() const { return m_MouseY; }
+		inline MousePosition GetPosition() const { return m_MousePos; }
+		inline int32_t GetX() const { return m_MousePos.x; }
+		inline int32_t GetY() const { return m_MousePos.y; }
 
 		std::string ToString() const override
 		{
 			std::stringstream ss;
-			ss << "MouseMovedEvent: " << m_MouseX << ", " << m_MouseY;
+			ss << "MouseMovedEvent: " << m_MousePos.x << ", " << m_MousePos.y;
 			return ss.str();
 		}
 
@@ -26,7 +28,7 @@ namespace Ares {
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	private:
-		int32_t m_MouseX, m_MouseY;
+		MousePosition m_MousePos;
 	};
 
 	class MouseScrolledEvent : public Event

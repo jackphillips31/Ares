@@ -54,7 +54,7 @@ namespace Ares {
 			if (endOfLine == std::string::npos)
 			{
 				result.IsValid = false;
-				result.Error = "Shader Syntax Error!";
+				result.Error = "Syntax Error!";
 				break;
 			}
 
@@ -63,7 +63,7 @@ namespace Ares {
 			if (type != "vertex" && type != "fragment" && type != "pixel")
 			{
 				result.IsValid = false;
-				result.Error = "Shader Syntax Error: Invalid shader type specification!";
+				result.Error = "Syntax Error: Invalid shader type specification!";
 				break;
 			}
 
@@ -71,7 +71,7 @@ namespace Ares {
 			if (nextLinePos == std::string::npos)
 			{
 				result.IsValid = false;
-				result.Error = "Shader Syntax Error!";
+				result.Error = "Syntax Error!";
 				break;
 			}
 

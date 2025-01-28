@@ -8,6 +8,8 @@
 #pragma once
 #include <EASTL/hash_map.h>
 
+#include "Engine/Core/Utility.h"
+
 namespace Ares {
 
 	class Event;
@@ -158,8 +160,8 @@ namespace Ares {
 		static inline std::mutex s_WriteQueueMutex;									///< Mutex for the write queue.
 
 		static inline std::atomic<uint32_t> s_NextListenerId{ 1 };					///< Next unique listener ID.
-		static inline std::unordered_map<EventType, eastl::hash_map<uint32_t, EventCallbackFn>> s_Listeners;	///< Map of event types to their registered listeners.
-		static inline eastl::hash_map<uint32_t, EventType> s_ListenerTypeMap;	///< Map of listener IDs to event types.
+		static inline eastl::hash_map<EventType, eastl::hash_map<uint32_t, EventCallbackFn>> s_Listeners;	///< Map of event types to their registered listeners.
+		static inline eastl::hash_map<uint32_t, EventType> s_ListenerTypeMap;		///< Map of listener IDs to event types.
 		static inline std::mutex s_ListenerMutex;									///< Mutex for listener operations.
 		static inline std::mutex s_CallbackMutex;									///< Mutex for Application Event Callback.
 		static inline ApplicationEventCallbackFn s_Callback = nullptr;				///< Callback function that events are sent to during processing.

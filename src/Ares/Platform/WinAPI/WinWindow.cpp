@@ -351,43 +351,68 @@ namespace Ares {
 			return 0;
 		}
 		case WM_LBUTTONDOWN: {
-			MouseButtonPressedEvent event(MouseCode::Button0);
-			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
-			return 0;
-		}
-		case WM_LBUTTONUP: {
-			MouseButtonReleasedEvent event(MouseCode::Button0);
-			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
-			return 0;
-		}
-		case WM_RBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button1);
 			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
-		case WM_RBUTTONUP: {
+		case WM_LBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button1);
 			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
 			return 0;
 		}
-		case WM_MBUTTONDOWN: {
+		case WM_RBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button2);
 			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
-		case WM_MBUTTONUP: {
+		case WM_RBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button2);
 			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
 			return 0;
 		}
-		case WM_XBUTTONDOWN: {
+		case WM_MBUTTONDOWN: {
 			MouseButtonPressedEvent event(MouseCode::Button3);
 			EventQueue::Dispatch<MouseButtonPressedEvent>(event);
 			return 0;
 		}
-		case WM_XBUTTONUP: {
+		case WM_MBUTTONUP: {
 			MouseButtonReleasedEvent event(MouseCode::Button3);
 			EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
+			return 0;
+		}
+		case WM_XBUTTONDOWN:
+		{
+			UINT button = GET_XBUTTON_WPARAM(wParam);
+
+			if (button == XBUTTON1)
+			{
+				MouseButtonPressedEvent event(MouseCode::ButtonX1);
+				EventQueue::Dispatch<MouseButtonPressedEvent>(event);
+				return 0;
+			}
+			else if (button == XBUTTON2)
+			{
+				MouseButtonPressedEvent event(MouseCode::ButtonX2);
+				EventQueue::Dispatch<MouseButtonPressedEvent>(event);
+				return 0;
+			}
+			return 0;
+		}
+		case WM_XBUTTONUP: {
+			UINT button = GET_XBUTTON_WPARAM(wParam);
+
+			if (button == XBUTTON1)
+			{
+				MouseButtonReleasedEvent event(MouseCode::ButtonX1);
+				EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
+				return 0;
+			}
+			else if (button == XBUTTON2)
+			{
+				MouseButtonReleasedEvent event(MouseCode::ButtonX2);
+				EventQueue::Dispatch<MouseButtonReleasedEvent>(event);
+				return 0;
+			}
 			return 0;
 		}
 		case WM_MOUSEWHEEL: {

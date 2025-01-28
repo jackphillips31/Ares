@@ -33,8 +33,6 @@ namespace Ares {
 			m_Layers.erase(it);
 			m_LayerInsertIndex--;
 		}
-
-		layer.reset();
 	}
 
 	void LayerStack::PopOverlay(Ref<Layer> overlay)
@@ -44,8 +42,6 @@ namespace Ares {
 		{
 			m_Layers.erase(it);
 		}
-
-		overlay.reset();
 	}
 
 }

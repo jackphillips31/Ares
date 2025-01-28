@@ -2,6 +2,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <EASTL/string.h>
 
 #include "Engine/Data/Asset.h"
 #include "Engine/ECS/Components/Material.h"
@@ -15,6 +16,12 @@ namespace Ares {
 	void CombineHash(size_t& seed, const T& value)
 	{
 		seed ^= std::hash<T>{}(value)+0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	template <typename T>
+	void CombineHashEASTL(size_t& seed, const T& value)
+	{
+		seed ^= eastl::hash<T>{}(value)+0xB000B1E5 + (seed << 6) + (seed >> 2);
 	}
 
 }
@@ -50,29 +57,26 @@ struct std::hash<Ares::Asset>
 {
 	std::size_t operator()(const Ares::Asset& asset) const
 	{
-		size_t hash = 0;
-
-		// Hash type
-		Ares::CombineHash<std::type_index>(hash, asset.m_Type);
+		size_t hash = asset.m_Type.hash_code();
 
 		// Hash filepath (if not empty)
 		if (!asset.m_Filepath.empty())
 		{
-			Ares::CombineHash<std::string>(hash, asset.m_Filepath);
+			Ares::CombineHashEASTL<eastl::string>(hash, asset.m_Filepath);
 		}
 		// Hash data key if filepath is empty
 		else
 		{
 			if (asset.m_DataKey)
 			{
-				Ares::CombineHash<uint32_t>(hash, asset.m_DataKey);
+				Ares::CombineHashEASTL<uint32_t>(hash, asset.m_DataKey);
 			}
 		}
 
 		// Hash dependencies (if not empty)
 		for (uint32_t id : asset.m_Dependencies)
 		{
-			Ares::CombineHash<uint32_t>(hash, id);
+			Ares::CombineHashEASTL<uint32_t>(hash, id);
 		}
 
 		return hash;
@@ -80,29 +84,26 @@ struct std::hash<Ares::Asset>
 
 	std::size_t operator()(const Ares::Ref<Ares::Asset>& asset) const
 	{
-		size_t hash = 0;
-
-		// Hash type
-		Ares::CombineHash<std::type_index>(hash, asset->m_Type);
+		size_t hash = asset->m_Type.hash_code();
 
 		// Hash filepath (if not empty)
 		if (!asset->m_Filepath.empty())
 		{
-			Ares::CombineHash<std::string>(hash, asset->m_Filepath);
+			Ares::CombineHashEASTL<eastl::string>(hash, asset->m_Filepath);
 		}
 		// Hash data key if filepath is empty
 		else
 		{
 			if (asset->m_DataKey)
 			{
-				Ares::CombineHash<uint32_t>(hash, asset->m_DataKey);
+				Ares::CombineHashEASTL<uint32_t>(hash, asset->m_DataKey);
 			}
 		}
 
 		// Hash dependencies (if not empty)
 		for (uint32_t id : asset->m_Dependencies)
 		{
-			Ares::CombineHash<uint32_t>(hash, id);
+			Ares::CombineHashEASTL<uint32_t>(hash, id);
 		}
 
 		return hash;
@@ -148,8 +149,20 @@ struct std::hash<glm::vec4>
 	}
 };
 
-// Standard Library hashes
+namespace Ares::Utility {
 
+	struct Hasher
+	{
+		template <typename HashType>
+		size_t operator()(const HashType& seed)
+		{
+			return eastl::hash<HashType>{}() ^ 0xB000B1E5;
+		}
+	};
+
+}
+
+// Standard Library hashes
 namespace eastl {
 	
 	template<>
@@ -157,7 +170,7 @@ namespace eastl {
 	{
 		size_t operator()(const std::type_index& typeIndex) const
 		{
-			return std::hash<std::string>()(typeIndex.name());
+			return typeIndex.hash_code();
 		}
 	};
 
@@ -166,7 +179,45 @@ namespace eastl {
 	{
 		size_t operator()(const Ares::EventType& eventType) const
 		{
-			return std::hash<uint16_t>()(static_cast<uint16_t>(eventType));
+			return eastl::hash<uint16_t>()(static_cast<uint16_t>(eventType));
+		}
+	};
+
+	template<>
+	struct hash<Ares::Asset>
+	{
+		size_t operator()(const Ares::Asset& asset) const
+		{
+			size_t seed = asset.m_Type.hash_code();
+
+			if (!asset.m_Filepath.empty())
+				Ares::CombineHashEASTL<eastl::string>(seed, asset.m_Filepath.c_str());
+			else if (asset.m_DataKey)
+				Ares::CombineHashEASTL<uint32_t>(seed, asset.m_DataKey);
+
+			for (const uint32_t& assetId : asset.m_Dependencies)
+			{
+				Ares::CombineHashEASTL<uint32_t>(seed, assetId);
+			}
+
+			return seed;
+		}
+
+		size_t operator()(const Ares::Ref<Ares::Asset>& asset) const
+		{
+			size_t seed = asset->m_Type.hash_code();
+
+			if (!asset->m_Filepath.empty())
+				Ares::CombineHashEASTL<eastl::string>(seed, asset->m_Filepath.c_str());
+			else if (asset->m_DataKey)
+				Ares::CombineHashEASTL<uint32_t>(seed, asset->m_DataKey);
+
+			for (const uint32_t& assetId : asset->m_Dependencies)
+			{
+				Ares::CombineHashEASTL<uint32_t>(seed, assetId);
+			}
+
+			return seed;
 		}
 	};
 

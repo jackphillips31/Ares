@@ -1,7 +1,7 @@
 #include <arespch.h>
 #include "Engine/ECS/Components/Mesh.h"
 
-#include "Engine/Data/AssetManager.h"
+#include "Engine/Data/Asset.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/BufferLayout.h"
 #include "Engine/Renderer/Assets/MeshData.h"
@@ -46,7 +46,7 @@ namespace Ares::ECS::Components {
 	{
 		std::shared_lock lock(m_Mutex);
 		if (m_MeshAsset != nullptr)
-			return m_MeshAsset->GetName();
+			return m_MeshAsset->GetName().c_str();
 
 		return "NULL";
 	}
@@ -82,7 +82,7 @@ namespace Ares::ECS::Components {
 	{
 		std::shared_lock lock(m_Mutex);
 		if (m_MeshAsset != nullptr && m_MeshAsset->GetState() == AssetState::Staged)
-			AssetManager::Load(m_MeshAsset);
+			m_MeshAsset->Load();
 	}
 
 	VertexBuffer* Mesh::GetBuffer(VertexDataType type) const

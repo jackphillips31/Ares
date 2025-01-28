@@ -27,9 +27,9 @@ namespace Ares {
 	{
 		m_Asset = asset;
 		m_Message = message;
-		m_AssetName = asset->GetName();
-		m_AssetFilepath = asset->GetFilepath();
-		m_AssetStateString = asset->GetStateString();
+		m_AssetName = asset->GetName().c_str();
+		m_AssetFilepath = asset->GetFilepath().c_str();
+		m_AssetStateString = asset->GetStateString().c_str();
 		m_AssetState = asset->GetState();
 	}
 

@@ -11,6 +11,12 @@ namespace Ares {
 
 	struct ParsedShaderData;
 
+	namespace Systems {
+
+		class AssetManager;
+
+	}
+
 	class Shader : public AssetBase
 	{
 	public:
@@ -33,7 +39,7 @@ namespace Ares {
 
 	private:
 		// Only Asset Manager can create Shaders
-		friend class AssetManager;
+		friend class Systems::AssetManager;
 		static Scope<VertexShader> Create(const std::string& name, const std::string_view shaderSource);
 	};
 
@@ -44,7 +50,7 @@ namespace Ares {
 
 	private:
 		// Only Asset Manager can create Shaders
-		friend class AssetManager;
+		friend class Systems::AssetManager;
 		static Scope<FragmentShader> Create(const std::string& name, const std::string_view shaderSource);
 	};
 
@@ -78,7 +84,7 @@ namespace Ares {
 
 	private:
 		// Only Asset Manager can create Shaders
-		friend class AssetManager;
+		friend class Systems::AssetManager;
 		static Scope<ShaderProgram> Create(const std::string& name, const std::vector<Shader*>& shaders);
 		static Scope<ShaderProgram> Create(const std::string& name, const Ref<ParsedShaderData>& shaderData);
 	};

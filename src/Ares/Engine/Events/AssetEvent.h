@@ -18,9 +18,6 @@ namespace Ares {
 		template <typename AssetType>
 		inline AssetType* GetRawAsset() const;
 
-		EVENT_CLASS_TYPE(AssetUpdate)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
-
 	protected:
 		inline void Initialize(const Ref<Asset>& asset, const std::string& message);
 
@@ -39,7 +36,7 @@ namespace Ares {
 		AssetStagedEvent(const Ref<Asset>& asset, const std::string& message = "");
 
 		EVENT_CLASS_TYPE(AssetStaged)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
 	};
 
 	class AssetLoadingEvent : public AssetBaseEvent
@@ -48,7 +45,7 @@ namespace Ares {
 		AssetLoadingEvent(const Ref<Asset>& asset, const std::string& message = "");
 
 		EVENT_CLASS_TYPE(AssetLoading)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
 	};
 
 	class AssetLoadedEvent : public AssetBaseEvent
@@ -57,7 +54,7 @@ namespace Ares {
 		AssetLoadedEvent(const Ref<Asset>& asset, const std::string& message = "");
 
 		EVENT_CLASS_TYPE(AssetLoaded)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
 	};
 
 	class AssetFailedEvent : public AssetBaseEvent
@@ -66,7 +63,7 @@ namespace Ares {
 		AssetFailedEvent(const Ref<Asset>& asset, const std::string& message = "");
 
 		EVENT_CLASS_TYPE(AssetFailed)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
 	};
 
 	class AssetUnloadedEvent : public AssetBaseEvent
@@ -75,7 +72,7 @@ namespace Ares {
 		AssetUnloadedEvent(const Ref<Asset>& asset, const std::string& message = "");
 
 		EVENT_CLASS_TYPE(AssetUnloaded)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
 	};
 
 	class AssetUnstagedEvent : public AssetBaseEvent
@@ -84,7 +81,7 @@ namespace Ares {
 		AssetUnstagedEvent(const Ref<Asset>& asset, const std::string& message = "");
 
 		EVENT_CLASS_TYPE(AssetUnstaged)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
 	};
 
 }

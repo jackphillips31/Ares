@@ -1,10 +1,15 @@
 #include <arespch.h>
-#include "Platform/WinAPI/WinImGuiLayer.h"
+#include "Platform/OpenGL/OpenGLImGuiContext.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_opengl3.h>
-#include <backends/imgui_impl_win32.h>
-#include <glad/wgl.h>
+
+#if AR_PLATFORM_WINDOWS
+	#include <backends/imgui_impl_win32.h>
+	#include <glad/wgl.h>
+#else
+	#error "Platform not supported!"
+#endif
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Window.h"
@@ -12,16 +17,77 @@
 
 namespace Ares {
 
-	WinImGuiLayer::WinImGuiLayer()
-		: ImGuiLayer("WinImGuiLayer")
+#if AR_PLATFORM_WINDOWS
+	inline void CreateViewportContext(ImGuiViewport* viewport)
 	{
+		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
+		AR_CORE_ASSERT(hdc, "Failed to get device context for viewport pixel format!");
+
+		PIXELFORMATDESCRIPTOR pfd = {};
+		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		pfd.iPixelType = PFD_TYPE_RGBA;
+		pfd.cColorBits = 32;
+		pfd.cDepthBits = 24;
+		pfd.iLayerType = PFD_MAIN_PLANE;
+
+		int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == 0)
+		{
+			AR_CORE_ASSERT(false, "Failed to set a compatible pixel format for viewport!");
+		}
+
+		int attributes[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+			WGL_CONTEXT_FLAGS_ARB,
+			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			0
+		};
+
+		HGLRC mainContext = static_cast<HGLRC>(Application::Get().GetWindow().GetGraphicsContext()->GetContextHandle());
+		AR_CORE_ASSERT(mainContext, "Failed to get main context for viewport!");
+
+		HGLRC sharedContext = wglCreateContextAttribsARB(hdc, mainContext, attributes);
+		AR_CORE_ASSERT(sharedContext, "Failed to create shared OpenGL context for viewport!");
+
+		if (!wglShareLists(mainContext, sharedContext))
+		{
+			DWORD error = GetLastError();
+			AR_CORE_ERROR("wglShareLists failed with error: {}", error);
+		}
+
+		ReleaseDC(static_cast<HWND>(viewport->PlatformHandle), hdc);
+
+		viewport->RendererUserData = static_cast<void*>(sharedContext);
 	}
 
-	WinImGuiLayer::~WinImGuiLayer()
+	inline void RenderViewport(ImGuiViewport* viewport, void* render_arg)
 	{
+		HDC hdc = GetDC(static_cast<HWND>(viewport->PlatformHandle));
+		HGLRC sharedContext = static_cast<HGLRC>(viewport->RendererUserData);
+
+		wglMakeCurrent(hdc, sharedContext);
+
+		ImGui_ImplOpenGL3_RenderDrawData(viewport->DrawData);
+
+		SwapBuffers(hdc);
+
+		wglMakeCurrent(nullptr, nullptr);
 	}
 
-	void WinImGuiLayer::OnAttach()
+	inline void DestroyViewportContext(ImGuiViewport* viewport)
+	{
+		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
+		if (sharedContext)
+		{
+			wglDeleteContext(sharedContext);
+			viewport->RendererUserData = nullptr;
+		}
+	}
+#endif
+
+	OpenGLImGuiContext::OpenGLImGuiContext()
 	{
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
@@ -51,11 +117,10 @@ namespace Ares {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		Application& app = Application::Get();
-		void* window = app.GetWindow().GetNativeWindow();
-
-		ImGui_ImplWin32_InitForOpenGL(window);
+	#if AR_PLATFORM_WINDOWS
+		ImGui_ImplWin32_InitForOpenGL(Application::Get().GetWindow().GetNativeWindow());
 		ImGui_ImplOpenGL3_Init("#version 450");
+	#endif
 
 		style.FrameRounding = 2.0f;
 		style.WindowBorderSize = 0.0f;
@@ -123,27 +188,35 @@ namespace Ares {
 		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 	}
 
-	void WinImGuiLayer::OnDetach()
+	OpenGLImGuiContext::~OpenGLImGuiContext()
 	{
 		ImGui_ImplOpenGL3_Shutdown();
+
+	#if AR_PLATFORM_WINDOWS
 		ImGui_ImplWin32_Shutdown();
+	#endif
+
 		ImGui::DestroyContext();
 	}
 
-	void WinImGuiLayer::Begin()
+	void OpenGLImGuiContext::Begin()
 	{
 		ImGui_ImplOpenGL3_NewFrame();
+
+	#if AR_PLATFORM_WINDOWS
 		ImGui_ImplWin32_NewFrame();
+	#endif
+
 		ImGui::NewFrame();
 	}
 
-	void WinImGuiLayer::End()
+	void OpenGLImGuiContext::End()
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		Application& app = Application::Get();
+		Window& appWindow = Application::Get().GetWindow();
 		io.DisplaySize = ImVec2(
-			static_cast<float>(app.GetWindow().GetClientWidth()),
-			static_cast<float>(app.GetWindow().GetClientHeight())
+			static_cast<float>(appWindow.GetClientWidth()),
+			static_cast<float>(appWindow.GetClientHeight())
 		);
 
 		// Rendering
@@ -152,7 +225,8 @@ namespace Ares {
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			HWND window = (HWND)app.GetWindow().GetNativeWindow();
+		#if AR_PLATFORM_WINDOWS
+			HWND window = static_cast<HWND>(appWindow.GetNativeWindow());
 			HDC backup_hdc = GetDC(window);
 			HGLRC backup_hglrc = wglGetCurrentContext();
 
@@ -161,74 +235,7 @@ namespace Ares {
 
 			wglMakeCurrent(backup_hdc, backup_hglrc);
 			ReleaseDC(window, backup_hdc);
-		}
-	}
-
-	void CreateViewportContext(ImGuiViewport* viewport)
-	{
-		HDC hdc = GetDC((HWND)viewport->PlatformHandle);
-		AR_CORE_ASSERT(hdc, "Failed to get device context for viewport pixel format!");
-
-		PIXELFORMATDESCRIPTOR pfd = {};
-		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-		pfd.iPixelType = PFD_TYPE_RGBA;
-		pfd.cColorBits = 32;
-		pfd.cDepthBits = 24;
-		pfd.iLayerType = PFD_MAIN_PLANE;
-
-		int pixelFormat = ChoosePixelFormat(hdc, &pfd);
-		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == 0)
-		{
-			AR_CORE_ASSERT(false, "Failed to set a compatible pixel format for viewport!");
-		}
-
-		int attributes[] = {
-			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
-			WGL_CONTEXT_FLAGS_ARB,
-			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-			0
-		};
-
-		HGLRC mainContext = static_cast<HGLRC>(Application::Get().GetWindow().GetGraphicsContext()->GetContextHandle());
-		AR_CORE_ASSERT(mainContext, "Failed to get main context for viewport!");
-
-		HGLRC sharedContext = wglCreateContextAttribsARB(hdc, mainContext, attributes);
-		AR_CORE_ASSERT(sharedContext, "Failed to create shared OpenGL context for viewport!");
-
-		if (!wglShareLists(mainContext, sharedContext))
-		{
-			DWORD error = GetLastError();
-			AR_CORE_ERROR("wglShareLists failed with error: {}", error);
-		}
-
-		ReleaseDC(static_cast<HWND>(viewport->PlatformHandle), hdc);
-
-		viewport->RendererUserData = static_cast<void*>(sharedContext);
-	}
-
-	void RenderViewport(ImGuiViewport* viewport, void* render_arg)
-	{
-		HDC hdc = GetDC(static_cast<HWND>(viewport->PlatformHandle));
-		HGLRC sharedContext = static_cast<HGLRC>(viewport->RendererUserData);
-
-		wglMakeCurrent(hdc, sharedContext);
-
-		ImGui_ImplOpenGL3_RenderDrawData(viewport->DrawData);
-
-		SwapBuffers(hdc);
-		
-		wglMakeCurrent(nullptr, nullptr);
-	}
-
-	void DestroyViewportContext(ImGuiViewport* viewport)
-	{
-		HGLRC sharedContext = (HGLRC)viewport->RendererUserData;
-		if (sharedContext)
-		{
-			wglDeleteContext(sharedContext);
-			viewport->RendererUserData = nullptr;
+		#endif
 		}
 	}
 

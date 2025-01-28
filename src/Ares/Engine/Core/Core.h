@@ -628,19 +628,39 @@
 /******************************************************/
 /*                 Ares Debug Defines                 */
 /******************************************************/
+#if defined(_MSC_VER)
+	#define AR_DEBUG_BREAK() __debugbreak()
+#elif defined(__GNUC__) || defined(__clang__)
+	#define AR_DEBUG_BREAK() __builtin_trap()
+#elif defined(__APPLE__)
+	#define AR_DEBUG_BREAK() raise(SIGTRAP)
+#elif defined(__linux__)
+	#define AR_DEBUG_BREAK() raise(SIGTRAP)
+#else
+	#define AR_DEBUG_BREAK() abort()
+#endif
+
 #if AR_BUILD_DEBUG
 	#define AR_ENABLE_ASSERTS	1
 	#define AR_ENABLE_PROFILING	0
 	#define EASTL_DEBUG			1
+
+	#define AR_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); AR_DEBUG_BREAK(); }
+	#define AR_CORE_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); AR_DEBUG_BREAK(); }
+#else
+	#define AR_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); }
+	#define AR_CORE_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); }
 #endif
 
 #if AR_ENABLE_ASSERTS
-	#define AR_ASSERT(x, ...) { if(!(x)) { AR_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-	#define AR_CORE_ASSERT(x, ...) { if(!(x)) { AR_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define AR_ASSERT(x, ...) { if(!(x)) { AR_ERROR("Assertion Failed: {0}", __VA_ARGS__); AR_DEBUG_BREAK(); } }
+	#define AR_CORE_ASSERT(x, ...) { if(!(x)) { AR_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); AR_DEBUG_BREAK(); } }
 #else
 	#define AR_ASSERT(x, ...)
 	#define AR_CORE_ASSERT(x, ...)
 #endif
+
+
 
 
 /******************************************************/

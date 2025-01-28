@@ -9,10 +9,17 @@
 #pragma once
 #include <shared_mutex>
 #include <typeindex>
+#include <EASTL/internal/function.h>
+#include <EASTL/vector.h>
 
 namespace Ares {
 
-	class AssetManager;
+	namespace Systems {
+		
+		class AssetManager;
+
+	}
+
 	using MemoryDataKey = uint32_t;
 
 	/**
@@ -77,9 +84,10 @@ namespace Ares {
 		static Ref<Asset> Create(
 			const std::type_index& type,
 			const AssetState state,
-			const std::string& filepath,
-			const std::vector<uint32_t>& dependencies,
-			const MemoryDataKey dataKey
+			const eastl::string& filepath,
+			const eastl::vector<uint32_t>& dependencies,
+			const MemoryDataKey dataKey,
+			Systems::AssetManager* parentManager
 		);
 
 		/**
@@ -94,9 +102,10 @@ namespace Ares {
 		Asset(
 			const std::type_index& type,
 			const AssetState state,
-			const std::string& filepath,
-			const std::vector<uint32_t>& dependencies,
-			const MemoryDataKey dataKey
+			const eastl::string& filepath,
+			const eastl::vector<uint32_t>& dependencies,
+			const MemoryDataKey dataKey,
+			Systems::AssetManager* parentManager
 		);
 
 		/**
@@ -104,9 +113,10 @@ namespace Ares {
 		 */
 		Asset();
 
-		friend class AssetManager;
+		friend class Systems::AssetManager;
 		friend class MainThreadQueue;
 		friend struct std::hash<Asset>;
+		friend struct eastl::hash<Asset>;
 
 	public:
 		/**
@@ -129,21 +139,21 @@ namespace Ares {
 		 * 
 		 * @return The asset's name as a string.
 		 */
-		inline std::string GetName() const { std::shared_lock lock(m_Mutex); return m_Name; }
+		inline eastl::string GetName() const { std::shared_lock lock(m_Mutex); return m_Name; }
 		
 		/**
 		 * @brief Get the filepath of the asset.
 		 * 
 		 * @return The asset's file path as a string.
 		 */
-		inline std::string GetFilepath() const { std::shared_lock lock(m_Mutex); return m_Filepath; }
+		inline eastl::string GetFilepath() const { std::shared_lock lock(m_Mutex); return m_Filepath; }
 		
 		/**
 		 * @brief Get the type name of the asset.
 		 * 
 		 * @return The asset's type name as a string.
 		 */
-		inline std::string GetTypeName() const { std::shared_lock lock(m_Mutex); return m_TypeName; }
+		inline eastl::string GetTypeName() const { std::shared_lock lock(m_Mutex); return m_TypeName; }
 		
 		/**
 		 * @brief Get the type index of the asset.
@@ -157,7 +167,7 @@ namespace Ares {
 		 * 
 		 * @return A vector of dependency IDs.
 		 */
-		inline std::vector<uint32_t> GetDependencies() const { std::shared_lock lock(m_Mutex); return m_Dependencies; }
+		inline eastl::vector<uint32_t> GetDependencies() const { std::shared_lock lock(m_Mutex); return m_Dependencies; }
 		
 		/**
 		 * @brief Get the asset's unique ID.
@@ -165,7 +175,21 @@ namespace Ares {
 		 * @return The asset's ID as a 32 bit unsigned integer.
 		 */
 		inline uint32_t GetAssetId() const { std::shared_lock lock(m_Mutex); return m_AssetId; }
-		
+
+		/**
+		 * @brief Get the asset's parent AssetManager.
+		 * 
+		 * @return A pointer to the asset's parent AssetManager.
+		 */
+		inline Systems::AssetManager* GetParentManager() const { std::shared_lock lock(m_Mutex); return m_AssetManager; }
+
+		/**
+		 * @brief Loads the Asset using its parent AssetManager.
+		 * 
+		 * @param callback A callback to be executed after loading (**Optional**).
+		 */
+		void Load(eastl::function<void(Ref<Asset>)> callback = nullptr);
+
 		/**
 		 * @brief Check if the asset has a filepath.
 		 * 
@@ -192,7 +216,7 @@ namespace Ares {
 		 * 
 		 * @return A string describing the asset's state.
 		 */
-		std::string GetStateString() const;
+		eastl::string GetStateString() const;
 		
 		/**
 		 * @brief Get the size of the asset's data.
@@ -227,14 +251,14 @@ namespace Ares {
 
 	private:
 		// Private setters for AssetManager to use
-		void SetName(const std::string& name);
+		void SetName(const eastl::string& name);
 		void SetState(const AssetState state);
 		void SetAssetId(const uint32_t id);
 		void SetAsset(Scope<AssetBase>&& asset);
 		void SetDataKey(const MemoryDataKey dataKey);
 
 		// Private getters for AssetManager to use
-		inline const MemoryDataKey GetDataKey() const { std::shared_lock lock(m_Mutex); return m_DataKey; }
+		inline MemoryDataKey& GetDataKey() { std::shared_lock lock(m_Mutex); return m_DataKey; }
 
 		// Private methods for unloading and unstaging
 		void Unload();
@@ -242,15 +266,16 @@ namespace Ares {
 
 	private:
 		mutable std::shared_mutex m_Mutex;			///< Mutex for thread-safe access.
-		std::string m_Name;							///< Asset name.
-		std::string m_Filepath;						///< Filepath of the asset.
-		std::string m_TypeName;						///< Type name of the asset.
+		eastl::string m_Name;							///< Asset name.
+		eastl::string m_Filepath;						///< Filepath of the asset.
+		eastl::string m_TypeName;						///< Type name of the asset.
 		std::type_index m_Type;						///< Type index of the asset.
-		std::vector<uint32_t> m_Dependencies;		///< List of asset's dependencies in the form of IDs.
+		eastl::vector<uint32_t> m_Dependencies;		///< List of asset's dependencies in the form of IDs.
 		uint32_t m_AssetId;							///< Unique ID of the asset.
 		Scope<AssetBase> m_Asset;					///< Pointer to the underlying asset data.
 		AssetState m_State;							///< Current state of the asset.
 		MemoryDataKey m_DataKey;					///< Key for memory data.
+		Systems::AssetManager* m_AssetManager;		///< Parent AssetManager.
 	};
 
 }
