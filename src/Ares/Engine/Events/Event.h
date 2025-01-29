@@ -9,6 +9,12 @@
 
 namespace Ares {
 
+	namespace Systems {
+
+		class EventQueue;
+
+	}
+
 	/**
 	 * @enum EventType
 	 * @brief Represents the various types of events in the application.
@@ -76,6 +82,8 @@ namespace Ares {
 	 */
 	#define EVENT_CLASS_CATEGORY(category) virtual uint16_t GetCategoryFlags() const override { return category; }
 
+	#define EVENT_CLASS_CLONE(type) inline Scope<Event> Clone() const override { return CreateScope<type>(*this); }
+
 	/**
 	 * @class Event
 	 * @brief Base class for all events in the engine.
@@ -86,6 +94,7 @@ namespace Ares {
 	class Event
 	{
 		friend class EventDispatcher;
+		friend class Systems::EventQueue;
 	public:
 		virtual ~Event() = default;
 
@@ -132,6 +141,9 @@ namespace Ares {
 		{
 			return GetCategoryFlags() & category;
 		}
+
+	private:
+		virtual Scope<Event> Clone() const = 0;
 	};
 
 	/**

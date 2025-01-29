@@ -95,10 +95,7 @@ namespace eastl {
 			header->UserPtr = originalPtr;
 
 			#if AR_BUILD_DEBUG && AR_DEBUG_PRINT_ALLOCATIONS
-				if (Ares::Log::GetCoreLogger())
-				{
-					AR_CORE_DEBUG("[{:>18}] - ALLOCATION            - Size: [{:>8}]", fmt::format("{:#018x}", reinterpret_cast<uintptr_t>(originalPtr)), totalSize);
-				}
+				AR_CORE_DEBUG("[{:>18}] - ALLOCATION            - Size: [{:>8}]", fmt::format("{:#018x}", reinterpret_cast<uintptr_t>(originalPtr)), totalSize);
 			#endif
 		#endif
 

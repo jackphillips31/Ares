@@ -16,10 +16,10 @@ namespace Ares {
 
 		inline uint32_t GetWidth() const override { return m_Data.Width; }
 		inline uint32_t GetHeight() const override { return m_Data.Height; }
-		inline glm::uvec2 GetWindowDimensions() const override{ return {m_Data.Width, m_Data.Height}; }
+		inline glm::uvec2 GetWindowDimensions() const override { return { m_Data.Width, m_Data.Height }; }
 		inline uint32_t GetClientWidth() const override { return m_Data.ClientWidth; }
 		inline uint32_t GetClientHeight() const override { return m_Data.ClientHeight; }
-		inline glm::uvec2 GetClientDimensions() const override{ return {m_Data.ClientWidth, m_Data.ClientHeight}; }
+		inline glm::uvec2 GetClientDimensions() const override { return { m_Data.ClientWidth, m_Data.ClientHeight }; }
 		inline glm::ivec2 GetWindowPos() const override { return glm::ivec2(m_Data.XPos, m_Data.YPos); }
 		inline glm::ivec2 GetClientPos() const override { return glm::ivec2(m_Data.ClientXPos, m_Data.ClientYPos); }
 		inline uint16_t GetWindowSettings() const override { return m_Data.Flags; }
@@ -32,6 +32,7 @@ namespace Ares {
 		void SetWindowSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) override;
 		void SetClientSizePos(int32_t x, int32_t y, uint32_t width, uint32_t height) override;
 		void SetWindowSettings(uint16_t flags) override;
+		inline void SetEventCallback(eastl::function<void(Event&)>&& callback) override { m_EventCallback = eastl::move(callback); }
 
 		inline virtual void* GetNativeWindow() const override { return m_Window; }
 		inline virtual GraphicsContext* GetGraphicsContext() const override { return m_GraphicsContext.get(); }
@@ -42,6 +43,7 @@ namespace Ares {
 		void ApplySettings(uint16_t flags);
 		void ConfigureFullscreen(uint16_t flags);
 		void ConfigureWindowed(uint16_t flags);
+		void EventCallback(Event& e);
 
 		LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -49,6 +51,7 @@ namespace Ares {
 	private:
 		HWND m_Window;
 		Scope<GraphicsContext> m_GraphicsContext;
+		eastl::function<void(Event&)> m_EventCallback;
 
 		struct WindowData
 		{

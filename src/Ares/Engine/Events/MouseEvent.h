@@ -28,6 +28,9 @@ namespace Ares {
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	private:
+		EVENT_CLASS_CLONE(MouseMovedEvent)
+
+	private:
 		MousePosition m_MousePos;
 	};
 
@@ -51,6 +54,9 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(MouseScrolled)
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
+
+	private:
+		EVENT_CLASS_CLONE(MouseScrolledEvent)
 
 	private:
 		float m_XOffset, m_YOffset;
@@ -88,6 +94,9 @@ namespace Ares {
 		}
 
 		EVENT_CLASS_TYPE(MouseButtonPressed)
+
+	private:
+		EVENT_CLASS_CLONE(MouseButtonPressedEvent)
 	};
 
 	class MouseButtonReleasedEvent : public MouseButtonEvent
@@ -106,6 +115,9 @@ namespace Ares {
 		}
 
 		EVENT_CLASS_TYPE(MouseButtonReleased)
+
+	private:
+		EVENT_CLASS_CLONE(MouseButtonReleasedEvent)
 	};
 
 }

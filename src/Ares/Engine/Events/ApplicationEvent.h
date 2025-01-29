@@ -18,6 +18,9 @@ namespace Ares {
 		EVENT_CLASS_TYPE(WindowResize)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	private:
+		EVENT_CLASS_CLONE(WindowResizeEvent)
+
+	private:
 		uint32_t m_Width, m_Height, m_ClientWidth, m_ClientHeight;
 	};
 
@@ -34,6 +37,9 @@ namespace Ares {
 		EVENT_CLASS_TYPE(WindowMoved)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	private:
+		EVENT_CLASS_CLONE(WindowMovedEvent)
+
+	private:
 		int32_t m_XPos, m_YPos;
 	};
 
@@ -44,6 +50,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(WindowClose)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		EVENT_CLASS_CLONE(WindowCloseEvent)
 	};
 
 	class WindowFocusEvent : public Event
@@ -57,6 +65,7 @@ namespace Ares {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 
 	private:
+		EVENT_CLASS_CLONE(WindowFocusEvent)
 		std::string GetFormattedTimestamp() const;
 
 	private:
@@ -74,6 +83,7 @@ namespace Ares {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 
 	private:
+		EVENT_CLASS_CLONE(WindowLostFocusEvent)
 		std::string GetFormattedTimestamp() const;
 
 	private:
@@ -87,6 +97,8 @@ namespace Ares {
 		
 		EVENT_CLASS_TYPE(AppTick)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		EVENT_CLASS_CLONE(AppTickEvent)
 	};
 
 	class AppUpdateEvent : public Event
@@ -96,6 +108,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AppUpdate)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		EVENT_CLASS_CLONE(AppUpdateEvent)
 	};
 
 	class AppRenderEvent : public Event
@@ -105,6 +119,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AppRender)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		EVENT_CLASS_CLONE(AppRenderEvent)
 	};
 
 }

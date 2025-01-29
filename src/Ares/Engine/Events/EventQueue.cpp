@@ -1,116 +1,110 @@
 #include <arespch.h>
 #include "Engine/Events/EventQueue.h"
 
+
 #include "Engine/Core/Application.h"
 #include "Engine/Events/Event.h"
+#include "Engine/Events/ApplicationEvent.h"
 
-namespace Ares {
+namespace Ares::Systems {
 
-	void EventQueue::Init()
+	Scope<EventQueue> EventQueue::Create()
 	{
-		AR_CORE_INFO("Initializing EventQueue");
-		Shutdown();
+		return Scope<EventQueue>(new EventQueue());
 	}
 
-	void EventQueue::Shutdown()
+	EventQueue::EventQueue()
+		: m_AppCallback(nullptr), m_NextListenerId(1)
 	{
-		// Clear Read Event Queue
-		{
-			std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
-			while (!s_ReadEventQueue.empty()) s_ReadEventQueue.pop();
-		}
-
-		// Clear Write Event Queue
-		{
-			std::lock_guard<std::mutex> lock(s_WriteQueueMutex);
-			while (!s_WriteEventQueue.empty()) s_WriteEventQueue.pop();
-		}
-
-		// Clear all listeners
-		{
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
-			s_Listeners.clear();
-			s_ListenerTypeMap.clear();
-		}
-
-		// Reset Id counter
-		s_NextListenerId = 1;
 	}
 
-	void EventQueue::OnUpdate()
+	EventQueue::~EventQueue()
 	{
-		SwapQueues();
-
-		std::lock_guard<std::mutex> lock(s_ReadQueueMutex);
-		while (!s_ReadEventQueue.empty())
 		{
-			Scope<Event> event = eastl::move(s_ReadEventQueue.front());
-			s_ReadEventQueue.pop();
-			if (s_Callback != nullptr)
-				s_Callback(*event);
-			NotifyListeners(*event);
+			std::unique_lock lock(m_WriteMutex);
+			while (!m_WriteQueue.empty()) m_WriteQueue.pop();
 		}
+		{
+			std::unique_lock lock(m_ReadMutex);
+			while (!m_ReadQueue.empty()) m_ReadQueue.pop();
+		}
+		{
+			std::unique_lock lock(m_ListenerMutex);
+			m_Listeners.clear();
+			m_ListenerIndexMap.clear();
+		}
+		{
+			std::unique_lock lock(m_CallbackMutex);
+			m_AppCallback = nullptr;
+		}
+	}
+
+	void EventQueue::Dispatch(Event& e)
+	{
+		std::unique_lock lock(m_WriteMutex);
+		m_WriteQueue.emplace(e.Clone());
+	}
+
+	void EventQueue::OnUpdate(Timestep& ts)
+	{
+		{
+			std::unique_lock lock1(m_WriteMutex);
+			std::unique_lock lock2(m_ReadMutex);
+			eastl::swap(m_WriteQueue, m_ReadQueue);
+		}
+		{
+			std::unique_lock lock(m_ReadMutex);
+			while (!m_ReadQueue.empty())
+			{
+				Scope<Event> event = eastl::move(m_ReadQueue.front());
+				m_ReadQueue.pop();
+				if (m_AppCallback)
+					m_AppCallback(*event);
+
+				for (auto& listenerEntry : m_Listeners)
+				{
+					if (event->Handled)
+						break;
+
+					if (listenerEntry.ListenerType == EventType::None || listenerEntry.ListenerType == event->GetEventType())
+					{
+						event->Handled = listenerEntry.CallbackFn(*event);
+					}
+				}
+			}
+		}
+	}
+
+	void EventQueue::SetEventCallback(ApplicationCallback&& callback)
+	{
+		std::unique_lock lock(m_CallbackMutex);
+		m_AppCallback = eastl::move(callback);
+	}
+
+	EventListener EventQueue::AddGlobalListener(StoredCallbackFn&& callback)
+	{
+		EventListener currentId = m_NextListenerId++;
+		ListenerEntry entry;
+		entry.CallbackFn = eastl::move(callback);
+		entry.ListenerId = currentId;
+		entry.ListenerType = EventType::None;
+
+		std::unique_lock lock(m_ListenerMutex);
+		m_ListenerIndexMap[currentId] = m_Listeners.size();
+		m_Listeners.emplace_back(eastl::move(entry));
+
+		return currentId;
 	}
 
 	void EventQueue::RemoveListener(EventListener& listenerId)
 	{
-		// Check to see if listener is valid
-		if (!listenerId)
+		std::unique_lock lock(m_ListenerMutex);
+		auto it = m_ListenerIndexMap.find(listenerId);
+		if (it != m_ListenerIndexMap.end())
 		{
-			AR_CORE_WARN("Event listener has already been removed!");
-			return;
-		}
-
-		// Remove listener
-		{
-			size_t listenersRemoved = 0;
-			std::lock_guard<std::mutex> lock(s_ListenerMutex);
-
-			// Find EventType for this listener
-			auto it = s_ListenerTypeMap.find(listenerId);
-			if (it != s_ListenerTypeMap.end())
-			{
-				// Erase event listener
-				auto& listeners = s_Listeners[it->second];
-				listenersRemoved += listeners.erase(listenerId);
-				s_ListenerTypeMap.erase(it);
-			}
-
-			// Check to see if a listener was removed
-			if (!listenersRemoved)
-			{
-				AR_CORE_WARN("Did not find any event listeners with id: {}", listenerId);
-			}
-			else
-				listenerId = 0;
+			m_Listeners.erase(m_Listeners.begin() + it->second);
+			listenerId = 0;
 		}
 	}
 
-	void EventQueue::SetEventCallback(ApplicationEventCallbackFn&& callback)
-	{
-		std::lock_guard<std::mutex> lock(s_CallbackMutex);
-		s_Callback = eastl::move(callback);
-	}
-
-	void EventQueue::NotifyListeners(Event& e)
-	{
-		std::lock_guard<std::mutex> lock(s_ListenerMutex);
-		auto& listeners = s_Listeners[e.GetEventType()];
-
-		for (auto& listenerEntry : listeners)
-		{
-			if (e.Handled)
-				break;
-
-			e.Handled = listenerEntry.second(e);
-		}
-	}
-
-	void EventQueue::SwapQueues()
-	{
-		std::lock_guard<std::mutex> writeLock(s_WriteQueueMutex);
-		std::lock_guard<std::mutex> readLock(s_ReadQueueMutex);
-
-		eastl::swap(s_WriteEventQueue, s_ReadEventQueue);
-	}
 }

@@ -5,7 +5,10 @@
 class MainWindowElement : public Ares::ImGuiElement
 {
 public:
-	MainWindowElement();
+	MainWindowElement(Ares::Application& app);
 
 	void Draw() override;
+
+private:
+	Ares::Systems::EventQueue* m_EventSystem;
 };

@@ -37,6 +37,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AssetStaged)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
+	private:
+		EVENT_CLASS_CLONE(AssetStagedEvent)
 	};
 
 	class AssetLoadingEvent : public AssetBaseEvent
@@ -46,6 +48,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AssetLoading)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
+	private:
+		EVENT_CLASS_CLONE(AssetLoadingEvent)
 	};
 
 	class AssetLoadedEvent : public AssetBaseEvent
@@ -55,6 +59,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AssetLoaded)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
+	private:
+		EVENT_CLASS_CLONE(AssetLoadedEvent)
 	};
 
 	class AssetFailedEvent : public AssetBaseEvent
@@ -64,6 +70,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AssetFailed)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
+	private:
+		EVENT_CLASS_CLONE(AssetFailedEvent)
 	};
 
 	class AssetUnloadedEvent : public AssetBaseEvent
@@ -73,6 +81,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AssetUnloaded)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
+	private:
+		EVENT_CLASS_CLONE(AssetUnloadedEvent)
 	};
 
 	class AssetUnstagedEvent : public AssetBaseEvent
@@ -82,6 +92,8 @@ namespace Ares {
 
 		EVENT_CLASS_TYPE(AssetUnstaged)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
+	private:
+		EVENT_CLASS_CLONE(AssetUnstagedEvent)
 	};
 
 }

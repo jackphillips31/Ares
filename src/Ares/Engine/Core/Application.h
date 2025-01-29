@@ -19,7 +19,6 @@ namespace Ares {
 
 	class AppSystem;
 	class Event;
-	class EventQueue;
 	class ImGuiContext;
 	class ImGuiLayer;
 	class Layer;
@@ -191,7 +190,6 @@ namespace Ares {
 		static Application* s_Instance;		// Static reference to the active Application instance.
 
 		friend int ::EntryPoint(int argc, char** argv);
-		friend class EventQueue;
 	};
 
 	/**

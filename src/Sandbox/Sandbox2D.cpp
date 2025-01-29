@@ -13,9 +13,10 @@ Sandbox2D::Sandbox2D(Ares::Application& app)
 	m_InputSystem(app.GetSystem<Ares::Systems::Input>()),
 	m_AssetManager(app.GetSystem<Ares::Systems::AssetManager>()),
 	m_AssetListElement(app),
+	m_MainWindowElement(app),
 	myFont(nullptr)
 {
-	Ares::EventQueue::AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
+	app.GetSystem<Ares::Systems::EventQueue>()->AddListener<Ares::WindowFocusEvent>(AR_BIND_EVENT_FN(Sandbox2D::OnWindowFocus));
 
 	m_SandboxScene = Ares::CreateScope<Scene>();
 	m_SandboxScene->RegisterSystem<Systems::CameraSystem>();

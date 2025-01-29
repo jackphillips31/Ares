@@ -40,6 +40,9 @@ namespace Ares {
 		EVENT_CLASS_TYPE(KeyPressed)
 
 	private:
+		EVENT_CLASS_CLONE(KeyPressedEvent)
+
+	private:
 		uint32_t m_RepeatCount;
 	};
 
@@ -59,6 +62,9 @@ namespace Ares {
 		}
 
 		EVENT_CLASS_TYPE(KeyReleased)
+
+	private:
+		EVENT_CLASS_CLONE(KeyReleasedEvent)
 	};
 
 	class KeyTypedEvent : public KeyEvent
@@ -77,6 +83,9 @@ namespace Ares {
 		}
 
 		EVENT_CLASS_TYPE(KeyTyped)
+
+	private:
+		EVENT_CLASS_CLONE(KeyTypedEvent)
 	};
 
 }

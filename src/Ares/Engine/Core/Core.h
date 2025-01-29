@@ -671,6 +671,7 @@
 #define AR_STATIC_BIND_EVENT_FN(fn) std::bind(&fn, std::placeholders::_1)
 #define AR_BIND_ASSET_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 #define AR_STATIC_BIND_ASSET_FN(fn) std::bind(&fn, std::placeholders::_1)
+#define AR_BIND_SYSTEM_CALLBACK_FN(fn, object) std::bind(&fn, object, std::placeholders::_1)
 
 /**
  * @namespace Ares

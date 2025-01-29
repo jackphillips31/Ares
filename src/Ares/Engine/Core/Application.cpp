@@ -3,7 +3,6 @@
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Layer.h"
-#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 #include "Engine/Core/Window.h"
@@ -47,24 +46,28 @@ namespace Ares {
 		RegisterSystem<Systems::Input>(m_Window.get());
 		RegisterSystem<Systems::ThreadPool>(settings.ThreadCount);
 		RegisterSystem<Systems::AssetManager>(GetSystem<Systems::ThreadPool>());
-		EventQueue::Init();
+		RegisterSystem<Systems::EventQueue>();
 		Renderer::Init();
-		MainThreadQueue::Init();
 
-		EventQueue::SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
-		EventQueue::AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
-		EventQueue::AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
+		m_Window->SetEventCallback(
+			AR_BIND_SYSTEM_CALLBACK_FN(Systems::EventQueue::Dispatch, GetSystem<Systems::EventQueue>())
+		);
 
+		GetSystem<Systems::AssetManager>()->SetEventCallback(
+			AR_BIND_SYSTEM_CALLBACK_FN(Systems::EventQueue::Dispatch, GetSystem<Systems::EventQueue>())
+		);
+		GetSystem<Systems::EventQueue>()->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
+		GetSystem<Systems::EventQueue>()->AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
+		GetSystem<Systems::EventQueue>()->AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
 	}
 
 	Application::~Application()
 	{
-		MainThreadQueue::Shutdown();
 		Renderer::Shutdown();
-		EventQueue::Shutdown();
 		UnregisterSystem<Systems::AssetManager>();
 		UnregisterSystem<Systems::ThreadPool>();
 		UnregisterSystem<Systems::Input>();
+		UnregisterSystem<Systems::EventQueue>();
 	}
 
 	void Application::PushLayer(Ref<Layer> layer)
@@ -104,7 +107,6 @@ namespace Ares {
 				m_LastFrameTime = currentTime;
 
 				m_Window->OnUpdate();
-				MainThreadQueue::OnUpdate();
 
 				if (!m_Minimized)
 				{
@@ -115,7 +117,6 @@ namespace Ares {
 						layer->OnUpdate(timestep);
 				}
 
-				EventQueue::OnUpdate();
 			}
 
 			if (m_Minimized)

@@ -75,6 +75,7 @@ namespace Ares {
 		case VK_NUMPAD7: return KeyCode::KP7;
 		case VK_NUMPAD8: return KeyCode::KP8;
 		case VK_NUMPAD9: return KeyCode::KP9;
+		case VK_NUMLOCK: return KeyCode::NumLock;
 		case VK_MULTIPLY: return KeyCode::KPMultiply;
 		case VK_ADD: return KeyCode::KPAdd;
 		case VK_SUBTRACT: return KeyCode::KPSubtract;
@@ -106,8 +107,10 @@ namespace Ares {
 		case VK_F24: return KeyCode::F24;
 		case VK_LSHIFT: return KeyCode::LeftShift;
 		case VK_RSHIFT: return KeyCode::RightShift;
+		case VK_SHIFT: return KeyCode::Shift;
 		case VK_LCONTROL: return KeyCode::LeftControl;
 		case VK_RCONTROL: return KeyCode::RightControl;
+		case VK_CONTROL: return KeyCode::Control;
 		case VK_LMENU: return KeyCode::LeftAlt;
 		case VK_RMENU: return KeyCode::RightAlt;
 		case VK_OEM_1: return KeyCode::Semicolon;
@@ -200,6 +203,7 @@ namespace Ares {
 			case KeyCode::KP7: return VK_NUMPAD7;
 			case KeyCode::KP8: return VK_NUMPAD8;
 			case KeyCode::KP9: return VK_NUMPAD9;
+			case KeyCode::NumLock: return VK_NUMLOCK;
 			case KeyCode::KPMultiply: return VK_MULTIPLY;
 			case KeyCode::KPAdd: return VK_ADD;
 			case KeyCode::KPSubtract: return VK_SUBTRACT;
@@ -231,8 +235,10 @@ namespace Ares {
 			case KeyCode::F24: return VK_F24;
 			case KeyCode::LeftShift: return VK_LSHIFT;
 			case KeyCode::RightShift: return VK_RSHIFT;
+			case KeyCode::Shift: return VK_SHIFT;
 			case KeyCode::LeftControl: return VK_LCONTROL;
 			case KeyCode::RightControl: return VK_RCONTROL;
+			case KeyCode::Control: return VK_CONTROL;
 			case KeyCode::LeftAlt: return VK_LMENU;
 			case KeyCode::RightAlt: return VK_RMENU;
 			case KeyCode::Semicolon: return VK_OEM_1;

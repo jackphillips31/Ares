@@ -10,7 +10,7 @@ namespace Ares {
 	class ImGuiConsoleSink : public spdlog::sinks::base_sink<Mutex>
 	{
 	public:
-		explicit ImGuiConsoleSink(Ref<Console> console)
+		explicit ImGuiConsoleSink(std::shared_ptr<Console> console)
 			: console(console)
 		{
 		}
@@ -28,7 +28,7 @@ namespace Ares {
 		}
 
 	private:
-		Ref<Console> console;
+		std::shared_ptr<Console> console;
 	};
 
 	using ImGuiConsoleSink_mt = ImGuiConsoleSink<std::mutex>;

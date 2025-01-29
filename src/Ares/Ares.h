@@ -87,7 +87,6 @@
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Layer.h"
-#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 #include "Engine/Core/Utility.h"

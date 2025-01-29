@@ -6,7 +6,7 @@ AssetListElement::AssetListElement(Ares::Application& app)
 	: m_AssetManager(app.GetSystem<Ares::Systems::AssetManager>())
 {
 	m_AssetList = m_AssetManager->GetCompleteList();
-	Ares::EventQueue::AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(AssetListElement::OnAssetLoaded));
+	app.GetSystem<Ares::Systems::EventQueue>()->AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(AssetListElement::OnAssetLoaded));
 }
 
 void AssetListElement::Draw()

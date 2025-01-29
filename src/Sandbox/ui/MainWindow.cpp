@@ -2,7 +2,8 @@
 
 #include <imgui.h>
 
-MainWindowElement::MainWindowElement()
+MainWindowElement::MainWindowElement(Ares::Application& app)
+	: m_EventSystem(app.GetSystem<Ares::Systems::EventQueue>())
 {
 }
 
@@ -39,7 +40,7 @@ void MainWindowElement::Draw()
 			if (ImGui::MenuItem("Exit"))
 			{
 				Ares::WindowCloseEvent event;
-				Ares::EventQueue::Dispatch<Ares::WindowCloseEvent>(event);
+				m_EventSystem->Dispatch(event);
 			}
 			ImGui::EndMenu();
 		}

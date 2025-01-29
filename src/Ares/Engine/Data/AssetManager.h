@@ -27,12 +27,14 @@
 #include <EASTL/hash_set.h>
 #include <EASTL/string.h>
 #include <EASTL/vector.h>
+#include <EASTL/queue.h>
 
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
 #include "Engine/Data/Asset.h"
 #include "Engine/Data/MemoryDataProvider.h"
 #include "Engine/Events/AssetEvent.h"
+#include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/EventQueue.h"
 
 namespace Ares {
@@ -336,6 +338,11 @@ namespace Ares {
 			 */
 			void RemoveListener(AssetListener& listenerId);
 
+			void SetEventCallback(std::function<void(Event&)> callback)
+			{
+				m_EventCallback = std::move(callback);
+			}
+
 			/**
 			 * @brief Executes all queued callbacks.
 			 */
@@ -458,9 +465,18 @@ namespace Ares {
 			eastl::atomic<AssetListener> m_NextListenerId;
 			std::shared_mutex m_ListenerMutex;
 
+			// Task Queue
+			eastl::queue<eastl::function<void()>> m_ReadTaskQueue;
+			eastl::queue<eastl::function<void()>> m_WriteTaskQueue;
+			std::shared_mutex m_ReadTaskQueueMutex;
+			std::shared_mutex m_WriteTaskQueueMutex;
+
 			// AssetManager Systems
 			Systems::ThreadPool* m_ThreadPool;
 			Internal::MemoryDataProviderSys m_MemoryDataProvider;
+
+			// Event callback
+			std::function<void(Event&)> m_EventCallback;
 		};
 
 		template <typename AssetType>
@@ -550,7 +566,9 @@ namespace Ares {
 			}
 
 			// Dispatch to event queue
-			EventQueue::Dispatch<AssetEventType>(tempEvent);
+			//EventQueue::Dispatch<AssetEventType>(tempEvent);
+			if (m_EventCallback)
+				m_EventCallback(tempEvent);
 			Ref<AssetEventType> event = CreateRef<AssetEventType>(tempEvent);
 
 			// Dispatch to asset listeners

@@ -4,7 +4,6 @@
 #include <EASTL/functional.h>
 
 #include "Engine/Core/Application.h"
-#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Data/DataBuffer.h"
 #include "Engine/Data/FileIO.h"
@@ -13,6 +12,7 @@
 #include "Engine/Data/Parsers/OBJParser.h"
 #include "Engine/Data/Parsers/ShaderParser.h"
 #include "Engine/Events/AssetEvent.h"
+#include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/EventQueue.h"
 #include "Engine/Renderer/Assets/MeshData.h"
 #include "Engine/Renderer/Assets/Shader.h"
@@ -266,6 +266,22 @@ namespace Ares::Systems {
 	void AssetManager::OnUpdate(Timestep& ts)
 	{
 		{
+			std::unique_lock lock1(m_ReadTaskQueueMutex);
+			std::unique_lock lock2(m_WriteTaskQueueMutex);
+			eastl::swap(m_ReadTaskQueue, m_WriteTaskQueue);
+		}
+
+		{
+			std::unique_lock lock(m_ReadTaskQueueMutex);
+			while (!m_ReadTaskQueue.empty())
+			{
+				eastl::function<void()> task = eastl::move(m_ReadTaskQueue.front());
+				m_ReadTaskQueue.pop();
+				task();
+			}
+		}
+
+		{
 			std::unique_lock lock1(m_ReadCallbackMutex);
 			std::unique_lock lock2(m_WriteCallbackMutex);
 			eastl::swap(m_ReadCallbackQueue, m_WriteCallbackQueue);
@@ -273,7 +289,7 @@ namespace Ares::Systems {
 
 		while (!m_ReadCallbackQueue.empty())
 		{
-			eastl::function<void()> callback = m_ReadCallbackQueue.front();
+			eastl::function<void()> callback = eastl::move(m_ReadCallbackQueue.front());
 			m_ReadCallbackQueue.pop();
 			callback();
 		}
@@ -331,7 +347,8 @@ namespace Ares::Systems {
 					const DataBuffer& dataBuffer = m_MemoryDataProvider.GetDataBuffer(dataKey);
 					std::string_view shaderData(static_cast<const char*>(dataBuffer.GetBuffer()), dataBuffer.GetSize());
 
-					MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), shaderData, assetType]()
+					std::unique_lock lock(m_WriteTaskQueueMutex);
+					m_WriteTaskQueue.emplace([this, asset, callback = eastl::move(callback), shaderData, assetType]()
 						{
 							Scope<Shader> result = nullptr;
 							try
@@ -406,7 +423,8 @@ namespace Ares::Systems {
 							}
 						}
 
-						MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), shaders]()
+						std::unique_lock lock(m_WriteTaskQueueMutex);
+						m_WriteTaskQueue.emplace([this, asset, callback = eastl::move(callback), shaders]()
 							{
 								Scope<ShaderProgram> result = nullptr;
 								try
@@ -442,7 +460,8 @@ namespace Ares::Systems {
 						if (!shaderData->IsValid)
 							throw std::runtime_error("Shader Parsing Error - " + shaderData->Error);
 
-						MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), shaderData]()
+						std::unique_lock lock(m_WriteTaskQueueMutex);
+						m_WriteTaskQueue.emplace([this, asset, callback = eastl::move(callback), shaderData]()
 							{
 								Scope<ShaderProgram> result = nullptr;
 								try
@@ -484,7 +503,8 @@ namespace Ares::Systems {
 					if (!meshData->IsValid)
 						throw std::runtime_error("Mesh Data Parsing Error - " + meshData->Error);
 
-					MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), meshData]()
+					std::unique_lock lock(m_WriteTaskQueueMutex);
+					m_WriteTaskQueue.emplace([this, asset, callback = eastl::move(callback), meshData]()
 						{
 							Scope<MeshData> result = nullptr;
 							try
@@ -511,7 +531,9 @@ namespace Ares::Systems {
 				case Utility::AssetType::Texture:
 				{
 					const DataBuffer& dataBuffer = m_MemoryDataProvider.GetDataBuffer(asset->GetDataKey());
-					MainThreadQueue::SubmitTask([this, asset, callback = eastl::move(callback), data = RawData(dataBuffer.GetBuffer(), dataBuffer.GetSize())]()
+
+					std::unique_lock lock(m_WriteTaskQueueMutex);
+					m_WriteTaskQueue.emplace([this, asset, callback = eastl::move(callback), data = RawData(dataBuffer.GetBuffer(), dataBuffer.GetSize())]()
 						{
 							Scope<Texture> result = nullptr;
 							try

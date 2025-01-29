@@ -226,6 +226,8 @@ namespace Ares {
 		 */
 		virtual void SetWindowSettings(uint16_t flags) = 0;
 
+		virtual void SetEventCallback(eastl::function<void(Event&)>&& callback) = 0;
+
 		/**
 		 * @brief Gets a pointer to the native window.
 		 * 

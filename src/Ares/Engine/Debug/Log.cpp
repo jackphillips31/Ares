@@ -8,13 +8,13 @@
 namespace Ares {
 	std::shared_ptr<spdlog::logger> Log::s_CoreLogger;
 	std::shared_ptr<spdlog::logger> Log::s_ClientLogger;
-	Ref<Console> Log::s_Console;
+	std::shared_ptr<Console> Log::s_Console;
 
 	void Log::Init(spdlog::level setLevel)
 	{
 		auto pattern = "%^[%T] %7n: %v%$";
 
-		s_Console = CreateRef<Console>();
+		s_Console = std::make_shared<Console>();
 
 		std::shared_ptr<ImGuiConsoleSink_mt> imgui_sink = std::make_shared<ImGuiConsoleSink_mt>(s_Console);
 		std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();

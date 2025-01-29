@@ -42,6 +42,7 @@
 #include <shared_mutex>
 #include <EASTL/vector.h>
 #include <EASTL/atomic.h>
+#include <EASTL/queue.h>
 
 namespace Ares {
 

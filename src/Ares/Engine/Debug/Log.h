@@ -14,12 +14,12 @@ namespace Ares {
 
 		inline static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
 		inline static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
-		inline static Ref<Console> GetConsole() { return s_Console; }
+		inline static std::shared_ptr<Console> GetConsole() { return s_Console; }
 
 	private:
 		static std::shared_ptr<spdlog::logger> s_CoreLogger;
 		static std::shared_ptr<spdlog::logger> s_ClientLogger;
-		static Ref<Console> s_Console;
+		static std::shared_ptr<Console> s_Console;
 	};
 
 }
