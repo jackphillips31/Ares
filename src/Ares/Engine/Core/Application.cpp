@@ -13,6 +13,8 @@
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/RenderCommand.h"
 
+#include "Engine/Data/MemoryManager.h"
+
 namespace Ares {
 
 	Application* Application::s_Instance = nullptr;
@@ -59,6 +61,22 @@ namespace Ares {
 		GetSystem<Systems::EventQueue>()->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 		GetSystem<Systems::EventQueue>()->AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		GetSystem<Systems::EventQueue>()->AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
+
+		Internal::MemoryManager testManager(512);
+		//void* data = testManager.Allocate(256);
+		void* data1 = testManager.Allocate(64);
+		void* data2 = testManager.Allocate(64);
+		//void* data3 = testManager.Allocate(512);
+		//void* data4 = testManager.Allocate(52);
+
+		testManager.Deallocate(data2);
+		testManager.Deallocate(data1);
+
+		void* data5 = testManager.Allocate(16);
+		void* data6 = testManager.Allocate(32);
+
+		//testManager.Deallocate(data5);
+		//testManager.Deallocate(data6);
 	}
 
 	Application::~Application()
