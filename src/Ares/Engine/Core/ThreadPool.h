@@ -48,6 +48,13 @@ namespace Ares {
 
 	class Application;
 
+	namespace Internal {
+
+		class AppAllocator;
+		struct Deleter;
+
+	}
+
 	namespace Systems {
 
 		/**
@@ -127,6 +134,9 @@ namespace Ares {
 			 */
 			static Scope<ThreadPool> Create(size_t threadCount = std::thread::hardware_concurrency());
 
+			template <typename DeleterType, typename AllocatorType>
+			static Scope<ThreadPool, DeleterType> Create(const AllocatorType& alloc, size_t threadCount = std::thread::hardware_concurrency());
+
 		private:
 			ThreadPool(size_t threadCount);
 
@@ -166,6 +176,12 @@ namespace Ares {
 			}
 
 			return result;
+		}
+
+		template <typename DeleterType, typename AllocatorType>
+		Scope<ThreadPool, DeleterType> ThreadPool::Create(const AllocatorType& alloc, size_t threadCount)
+		{
+			return Scope<ThreadPool, DeleterType>(new (alloc.allocate(sizeof(ThreadPool))) ThreadPool(threadCount), DeleterType(alloc));
 		}
 
 	}

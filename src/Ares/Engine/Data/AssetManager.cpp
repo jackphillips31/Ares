@@ -25,6 +25,13 @@ namespace Ares::Systems {
 		return Scope<AssetManager>(new AssetManager(threadPool));
 	}
 
+	/*
+	Scope<AssetManager, Internal::Deleter> AssetManager::Create(const Internal::AppAllocator& alloc, Systems::ThreadPool* threadPool)
+	{
+		return Scope<AssetManager, Internal::Deleter>(new AssetManager(threadPool), Internal::Deleter(alloc));
+	}
+	*/
+
 	AssetManager::AssetManager(Systems::ThreadPool* threadPool)
 		: m_NextAssetId(1), m_NextListenerId(1), m_ThreadPool(threadPool), m_MemoryDataProvider()
 	{

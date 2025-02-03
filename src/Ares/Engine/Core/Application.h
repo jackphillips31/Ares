@@ -12,6 +12,7 @@
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
+#include "Engine/Data/MemoryManager.h"
 
 int EntryPoint(int argc, char** argv);
 
@@ -137,6 +138,8 @@ namespace Ares {
 		 */
 		inline static Application& Get() { return *s_Instance; }
 
+		inline Internal::MemoryManager& GetMemoryManager() { return m_MemoryManager; }
+
 		template <typename SystemType>
 		SystemType* GetSystem();
 
@@ -176,6 +179,7 @@ namespace Ares {
 		void UnregisterSystem();
 	
 	private:
+		Internal::MemoryManager m_MemoryManager;		// Application Memory Manager.
 		ApplicationSettings m_Settings;		// Application configuration settings.
 		Scope<Window> m_Window;				// The main application window.
 		Scope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
@@ -184,8 +188,14 @@ namespace Ares {
 		LayerStack m_LayerStack;			// Stack of active layers in the application.
 		double m_LastFrameTime = 0.0f;		// Timestamp of the last frame update.
 
-		eastl::hash_map<std::type_index, Scope<Internal::System>> m_Systems;
-		eastl::vector<std::type_index> m_SystemOrder;
+		eastl::hash_map<
+			std::type_index,
+			Scope<Internal::System, Internal::Deleter>,
+			eastl::hash<std::type_index>,
+			eastl::equal_to<std::type_index>,
+			Internal::AppAllocator
+		> m_Systems;
+		eastl::vector<std::type_index, Internal::AppAllocator> m_SystemOrder;
 	private:
 		static Application* s_Instance;		// Static reference to the active Application instance.
 
@@ -222,7 +232,7 @@ namespace Ares {
 	template <typename SystemType, typename... Args>
 	bool Application::RegisterSystem(Args&&... args)
 	{
-		if (m_Systems[typeid(SystemType)] = SystemType::Create(std::forward<Args>(args)...))
+		if (m_Systems[typeid(SystemType)] = SystemType::template Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), std::forward<Args>(args)...))
 		{
 			m_SystemOrder.emplace_back(typeid(SystemType));
 			return true;

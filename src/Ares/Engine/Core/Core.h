@@ -688,9 +688,10 @@ namespace Ares {
 	 * @details This alias simplifies the usage of `eastl::unique_ptr` within the engine.
 	 * 
 	 * @tparam ObjectType The type of object.
+	 * @tparam DeleterType The type of deleter to use during destruction. **Optional**
 	 */
-	template<typename ObjectType>
-	using Scope = eastl::unique_ptr<ObjectType>;
+	template<typename ObjectType, typename DeleterType = eastl::default_delete<ObjectType>>
+	using Scope = eastl::unique_ptr<ObjectType, DeleterType>;
 
 	/**
 	 * @fn CreateScope(Args&&... args)
@@ -745,6 +746,14 @@ namespace Ares {
 	{
 		return eastl::make_shared<ObjectType>(std::forward<Args>(args)...);
 	}
+
+	/*
+	template <typename ObjectType, typename DeleterType, typename... Args>
+	constexpr Ref<ObjectType> CreateRefWithDeleter(const DeleterType& deleter, Args&&... args)
+	{
+		return eastl::shared_ptr<ObjectType>(eastl::forward<Args>(args)..., deleter);
+	}
+	*/
 
 }
 /******************************************************/

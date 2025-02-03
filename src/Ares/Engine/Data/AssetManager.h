@@ -33,6 +33,7 @@
 #include "Engine/Core/Utility.h"
 #include "Engine/Data/Asset.h"
 #include "Engine/Data/MemoryDataProvider.h"
+#include "Engine/Data/MemoryManager.h"
 #include "Engine/Events/AssetEvent.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/EventQueue.h"
@@ -45,6 +46,13 @@ namespace Ares {
 	class Event;
 	class Timestep;
 	struct RawData;
+
+	namespace Internal {
+
+		class AppAllocator;
+		struct Deleter;
+
+	}
 
 	/**
 	 * @typedef AssetListener
@@ -358,6 +366,10 @@ namespace Ares {
 			 * @return A Scope of the created AssetManager object.
 			 */
 			static Scope<AssetManager> Create(Systems::ThreadPool* threadPool);
+			//static Scope<AssetManager, Internal::Deleter> Create(const Internal::AppAllocator& alloc, Systems::ThreadPool* threadPool);
+
+			template <typename DeleterType, typename AllocatorType>
+			static Scope<AssetManager, DeleterType> Create(const AllocatorType& alloc, Systems::ThreadPool* threadPool);
 
 		private:
 			/**
@@ -597,6 +609,12 @@ namespace Ares {
 					}
 				}
 			}
+		}
+
+		template <typename DeleterType, typename AllocatorType>
+		Scope<AssetManager, DeleterType> AssetManager::Create(const AllocatorType& alloc, Systems::ThreadPool* threadPool)
+		{
+			return Scope<AssetManager, DeleterType>(new (alloc.allocate(sizeof(AssetManager))) AssetManager(threadPool), DeleterType(alloc));
 		}
 
 	}

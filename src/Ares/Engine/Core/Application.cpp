@@ -13,14 +13,14 @@
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/RenderCommand.h"
 
-#include "Engine/Data/MemoryManager.h"
-
 namespace Ares {
 
 	Application* Application::s_Instance = nullptr;
 	
 	Application::Application(const ApplicationSettings& settings)
-		: m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr)
+		: m_MemoryManager(), m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr),
+		m_Systems(Internal::AppAllocator(&m_MemoryManager)),
+		m_SystemOrder(Internal::AppAllocator(&m_MemoryManager))
 	{
 		if (s_Instance != nullptr)
 		{
@@ -62,21 +62,23 @@ namespace Ares {
 		GetSystem<Systems::EventQueue>()->AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		GetSystem<Systems::EventQueue>()->AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
 
-		Internal::MemoryManager testManager(512);
-		//void* data = testManager.Allocate(256);
-		void* data1 = testManager.Allocate(64);
+		/*
+		Internal::MemoryManager testManager;
+		void* data1 = testManager.Allocate(32);
 		void* data2 = testManager.Allocate(64);
-		//void* data3 = testManager.Allocate(512);
-		//void* data4 = testManager.Allocate(52);
-
+		void* data3 = testManager.Allocate(32);
 		testManager.Deallocate(data2);
 		testManager.Deallocate(data1);
 
-		void* data5 = testManager.Allocate(16);
-		void* data6 = testManager.Allocate(32);
-
-		//testManager.Deallocate(data5);
-		//testManager.Deallocate(data6);
+		void* data4 = testManager.Allocate(4);
+		void* data5 = testManager.Allocate(1);
+		*reinterpret_cast<uint32_t*>(data4) = 666;
+		AR_CORE_TRACE("TEST: {}", *reinterpret_cast<uint32_t*>(data4));
+		*/
+		//Scope<Systems::AssetManager, Internal::Deleter> m_TestManager = Systems::AssetManager::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), nullptr);
+		//Scope<Systems::Input, Internal::Deleter> m_TestInput = Systems::Input::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), m_Window.get());
+		//Scope<Systems::EventQueue, Internal::Deleter> m_TestQueue = Systems::EventQueue::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager));
+		//Scope<Systems::ThreadPool, Internal::Deleter> m_TestPool = Systems::ThreadPool::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), 1);
 	}
 
 	Application::~Application()
