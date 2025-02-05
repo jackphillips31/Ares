@@ -1,5 +1,5 @@
 #include <arespch.h>
-
+#include <EASTL/allocator.h>
 #include "Engine/Core/Core.h"
 
 #if AR_PLATFORM_WINDOWS

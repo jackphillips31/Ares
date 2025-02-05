@@ -175,7 +175,7 @@ namespace Ares {
 			static Scope<Input> Create(Window* window = nullptr);
 
 			template <typename DeleterType, typename AllocatorType>
-			static Scope<Input, DeleterType> Create(const AllocatorType& alloc, Window* window = nullptr);
+			static Scope<Input, DeleterType> Create(const AllocatorType* alloc, Window* window = nullptr);
 
 		private:
 			static Input* CreatePlatformInput(void* memory, Window* window);
@@ -188,9 +188,9 @@ namespace Ares {
 namespace Ares::Systems {
 
 	template <typename DeleterType, typename AllocatorType>
-	Scope<Input, DeleterType> Input::Create(const AllocatorType& alloc, Window* window)
+	Scope<Input, DeleterType> Input::Create(const AllocatorType* alloc, Window* window)
 	{
-		return Scope<Input, DeleterType>(CreatePlatformInput(alloc.allocate(sizeof(Input)), window), DeleterType(alloc));
+		return Scope<Input, DeleterType>(CreatePlatformInput(alloc->allocate(sizeof(Input)), window), DeleterType(alloc));
 	}
 
 }

@@ -232,7 +232,7 @@ namespace Ares {
 	template <typename SystemType, typename... Args>
 	bool Application::RegisterSystem(Args&&... args)
 	{
-		if (m_Systems[typeid(SystemType)] = SystemType::template Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), std::forward<Args>(args)...))
+		if (m_Systems[typeid(SystemType)] = SystemType::template Create<Internal::Deleter, Internal::AppAllocator>(m_MemoryManager.GetDefaultAllocator(), std::forward<Args>(args)...))
 		{
 			m_SystemOrder.emplace_back(typeid(SystemType));
 			return true;

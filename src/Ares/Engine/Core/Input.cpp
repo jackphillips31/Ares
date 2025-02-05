@@ -45,6 +45,6 @@ namespace Ares::Systems {
 	}
 	*/
 
-	//template Scope<Input, Internal::Deleter> Input::Create<Internal::Deleter, Internal::AppAllocator>(const Internal::AppAllocator&, Window*);
+	//template Scope<Input, Internal::Deleter> Input::Create<Internal::Deleter, Internal::Allocator>(const Internal::Allocator&, Window*);
 
 }

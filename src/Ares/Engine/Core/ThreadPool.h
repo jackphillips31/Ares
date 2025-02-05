@@ -38,6 +38,7 @@
  */
 #pragma once
 #include "Engine/Core/System.h"
+#include "Engine/Data/MemoryManager/AppAllocator.h"
 #include <future>
 #include <shared_mutex>
 #include <EASTL/vector.h>
@@ -135,18 +136,21 @@ namespace Ares {
 			static Scope<ThreadPool> Create(size_t threadCount = std::thread::hardware_concurrency());
 
 			template <typename DeleterType, typename AllocatorType>
-			static Scope<ThreadPool, DeleterType> Create(const AllocatorType& alloc, size_t threadCount = std::thread::hardware_concurrency());
+			static Scope<ThreadPool, DeleterType> Create(const AllocatorType* alloc, size_t threadCount = std::thread::hardware_concurrency());
 
 		private:
 			ThreadPool(size_t threadCount);
 
 		private:
-			eastl::vector<std::thread> m_Workers;					///< Vector of worker threads.
-			eastl::queue<eastl::function<void()>> m_TaskQueue;		///< Queue of tasks to be executed.
-			std::mutex m_QueueMutex;								///< Mutex for synchronizing task queue access.
-			std::shared_mutex m_WorkerMutex;						///< Mutex for synchronizing work done on worker.
-			std::condition_variable m_Condition;					///< Condition variable for task synchronization.
-			eastl::atomic<bool> m_ShutdownRequested;				///< Flag to indicate shutdown.
+			eastl::vector<std::thread, Internal::AppAllocator> m_Workers;	///< Vector of worker threads.
+			eastl::queue<
+				eastl::function<void()>,
+				eastl::deque<eastl::function<void()>, Internal::AppAllocator>
+			> m_TaskQueue;												///< Queue of tasks to be executed.
+			std::mutex m_QueueMutex;									///< Mutex for synchronizing task queue access.
+			std::shared_mutex m_WorkerMutex;							///< Mutex for synchronizing work done on worker.
+			std::condition_variable m_Condition;						///< Condition variable for task synchronization.
+			eastl::atomic<bool> m_ShutdownRequested;					///< Flag to indicate shutdown.
 		};
 
 		template <typename Func, typename... Args>
@@ -179,9 +183,9 @@ namespace Ares {
 		}
 
 		template <typename DeleterType, typename AllocatorType>
-		Scope<ThreadPool, DeleterType> ThreadPool::Create(const AllocatorType& alloc, size_t threadCount)
+		Scope<ThreadPool, DeleterType> ThreadPool::Create(const AllocatorType* alloc, size_t threadCount)
 		{
-			return Scope<ThreadPool, DeleterType>(new (alloc.allocate(sizeof(ThreadPool))) ThreadPool(threadCount), DeleterType(alloc));
+			return Scope<ThreadPool, DeleterType>(new (alloc->allocate(sizeof(ThreadPool))) ThreadPool(threadCount), DeleterType(alloc));
 		}
 
 	}

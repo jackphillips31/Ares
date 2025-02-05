@@ -54,7 +54,7 @@ namespace Ares {
 			static Scope<EventQueue> Create();
 
 			template <typename DeleterType, typename AllocatorType>
-			static Scope<EventQueue, DeleterType> Create(const AllocatorType& alloc);
+			static Scope<EventQueue, DeleterType> Create(const AllocatorType* alloc);
 
 		private:
 			struct ListenerEntry
@@ -96,9 +96,9 @@ namespace Ares {
 		}
 
 		template <typename DeleterType, typename AllocatorType>
-		Scope<EventQueue, DeleterType> EventQueue::Create(const AllocatorType& alloc)
+		Scope<EventQueue, DeleterType> EventQueue::Create(const AllocatorType* alloc)
 		{
-			return Scope<EventQueue, DeleterType>(new (alloc.allocate(sizeof(EventQueue))) EventQueue(), DeleterType(alloc));
+			return Scope<EventQueue, DeleterType>(new (alloc->allocate(sizeof(EventQueue))) EventQueue(), DeleterType(alloc));
 		}
 
 	}

@@ -366,10 +366,10 @@ namespace Ares {
 			 * @return A Scope of the created AssetManager object.
 			 */
 			static Scope<AssetManager> Create(Systems::ThreadPool* threadPool);
-			//static Scope<AssetManager, Internal::Deleter> Create(const Internal::AppAllocator& alloc, Systems::ThreadPool* threadPool);
+			//static Scope<AssetManager, Internal::Deleter> Create(const Internal::Allocator& alloc, Systems::ThreadPool* threadPool);
 
 			template <typename DeleterType, typename AllocatorType>
-			static Scope<AssetManager, DeleterType> Create(const AllocatorType& alloc, Systems::ThreadPool* threadPool);
+			static Scope<AssetManager, DeleterType> Create(const AllocatorType* alloc, Systems::ThreadPool* threadPool);
 
 		private:
 			/**
@@ -612,9 +612,9 @@ namespace Ares {
 		}
 
 		template <typename DeleterType, typename AllocatorType>
-		Scope<AssetManager, DeleterType> AssetManager::Create(const AllocatorType& alloc, Systems::ThreadPool* threadPool)
+		Scope<AssetManager, DeleterType> AssetManager::Create(const AllocatorType* alloc, Systems::ThreadPool* threadPool)
 		{
-			return Scope<AssetManager, DeleterType>(new (alloc.allocate(sizeof(AssetManager))) AssetManager(threadPool), DeleterType(alloc));
+			return Scope<AssetManager, DeleterType>(new (alloc->allocate(sizeof(AssetManager))) AssetManager(threadPool), DeleterType(alloc));
 		}
 
 	}

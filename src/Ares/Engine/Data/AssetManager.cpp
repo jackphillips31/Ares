@@ -26,7 +26,7 @@ namespace Ares::Systems {
 	}
 
 	/*
-	Scope<AssetManager, Internal::Deleter> AssetManager::Create(const Internal::AppAllocator& alloc, Systems::ThreadPool* threadPool)
+	Scope<AssetManager, Internal::Deleter> AssetManager::Create(const Internal::Allocator& alloc, Systems::ThreadPool* threadPool)
 	{
 		return Scope<AssetManager, Internal::Deleter>(new AssetManager(threadPool), Internal::Deleter(alloc));
 	}
