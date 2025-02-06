@@ -9,21 +9,10 @@
 
 namespace Ares::Systems {
 
-	Scope<Input> Input::Create(Window* window)
+	AppScope<Input> Input::Create(Window* window)
 	{
 	#if AR_PLATFORM_WINDOWS
-		return Scope<WinInput>(new WinInput(window));
-	#else
-		AR_CORE_ASSERT(false, "Unknown Platform!");
-		throw std::runtime_error("Unknown Platform!");
-	#endif
-		return nullptr;
-	}
-
-	Input* Input::CreatePlatformInput(void* memory, Window* window)
-	{
-	#if AR_PLATFORM_WINDOWS
-		return new (memory) WinInput(window);
+		return CreateAppScope<WinInput>(window);
 	#else
 		AR_CORE_ASSERT(false, "Unknown Platform!");
 		throw std::runtime_error("Unknown Platform!");

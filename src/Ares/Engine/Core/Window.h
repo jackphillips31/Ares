@@ -11,6 +11,7 @@
 #include <glm/vec2.hpp>
 
 #include "Engine/Core/Flags.h"
+#include "Engine/Core/Memory.h"
 
 namespace Ares {
 
@@ -248,7 +249,7 @@ namespace Ares {
 		 * @param props The window properties to initialize the window with.
 		 * @return A Scope<Window> to the newly created window.
 		 */
-		static Scope<Window> Create(const WindowProps& props = WindowProps());
+		static AppScope<Window> Create(const WindowProps& props = WindowProps());
 	};
 
 }

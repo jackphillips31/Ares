@@ -46,6 +46,7 @@
  * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.
  */
 #pragma once
+#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 
 namespace Ares {
@@ -172,25 +173,13 @@ namespace Ares {
 			 * @return A Scope to the created Input object.
 			 * @throws std::runtime_error If platform-specific implementation is unavailable.
 			 */
-			static Scope<Input> Create(Window* window = nullptr);
-
-			template <typename DeleterType, typename AllocatorType>
-			static Scope<Input, DeleterType> Create(const AllocatorType* alloc, Window* window = nullptr);
+			static AppScope<Input> Create(Window* window = nullptr);
 
 		private:
-			static Input* CreatePlatformInput(void* memory, Window* window);
+			template <typename ObjectType, typename... Args>
+			friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
 		};
 
-	}
-
-}
-
-namespace Ares::Systems {
-
-	template <typename DeleterType, typename AllocatorType>
-	Scope<Input, DeleterType> Input::Create(const AllocatorType* alloc, Window* window)
-	{
-		return Scope<Input, DeleterType>(CreatePlatformInput(alloc->allocate(sizeof(Input)), window), DeleterType(alloc));
 	}
 
 }

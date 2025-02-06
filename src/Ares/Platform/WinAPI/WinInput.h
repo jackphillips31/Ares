@@ -16,6 +16,8 @@ namespace Ares::Systems {
 	private:
 		WinInput(Window* window);
 		friend class Input;
+		template <typename ObjectType, typename... Args>
+		friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
 
 	private:
 		HWND m_Window;

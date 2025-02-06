@@ -61,6 +61,7 @@ namespace Ares::Internal {
 
 	void* AppAllocator::allocate(size_t size, int flags) const
 	{
+		AR_CORE_TRACE("ALLOCATING - {} bytes", size);
 		AR_CORE_ASSERT(m_Manager, "Tried to use Allocator without MemoryManager!");
 		if (!m_Manager)
 			throw std::runtime_error("Allocator does not have MemoryManager instance!");
@@ -69,6 +70,7 @@ namespace Ares::Internal {
 
 	void* AppAllocator::allocate(size_t size, size_t alignment, size_t offset, int flags) const
 	{
+		AR_CORE_TRACE("ALLOCATING - {} bytes", size);
 		AR_CORE_ASSERT(m_Manager, "Tried to use Allocator without MemoryManager");
 		if (!m_Manager)
 			throw std::runtime_error("Allocator does not have MemoryManager instance!");
@@ -77,6 +79,7 @@ namespace Ares::Internal {
 
 	void AppAllocator::deallocate(void* ptr, size_t size) const
 	{
+		AR_CORE_TRACE("DEALLOCATING - {} bytes", size);
 		AR_CORE_ASSERT(m_Manager, "Tried to use Allocator without MemoryManager!");
 		if (!m_Manager)
 			throw std::runtime_error("Allocator does not have MemoryManager instance!");

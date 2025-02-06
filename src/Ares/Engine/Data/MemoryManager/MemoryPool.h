@@ -29,6 +29,7 @@ namespace Ares::Internal {
 		void* m_Head;
 		uint32_t m_Size;
 		uintptr_t m_PoolStart;
+		std::shared_mutex m_PoolMutex;
 	};
 
 }

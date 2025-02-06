@@ -9,6 +9,7 @@
 #include <EASTL/hash_map.h>
 #include <EASTL/hash_set.h>
 
+#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
 #include "Engine/Events/Event.h"
@@ -51,12 +52,12 @@ namespace Ares {
 
 			void RemoveListener(EventListener& listenerId);
 
-			static Scope<EventQueue> Create();
-
-			template <typename DeleterType, typename AllocatorType>
-			static Scope<EventQueue, DeleterType> Create(const AllocatorType* alloc);
+			static AppScope<EventQueue> Create();
 
 		private:
+			template <typename ObjectType, typename... Args>
+			friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
+
 			struct ListenerEntry
 			{
 				EventListener ListenerId;
@@ -65,8 +66,8 @@ namespace Ares {
 			};
 
 		private:
-			eastl::queue<Scope<Event>> m_WriteQueue;
-			eastl::queue<Scope<Event>> m_ReadQueue;
+			eastl::queue<AppScope<Event>> m_WriteQueue;
+			eastl::queue<AppScope<Event>> m_ReadQueue;
 			std::shared_mutex m_WriteMutex;
 			std::shared_mutex m_ReadMutex;
 
@@ -93,12 +94,6 @@ namespace Ares {
 			m_Listeners.emplace_back(eastl::move(entry));
 
 			return currentId;
-		}
-
-		template <typename DeleterType, typename AllocatorType>
-		Scope<EventQueue, DeleterType> EventQueue::Create(const AllocatorType* alloc)
-		{
-			return Scope<EventQueue, DeleterType>(new (alloc->allocate(sizeof(EventQueue))) EventQueue(), DeleterType(alloc));
 		}
 
 	}

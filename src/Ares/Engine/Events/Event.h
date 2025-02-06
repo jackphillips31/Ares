@@ -6,6 +6,7 @@
  * user input, window events, and application lifecycle events.
  */
 #pragma once
+#include "Engine/Core/Memory.h"
 
 namespace Ares {
 
@@ -82,7 +83,7 @@ namespace Ares {
 	 */
 	#define EVENT_CLASS_CATEGORY(category) virtual uint16_t GetCategoryFlags() const override { return category; }
 
-	#define EVENT_CLASS_CLONE(type) inline Scope<Event> Clone() const override { return CreateScope<type>(*this); }
+	#define EVENT_CLASS_CLONE(type) inline AppScope<Event> Clone() const override { return CreateAppScope<type>(*this); }
 
 	/**
 	 * @class Event
@@ -143,7 +144,7 @@ namespace Ares {
 		}
 
 	private:
-		virtual Scope<Event> Clone() const = 0;
+		virtual AppScope<Event> Clone() const = 0;
 	};
 
 	/**

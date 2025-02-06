@@ -7,10 +7,10 @@
 
 namespace Ares {
 
-	Scope<Window> Window::Create(const WindowProps& props)
+	AppScope<Window> Window::Create(const WindowProps& props)
 	{
 	#if AR_PLATFORM_WINDOWS
-		return CreateScope<WinWindow>(props);
+		return CreateAppScope<WinWindow>(props);
 	#else
 		AR_CORE_ASSERT(false, "Unknown Platform!");
 		return nullptr;

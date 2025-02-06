@@ -26,7 +26,7 @@
 #pragma once
 #include <EASTL/unique_ptr.h>
 #include <EASTL/shared_ptr.h>
-
+#include "Engine/Data/MemoryManager/AppAllocator.h"
 /******************************************************/
 /*     Platform detection using predefined macros     */
 /******************************************************/

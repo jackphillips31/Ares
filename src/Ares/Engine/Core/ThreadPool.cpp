@@ -5,9 +5,9 @@
 
 namespace Ares::Systems {
 
-	Scope<ThreadPool> ThreadPool::Create(size_t threadCount)
+	AppScope<ThreadPool> ThreadPool::Create(size_t threadCount)
 	{
-		return Scope<ThreadPool>(new ThreadPool(threadCount));
+		return CreateAppScope<ThreadPool>(threadCount);
 	}
 
 	ThreadPool::ThreadPool(size_t threadCount)

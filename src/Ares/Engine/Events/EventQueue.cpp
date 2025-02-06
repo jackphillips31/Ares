@@ -8,9 +8,9 @@
 
 namespace Ares::Systems {
 
-	Scope<EventQueue> EventQueue::Create()
+	AppScope<EventQueue> EventQueue::Create()
 	{
-		return Scope<EventQueue>(new EventQueue());
+		return CreateAppScope<EventQueue>();
 	}
 
 	EventQueue::EventQueue()
@@ -56,7 +56,7 @@ namespace Ares::Systems {
 			std::unique_lock lock(m_ReadMutex);
 			while (!m_ReadQueue.empty())
 			{
-				Scope<Event> event = eastl::move(m_ReadQueue.front());
+				AppScope<Event> event = eastl::move(m_ReadQueue.front());
 				m_ReadQueue.pop();
 				if (m_AppCallback)
 					m_AppCallback(*event);

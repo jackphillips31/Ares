@@ -37,6 +37,7 @@
  * tasks and retrieve results via `std::future`.
  */
 #pragma once
+#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 #include "Engine/Data/MemoryManager/AppAllocator.h"
 #include <future>
@@ -133,12 +134,11 @@ namespace Ares {
 			 * @param threadCount The number of worker threads to create (default: hardware concurrency).
 			 * @return A Scope to the created ThreadPool object.
 			 */
-			static Scope<ThreadPool> Create(size_t threadCount = std::thread::hardware_concurrency());
-
-			template <typename DeleterType, typename AllocatorType>
-			static Scope<ThreadPool, DeleterType> Create(const AllocatorType* alloc, size_t threadCount = std::thread::hardware_concurrency());
+			static AppScope<ThreadPool> Create(size_t threadCount = std::thread::hardware_concurrency());
 
 		private:
+			template <typename ObjectType, typename... Args>
+			friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
 			ThreadPool(size_t threadCount);
 
 		private:
@@ -180,12 +180,6 @@ namespace Ares {
 			}
 
 			return result;
-		}
-
-		template <typename DeleterType, typename AllocatorType>
-		Scope<ThreadPool, DeleterType> ThreadPool::Create(const AllocatorType* alloc, size_t threadCount)
-		{
-			return Scope<ThreadPool, DeleterType>(new (alloc->allocate(sizeof(ThreadPool))) ThreadPool(threadCount), DeleterType(alloc));
 		}
 
 	}

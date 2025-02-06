@@ -4,7 +4,7 @@
 namespace Ares::Internal {
 
 	MemoryManager::MemoryManager()
-		: m_SelfPool(1024 * 4), m_SelfAllocator(this), m_PtrPoolMap(m_SelfAllocator), m_Pools(m_SelfAllocator)
+		: m_SelfPool(1024 * 1024), m_SelfAllocator(this), m_PtrPoolMap(m_SelfAllocator), m_Pools(m_SelfAllocator)
 	{
 		m_Pools.set_allocator(m_SelfAllocator);
 		m_Pools.emplace_back(MemoryPool(1024 * 4));
@@ -25,6 +25,7 @@ namespace Ares::Internal {
 			void* result = m_Pools[i].Allocate(static_cast<uint32_t>(size));
 			if (result != nullptr)
 			{
+				AR_CORE_ASSERT(result != nullptr, "Something went wrong when allocating!");
 				m_PtrPoolMap[reinterpret_cast<uintptr_t>(result)] = i;
 				return result;
 			}
@@ -46,6 +47,7 @@ namespace Ares::Internal {
 			void* result = m_Pools[i].Allocate(static_cast<uint32_t>(size), static_cast<uint32_t>(alignment), static_cast<uint32_t>(offset));
 			if (result != nullptr)
 			{
+				AR_CORE_ASSERT(result != nullptr, "Something went wrong when allocating!");
 				m_PtrPoolMap[reinterpret_cast<uintptr_t>(result)] = i;
 				return result;
 			}

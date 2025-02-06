@@ -1,4 +1,5 @@
 #pragma once
+#include "Engine/Core/Memory.h"
 
 namespace Ares {
 
@@ -11,7 +12,7 @@ namespace Ares {
 		virtual void Begin() = 0;
 		virtual void End() = 0;
 
-		static Scope<ImGuiContext> Create();
+		static AppScope<ImGuiContext> Create();
 	};
 
 }

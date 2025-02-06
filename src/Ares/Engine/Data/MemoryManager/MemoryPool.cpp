@@ -50,6 +50,8 @@ namespace Ares::Internal {
 
 	MemoryPool& MemoryPool::operator=(MemoryPool&& other) noexcept
 	{
+		std::shared_lock lock1(other.m_PoolMutex);
+		std::unique_lock lock2(m_PoolMutex);
 		m_Data = other.m_Data;
 		m_Head = other.m_Head;
 		m_Size = other.m_Size;
@@ -65,6 +67,7 @@ namespace Ares::Internal {
 
 	void* MemoryPool::Allocate(const uint32_t& size)
 	{
+		std::unique_lock lock(m_PoolMutex);
 		uint32_t adjustedSize = AdjustSize(size);
 
 		MemoryBlock currentBlock = m_Head;
@@ -91,7 +94,20 @@ namespace Ares::Internal {
 				newBlock.SetPrevPtr(currentBlock.GetPrevPtr());
 				newBlock.SetNextPtr(currentBlock.GetNextPtr());
 
-				m_Head = newBlock;
+				if (newBlock.GetPrevPtr() != nullptr)
+				{
+					newBlock.GetPrevPtr().SetNextPtr(newBlock);
+				}
+
+				if (newBlock.GetNextPtr() != nullptr)
+				{
+					newBlock.GetNextPtr().SetPrevPtr(newBlock);
+				}
+
+				if (currentBlock == m_Head)
+				{
+					m_Head = newBlock;
+				}
 
 				return currentBlock.GetPayloadPtr();
 			}
@@ -106,6 +122,7 @@ namespace Ares::Internal {
 
 	void* MemoryPool::Allocate(const uint32_t& size, const uint32_t& alignment, const uint32_t& alignmentOffset)
 	{
+		std::unique_lock lock(m_PoolMutex);
 		uint32_t adjustedAlignment = AdjustAlignment(alignment);
 		uint32_t adjustedSize = AdjustSize(size, adjustedAlignment, alignmentOffset);
 
@@ -134,7 +151,20 @@ namespace Ares::Internal {
 				newBlock.SetPrevPtr(currentBlock.GetPrevPtr());
 				newBlock.SetNextPtr(currentBlock.GetNextPtr());
 
-				m_Head = newBlock;
+				if (newBlock.GetPrevPtr() != nullptr)
+				{
+					newBlock.GetPrevPtr().SetNextPtr(newBlock);
+				}
+
+				if (newBlock.GetNextPtr() != nullptr)
+				{
+					newBlock.GetNextPtr().SetPrevPtr(newBlock);
+				}
+
+				if (currentBlock == m_Head)
+				{
+					m_Head = newBlock;
+				}
 
 				return currentBlock.GetPayloadPtr(adjustedAlignment, alignmentOffset);
 			}
@@ -152,6 +182,7 @@ namespace Ares::Internal {
 		if (!ptr)
 			return;
 
+		std::unique_lock lock(m_PoolMutex);
 		uintptr_t currentPtr = reinterpret_cast<uintptr_t>(ptr) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
 
 		BlockData* tempHeader = reinterpret_cast<BlockData*>(currentPtr);
@@ -205,7 +236,7 @@ namespace Ares::Internal {
 			{
 				currentBlock.GetPrevPtr().SetNextPtr(freedBlock);
 			}
-			else
+			else if (currentBlock == m_Head)
 			{
 				m_Head = freedBlock;
 			}

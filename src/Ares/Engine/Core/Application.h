@@ -10,6 +10,7 @@
 #include <EASTL/hash_map.h>
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
+#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
 #include "Engine/Data/MemoryManager.h"
@@ -138,6 +139,8 @@ namespace Ares {
 		 */
 		inline static Application& Get() { return *s_Instance; }
 
+		inline static bool IsValid() { return s_Instance != nullptr; }
+
 		inline Internal::MemoryManager& GetMemoryManager() { return m_MemoryManager; }
 
 		template <typename SystemType>
@@ -181,8 +184,8 @@ namespace Ares {
 	private:
 		Internal::MemoryManager m_MemoryManager;		// Application Memory Manager.
 		ApplicationSettings m_Settings;		// Application configuration settings.
-		Scope<Window> m_Window;				// The main application window.
-		Scope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
+		AppScope<Window> m_Window;				// The main application window.
+		AppScope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
 		bool m_Running = true;				// Flag to indicate if the application is running.
 		bool m_Minimized = false;			// Flag to indicate if the application is minimized.
 		LayerStack m_LayerStack;			// Stack of active layers in the application.
@@ -190,7 +193,7 @@ namespace Ares {
 
 		eastl::hash_map<
 			std::type_index,
-			Scope<Internal::System, Internal::Deleter>,
+			AppScope<Internal::System>,
 			eastl::hash<std::type_index>,
 			eastl::equal_to<std::type_index>,
 			Internal::AppAllocator
@@ -232,7 +235,8 @@ namespace Ares {
 	template <typename SystemType, typename... Args>
 	bool Application::RegisterSystem(Args&&... args)
 	{
-		if (m_Systems[typeid(SystemType)] = SystemType::template Create<Internal::Deleter, Internal::AppAllocator>(m_MemoryManager.GetDefaultAllocator(), std::forward<Args>(args)...))
+		//if (m_Systems[typeid(SystemType)] = SystemType::template Create<Internal::Deleter, Internal::AppAllocator>(m_MemoryManager.GetDefaultAllocator(), std::forward<Args>(args)...))
+		if (m_Systems[typeid(SystemType)] = SystemType::template Create(std::forward<Args>(args)...))
 		{
 			m_SystemOrder.emplace_back(typeid(SystemType));
 			return true;
