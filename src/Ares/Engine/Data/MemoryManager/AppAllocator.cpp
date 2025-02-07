@@ -103,7 +103,7 @@ namespace Ares::Internal {
 
 	AppAllocator* get_default_allocator(const AppAllocator*)
 	{
-		return ::Ares::Application::Get().GetMemoryManager().GetDefaultAllocator();
+		return Application::Get().GetMemoryManager().GetDefaultAllocator();
 	}
 
 	bool operator==(const AppAllocator& a, const AppAllocator& b)

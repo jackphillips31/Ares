@@ -38,6 +38,8 @@ namespace Ares {
 
 	private:
 		// Only Asset Manager can create MeshData
+		template <typename ObjectType, typename... Args>
+		friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
 		friend class Systems::AssetManager;
 		MeshData(const std::string& name, const Ref<ParsedMeshData>& meshData);
 		static Scope<MeshData> Create(const std::string& name, const Ref<ParsedMeshData>& meshData);

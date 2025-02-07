@@ -24,9 +24,9 @@
  * 
  */
 #pragma once
+#include <shared_mutex>
 #include <EASTL/unique_ptr.h>
 #include <EASTL/shared_ptr.h>
-#include "Engine/Data/MemoryManager/AppAllocator.h"
 /******************************************************/
 /*     Platform detection using predefined macros     */
 /******************************************************/
@@ -684,76 +684,191 @@ namespace Ares {
 	/**
 	 * @typedef Scope
 	 * @brief A unique pointer alias for managing heap-allocated objects.
-	 * 
+	 *
 	 * @details This alias simplifies the usage of `eastl::unique_ptr` within the engine.
-	 * 
+	 *
 	 * @tparam ObjectType The type of object.
 	 * @tparam DeleterType The type of deleter to use during destruction. **Optional**
 	 */
-	template<typename ObjectType, typename DeleterType = eastl::default_delete<ObjectType>>
-	using Scope = eastl::unique_ptr<ObjectType, DeleterType>;
-
-	/**
-	 * @fn CreateScope(Args&&... args)
-	 * @brief Creates a unique pointer to a new object.
-	 * 
-	 * @details This utility function creates a new object and returns a Scope (unique pointer)
-	 * to it. It forwards the provided arguments to the constructor of the object.
-	 * 
-	 * @tparam ObjectType The type of object to be created.
-	 * @param args The arguments to be forwarded to the object's constructor.
-	 * @return A Scope<ObjectType> pointing to the newly created object.
-	 * 
-	 * **Example usage**:
-	 * ```cpp
-	 * Scope<uint32_t> unsignedInt = CreateScope<uint32_t>(5);
-	 * ```
+	 /*
+	 template<typename ObjectType, typename DeleterType = eastl::default_delete<ObjectType>>
+	 using Scope = eastl::unique_ptr<ObjectType, DeleterType>;
 	 */
-	template<typename ObjectType, typename ... Args>
-	constexpr Scope<ObjectType> CreateScope(Args&& ... args)
-	{
-		return eastl::make_unique<ObjectType>(std::forward<Args>(args)...);
-	}
 
-	/**
-	 * @typedef Ref
-	 * @brief A shared pointer alias for managing shared ownership of objects.
-	 * 
-	 * @details This alias simplifies the usage of `eastl::shared_ptr` within the engine.
-	 * 
-	 * @tparam ObjectType The type of object.
-	 */
+	 /**
+	  * @fn CreateScope(Args&&... args)
+	  * @brief Creates a unique pointer to a new object.
+	  *
+	  * @details This utility function creates a new object and returns a Scope (unique pointer)
+	  * to it. It forwards the provided arguments to the constructor of the object.
+	  *
+	  * @tparam ObjectType The type of object to be created.
+	  * @param args The arguments to be forwarded to the object's constructor.
+	  * @return A Scope<ObjectType> pointing to the newly created object.
+	  *
+	  * **Example usage**:
+	  * ```cpp
+	  * Scope<uint32_t> unsignedInt = CreateScope<uint32_t>(5);
+	  * ```
+	  */
+	  /*
+	  template<typename ObjectType, typename ... Args>
+	  constexpr Scope<ObjectType> CreateScope(Args&& ... args)
+	  {
+		  return eastl::make_unique<ObjectType>(std::forward<Args>(args)...);
+	  }
+	  */
+
+	  /**
+	   * @typedef Ref
+	   * @brief A shared pointer alias for managing shared ownership of objects.
+	   *
+	   * @details This alias simplifies the usage of `eastl::shared_ptr` within the engine.
+	   *
+	   * @tparam ObjectType The type of object.
+	   */
 	template<typename ObjectType>
 	using Ref = eastl::shared_ptr<ObjectType>;
 
 	/**
 	 * @brief Creates a shared pointer to a new object.
-	 * 
+	 *
 	 * @details This utility function creates a new object and returns a Ref (shared pointer)
 	 * to it. It forwards the provided arguments to the constructor of the object.
-	 * 
+	 *
 	 * @tparam ObjectType The type of object to be created.
 	 * @param args The arguments to be forwarded to the object's constructor.
 	 * @return A Ref<ObjectType> pointing to the newly created object.
-	 * 
+	 *
 	 * **Example usage**:
 	 * ```cpp
 	 * Ref<uint32_t> unsignedInt = CreateRef<uint32_t>(5);
 	 * ```
 	 */
-	template<typename ObjectType, typename ... Args>
-	constexpr Ref<ObjectType> CreateRef(Args&& ... args)
-	{
-		return eastl::make_shared<ObjectType>(std::forward<Args>(args)...);
+	 /*
+	 template<typename ObjectType, typename ... Args>
+	 constexpr Ref<ObjectType> CreateRef(Args&& ... args)
+	 {
+		 return eastl::make_shared<ObjectType>(std::forward<Args>(args)...);
+	 }
+	 */
+
+	 /*
+	 template <typename ObjectType, typename DeleterType, typename... Args>
+	 constexpr Ref<ObjectType> CreateRefWithDeleter(const DeleterType& deleter, Args&&... args)
+	 {
+		 return eastl::shared_ptr<ObjectType>(eastl::forward<Args>(args)..., deleter);
+	 }
+	 */
+
+	namespace Internal {
+
+		class AppAllocator;
+
+		bool IsApplicationValid();
+		AppAllocator* GetDefaultAllocator();
+
+		void* Allocate(size_t size);
+		void* Allocate(size_t size, size_t alignment, size_t offset);
+		void Deallocate(void* ptr, size_t size = 0);
+
 	}
 
-	/*
-	template <typename ObjectType, typename DeleterType, typename... Args>
-	constexpr Ref<ObjectType> CreateRefWithDeleter(const DeleterType& deleter, Args&&... args)
-	{
-		return eastl::shared_ptr<ObjectType>(eastl::forward<Args>(args)..., deleter);
+}
+
+#include "Engine/Core/Memory.h"
+
+namespace Ares {
+	
+	namespace Internal {
+
+		template <typename ObjectType, typename... Args>
+		AppScope<ObjectType> CreateAppScope(Args&&... args)
+		{
+			if (!IsApplicationValid()) throw std::runtime_error("Object Creation Error: Cannot create AppScope before Application construction!");
+			return AppScope<ObjectType>(new (Allocate(sizeof(ObjectType))) ObjectType(std::forward<Args>(args)...));
+		}
+
+		template <typename ObjectType, typename... Args>
+		AppRef<ObjectType> CreateAppRef(Args&&... args)
+		{
+			if (!IsApplicationValid()) throw std::runtime_error("Object Creation Error: Cannot create AppRef before Application construction!");
+			return AppRef<ObjectType>(new (Allocate(sizeof(ObjectType))) ObjectType(std::forward<Args>(args)...));
+		}
+
+		template <typename ObjectType>
+		void Delete(ObjectType* ptr)
+		{
+			ptr->~ObjectType();
+			Deallocate(static_cast<void*>(ptr));
+		}
+
 	}
-	*/
+
+	template <typename ObjectType>
+	using Scope = eastl::unique_ptr<ObjectType, eastl::function<void(void*)>>;
+
+	template <typename ObjectType, typename... Args>
+	Scope<ObjectType> CreateScope(Args&&... args)
+	{
+		if (Internal::IsApplicationValid())
+		{
+			ObjectType* result = new (Internal::Allocate(sizeof(ObjectType))) ObjectType(std::forward<Args>(args)...);
+
+			eastl::function<void(void*)> deleter = [](void* ptr)
+				{
+					ObjectType* obj = static_cast<ObjectType*>(ptr);
+					obj->~ObjectType();
+					Internal::Deallocate(ptr, sizeof(ObjectType));
+				};
+
+			return Scope<ObjectType>(result, deleter);
+		}
+		else
+		{
+			ObjectType* result = new ObjectType(std::forward<Args>(args)...);
+
+			eastl::function<void(void*)> deleter = [](void* ptr)
+				{
+					ObjectType* obj = static_cast<ObjectType*>(ptr);
+					obj->~ObjectType();
+					delete ptr;
+				};
+
+			return Scope<ObjectType>(result, deleter);
+		}
+	}
+
+	template <typename ObjectType, typename... Args>
+	Ref<ObjectType> CreateRef(Args&&... args)
+	{
+		if (Internal::IsApplicationValid())
+		{
+			ObjectType* result = new (Internal::Allocate(sizeof(ObjectType))) ObjectType(std::forward<Args>(args)...);
+
+			eastl::function<void(void*)> deleter = [](void* ptr)
+				{
+					ObjectType* obj = static_cast<ObjectType*>(ptr);
+					obj->~ObjectType();
+					Internal::Deallocate(ptr, sizeof(ObjectType));
+				};
+
+			return Ref<ObjectType>(result, deleter);
+		}
+		else
+		{
+			ObjectType* result = new ObjectType(std::forward<Args>(args)...);
+
+			eastl::function<void(void*)> deleter = [](void* ptr)
+				{
+					ObjectType* obj = static_cast<ObjectType*>(ptr);
+					obj->~ObjectType();
+					delete ptr;
+				};
+
+			return Ref<ObjectType>(result, deleter);
+		}
+	}
 
 }
 /******************************************************/

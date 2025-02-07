@@ -113,6 +113,8 @@ namespace Ares {
 		 */
 		Asset();
 
+		template <typename ObjectType, typename... Args>
+		friend Ref<ObjectType> Ares::CreateRef(Args&&... args);
 		friend class Systems::AssetManager;
 		friend class MainThreadQueue;
 		friend struct std::hash<Asset>;

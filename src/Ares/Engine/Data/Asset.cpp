@@ -20,7 +20,8 @@ namespace Ares {
 		// CreateRef (std::make_shared) doesn't have access to private
 		// constructors, so we wrap a raw pointer with a smart pointer
 		// instead.
-		return Ref<Asset>(new Asset(type, state, filepath, dependencies, dataKey, parentManager));
+		//return Ref<Asset>(new Asset(type, state, filepath, dependencies, dataKey, parentManager));
+		return CreateRef<Asset>(type, state, filepath, dependencies, dataKey, parentManager);
 	}
 
 	Asset::Asset(

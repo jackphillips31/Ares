@@ -29,7 +29,6 @@
 #include <EASTL/vector.h>
 #include <EASTL/queue.h>
 
-#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
 #include "Engine/Data/Asset.h"
@@ -366,11 +365,11 @@ namespace Ares {
 			 * the AssetManager will load Assets on the **main thread**.
 			 * @return A Scope of the created AssetManager object.
 			 */
-			static AppScope<AssetManager> Create(Systems::ThreadPool* threadPool = nullptr);
+			static Scope<AssetManager> Create(Systems::ThreadPool* threadPool = nullptr);
 
 		private:
 			template <typename ObjectType, typename... Args>
-			friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
+			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
 
 			/**
 			 * @brief The constructor for the AssetManager.

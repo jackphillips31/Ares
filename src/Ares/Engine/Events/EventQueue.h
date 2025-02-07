@@ -9,7 +9,6 @@
 #include <EASTL/hash_map.h>
 #include <EASTL/hash_set.h>
 
-#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
 #include "Engine/Events/Event.h"
@@ -52,11 +51,11 @@ namespace Ares {
 
 			void RemoveListener(EventListener& listenerId);
 
-			static AppScope<EventQueue> Create();
+			static Scope<EventQueue> Create();
 
 		private:
 			template <typename ObjectType, typename... Args>
-			friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
+			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
 
 			struct ListenerEntry
 			{
@@ -66,8 +65,8 @@ namespace Ares {
 			};
 
 		private:
-			eastl::queue<AppScope<Event>> m_WriteQueue;
-			eastl::queue<AppScope<Event>> m_ReadQueue;
+			eastl::queue<Scope<Event>> m_WriteQueue;
+			eastl::queue<Scope<Event>> m_ReadQueue;
 			std::shared_mutex m_WriteMutex;
 			std::shared_mutex m_ReadMutex;
 

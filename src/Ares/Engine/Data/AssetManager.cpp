@@ -20,9 +20,9 @@
 
 namespace Ares::Systems {
 
-	AppScope<AssetManager> AssetManager::Create(Systems::ThreadPool* threadPool)
+	Scope<AssetManager> AssetManager::Create(Systems::ThreadPool* threadPool)
 	{
-		return CreateAppScope<AssetManager>(threadPool);
+		return CreateScope<AssetManager>(threadPool);
 	}
 
 	AssetManager::AssetManager(Systems::ThreadPool* threadPool)

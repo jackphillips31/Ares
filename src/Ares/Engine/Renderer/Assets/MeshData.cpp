@@ -22,7 +22,7 @@ namespace Ares {
 
 	Scope<MeshData> MeshData::Create(const std::string& name, const Ref<ParsedMeshData>& meshData)
 	{
-		return Scope<MeshData>(new MeshData(name, meshData));
+		return CreateScope<MeshData>(name, meshData);
 	}
 
 	VertexBuffer* MeshData::GetPositionBuffer() const

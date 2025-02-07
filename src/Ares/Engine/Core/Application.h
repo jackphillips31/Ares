@@ -10,7 +10,6 @@
 #include <EASTL/hash_map.h>
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
-#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 #include "Engine/Core/Utility.h"
 #include "Engine/Data/MemoryManager.h"
@@ -18,6 +17,19 @@
 int EntryPoint(int argc, char** argv);
 
 namespace Ares {
+
+	class TestObject
+	{
+	public:
+		TestObject(int32_t number) : m_Number(number) {}
+		TestObject(const TestObject&) = default;
+		TestObject& operator=(const TestObject&) = default;
+
+		inline int32_t GetNumber() const { return m_Number; }
+
+	private:
+		int32_t m_Number;
+	};
 
 	class AppSystem;
 	class Event;
@@ -184,8 +196,8 @@ namespace Ares {
 	private:
 		Internal::MemoryManager m_MemoryManager;		// Application Memory Manager.
 		ApplicationSettings m_Settings;		// Application configuration settings.
-		AppScope<Window> m_Window;				// The main application window.
-		AppScope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
+		Scope<Window> m_Window;				// The main application window.
+		Scope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
 		bool m_Running = true;				// Flag to indicate if the application is running.
 		bool m_Minimized = false;			// Flag to indicate if the application is minimized.
 		LayerStack m_LayerStack;			// Stack of active layers in the application.
@@ -193,7 +205,7 @@ namespace Ares {
 
 		eastl::hash_map<
 			std::type_index,
-			AppScope<Internal::System>,
+			Scope<Internal::System>,
 			eastl::hash<std::type_index>,
 			eastl::equal_to<std::type_index>,
 			Internal::AppAllocator

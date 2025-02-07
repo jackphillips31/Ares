@@ -46,7 +46,6 @@
  * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.
  */
 #pragma once
-#include "Engine/Core/Memory.h"
 #include "Engine/Core/System.h"
 
 namespace Ares {
@@ -173,11 +172,11 @@ namespace Ares {
 			 * @return A Scope to the created Input object.
 			 * @throws std::runtime_error If platform-specific implementation is unavailable.
 			 */
-			static AppScope<Input> Create(Window* window = nullptr);
+			static Scope<Input> Create(Window* window = nullptr);
 
 		private:
 			template <typename ObjectType, typename... Args>
-			friend AppScope<ObjectType> Ares::CreateAppScope(Args&&... args);
+			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
 		};
 
 	}

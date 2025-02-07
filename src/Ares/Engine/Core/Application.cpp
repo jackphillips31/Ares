@@ -79,6 +79,17 @@ namespace Ares {
 		//Scope<Systems::Input, Internal::Deleter> m_TestInput = Systems::Input::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), m_Window.get());
 		//Scope<Systems::EventQueue, Internal::Deleter> m_TestQueue = Systems::EventQueue::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager));
 		//Scope<Systems::ThreadPool, Internal::Deleter> m_TestPool = Systems::ThreadPool::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), 1);
+
+		AppScope<TestObject> testObj = Internal::CreateAppScope<TestObject>(32);
+		AppRef<TestObject> testRef = Internal::CreateAppRef<TestObject>(44);
+
+		AppRef<TestObject> testRef2 = testRef;
+
+		AppScope<TestObject> testObj2 = eastl::move(testObj);
+
+		TestObject* testObj3 = testObj2.Release();
+
+		AR_CORE_TRACE("Test: {}", testObj->GetNumber());
 	}
 
 	Application::~Application()
