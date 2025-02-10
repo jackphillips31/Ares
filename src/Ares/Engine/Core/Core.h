@@ -673,6 +673,8 @@
 #define AR_STATIC_BIND_ASSET_FN(fn) std::bind(&fn, std::placeholders::_1)
 #define AR_BIND_SYSTEM_CALLBACK_FN(fn, object) std::bind(&fn, object, std::placeholders::_1)
 
+#include "Engine/Debug/Exception.h"
+
 /**
  * @namespace Ares
  * @brief The main namespace for the Ares engine.

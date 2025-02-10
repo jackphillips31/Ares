@@ -9,10 +9,10 @@ namespace Ares {
 
 	Ref<VertexArray> VertexArray::Create()
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLVertexArray>();
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateRef<OpenGLVertexArray>();
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");

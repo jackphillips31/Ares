@@ -9,6 +9,12 @@ namespace Ares {
 	class VertexBuffer;
 	class UniformBuffer;
 
+	namespace Systems {
+
+		class Renderer;
+
+	}
+
 	namespace ECS {
 
 		namespace Components {
@@ -25,6 +31,8 @@ namespace Ares {
 			class RenderSystem : public System
 			{
 			public:
+				RenderSystem(Ares::Systems::Renderer* renderSys);
+
 				void OnInit(const Scene& scene);
 				void OnShutdown(const Scene& scene);
 
@@ -60,6 +68,7 @@ namespace Ares {
 				};
 
 			private:
+				Ares::Systems::Renderer* m_Renderer;
 				std::unordered_map<size_t, MeshBatch> m_DynamicBatches;
 			};
 

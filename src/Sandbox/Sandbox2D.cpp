@@ -12,6 +12,7 @@ Sandbox2D::Sandbox2D(Ares::Application& app)
 	m_Application(app),
 	m_InputSystem(app.GetSystem<Ares::Systems::Input>()),
 	m_AssetManager(app.GetSystem<Ares::Systems::AssetManager>()),
+	m_Renderer(app.GetSystem<Ares::Systems::Renderer>()),
 	m_AssetListElement(app),
 	m_MainWindowElement(app),
 	myFont(nullptr)
@@ -20,7 +21,7 @@ Sandbox2D::Sandbox2D(Ares::Application& app)
 
 	m_SandboxScene = Ares::CreateScope<Scene>();
 	m_SandboxScene->RegisterSystem<Systems::CameraSystem>();
-	m_SandboxScene->RegisterSystem<Systems::RenderSystem>();
+	m_SandboxScene->RegisterSystem<Systems::RenderSystem>(m_Renderer);
 	m_SandboxScene->RegisterSystem<Systems::LightSystem>();
 	m_SandboxScene->SetSystemUpdateOrder<Systems::CameraSystem, Systems::LightSystem, Systems::RenderSystem>();
 	m_SandboxScene->SetSystemRenderOrder<Systems::RenderSystem>();
@@ -86,7 +87,8 @@ void Sandbox2D::OnAttach()
 	LoadShaderProgram();
 	LoadDefaultTexture();
 
-	Ares::RenderCommand::SetFaceCulling(true);
+	//Ares::RenderCommand::SetFaceCulling(true);
+	m_Renderer->RenderCommand()->SetFaceCulling(true);
 }
 
 void Sandbox2D::OnDetach()
@@ -107,8 +109,11 @@ void Sandbox2D::OnUpdate(const Ares::Timestep& ts)
 
 void Sandbox2D::OnRender()
 {
-	Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.1f });
-	Ares::RenderCommand::Clear();
+	//Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.1f });
+	//Ares::RenderCommand::Clear();
+
+	m_Renderer->RenderCommand()->SetClearColor({ 0.1f, 0.1f, 0.1f, 0.1f });
+	m_Renderer->RenderCommand()->Clear();
 
 	Ares::FrameBuffer* frameBuffer = m_FrameBufferElement.GetFrameBuffer();
 	ImVec2 availableSize = m_FrameBufferElement.GetContentRegionAvail();

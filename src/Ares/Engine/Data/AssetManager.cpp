@@ -28,6 +28,7 @@ namespace Ares::Systems {
 	AssetManager::AssetManager(Systems::ThreadPool* threadPool)
 		: m_NextAssetId(1), m_NextListenerId(1), m_ThreadPool(threadPool), m_MemoryDataProvider()
 	{
+		AR_CORE_INFO("Initializing System: AssetManager");
 		m_ListenerOrder.reserve(100);
 	}
 
@@ -59,12 +60,13 @@ namespace Ares::Systems {
 
 	void AssetManager::Unstage(const Ref<Asset>& asset)
 	{
-#if AR_BUILD_DEBUG || AR_BUILD_RELEASE
+	#if AR_BUILD_DEBUG
 		// Check for references outside AssetManager
 		if (asset.use_count() > 1)
 		{
 			AR_CORE_WARN("Asset: {} has {} reference(s) outside the Asset Cache!", asset->GetName(), asset.use_count() - 1);
 		}
+	#endif
 
 		// Check to see if asset has been unloaded first
 		if (asset->GetState() == AssetState::Loaded)
@@ -72,7 +74,6 @@ namespace Ares::Systems {
 			AR_CORE_WARN("Asset: {} has not been unloaded! Current State: {} - Asset will be removed regardless...", asset->GetName(), asset->GetStateString());
 			Unload(asset);
 		}
-#endif
 
 		// Remove from secondary lookup maps
 		{
@@ -310,7 +311,7 @@ namespace Ares::Systems {
 		DispatchAssetEvent<AssetLoadingEvent>(asset);
 
 		// Create loading task
-		auto loadTask = [this, asset, callback]() mutable
+		auto loadTask = [this, asset, callback = eastl::move(callback)]() mutable
 		{
 			eastl::string eventMessage;
 
@@ -571,6 +572,7 @@ namespace Ares::Systems {
 		// Run task if thread pool is absent
 		if (!m_ThreadPool)
 			loadTask();
+
 		// Send to thread pool if present
 		else
 			m_ThreadPool->SubmitTask(loadTask);

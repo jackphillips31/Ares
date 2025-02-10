@@ -58,6 +58,7 @@ namespace eastl {
 
 	void* allocator::allocate(size_t size, int flags)
 	{
+		AR_CORE_TRACE("ALLOCATION: {}", size);
 		constexpr size_t headerSize = sizeof(AllocationHeader);
 
 		// Calculate total size
@@ -104,6 +105,7 @@ namespace eastl {
 
 	void* allocator::allocate(size_t size, size_t alignment, size_t offset, int flags)
 	{
+		AR_CORE_TRACE("ALLOCATION: {}", size);
 		constexpr size_t headerSize = sizeof(AllocationHeader);
 
 		// Ensure alignment meets the minimum requirement

@@ -18,19 +18,6 @@ int EntryPoint(int argc, char** argv);
 
 namespace Ares {
 
-	class TestObject
-	{
-	public:
-		TestObject(int32_t number) : m_Number(number) {}
-		TestObject(const TestObject&) = default;
-		TestObject& operator=(const TestObject&) = default;
-
-		inline int32_t GetNumber() const { return m_Number; }
-
-	private:
-		int32_t m_Number;
-	};
-
 	class AppSystem;
 	class Event;
 	class ImGuiContext;

@@ -5,6 +5,7 @@
 #include <EASTL/string.h>
 
 #include "Engine/Data/Asset.h"
+#include "Engine/Debug/Exception.h"
 #include "Engine/ECS/Components/Material.h"
 #include "Engine/ECS/Components/Mesh.h"
 
@@ -164,7 +165,7 @@ namespace Ares::Utility {
 
 // Standard Library hashes
 namespace eastl {
-	
+
 	template<>
 	struct hash<std::type_index>
 	{
@@ -218,6 +219,15 @@ namespace eastl {
 			}
 
 			return seed;
+		}
+	};
+
+	template<>
+	struct hash<Ares::ErrorCode>
+	{
+		size_t operator()(const Ares::ErrorCode errorCode) const
+		{
+			return static_cast<size_t>(errorCode);
 		}
 	};
 

@@ -9,25 +9,25 @@ namespace Ares {
 
 	Scope<Texture> Texture::Create(const std::string& name, const RawData& data)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLTexture>(name, data);
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateScope<OpenGLTexture>(name, data);
 		}
 
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 
 	Scope<Texture> Texture::Create(const std::string& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLTexture>(name, dimensions, rawData, format);
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateScope<OpenGLTexture>(name, dimensions, rawData, format);
 		}
 
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 

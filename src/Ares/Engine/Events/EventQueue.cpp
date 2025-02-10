@@ -16,6 +16,7 @@ namespace Ares::Systems {
 	EventQueue::EventQueue()
 		: m_AppCallback(nullptr), m_NextListenerId(1)
 	{
+		AR_CORE_INFO("Initializing System: EventQueue");
 	}
 
 	EventQueue::~EventQueue()

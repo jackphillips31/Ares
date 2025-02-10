@@ -1,21 +1,22 @@
 #include <arespch.h>
 #include "Engine/Renderer/RendererAPI.h"
 
+#include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 
-namespace Ares {
+namespace Ares::Internal {
 
-	RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
+	RenderAPI RendererAPI::s_API = RenderAPI::OpenGL;
 
 	Scope<RendererAPI> RendererAPI::Create()
 	{
 		switch (s_API)
 		{
-		case RendererAPI::API::None: AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL: return CreateScope<OpenGLRendererAPI>();
+		case RenderAPI::None: AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL: return CreateScope<OpenGLRendererAPI>();
 		}
 
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 

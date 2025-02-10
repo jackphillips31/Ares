@@ -1,4 +1,5 @@
 #pragma once
+#include "Engine/Data/MemoryManager/AVLTree.h"
 
 namespace Ares::Internal {
 
@@ -30,6 +31,33 @@ namespace Ares::Internal {
 		uint32_t m_Size;
 		uintptr_t m_PoolStart;
 		std::shared_mutex m_PoolMutex;
+	};
+
+	struct AVLNodeData;
+	class MemoryBlockNew;
+
+	class MemoryPoolNew
+	{
+	public:
+		MemoryPoolNew(size_t poolSize);
+		MemoryPoolNew(const MemoryPoolNew&) = delete;
+		MemoryPoolNew& operator=(const MemoryPoolNew&) = delete;
+		MemoryPoolNew(MemoryPoolNew&& other) noexcept;
+		MemoryPoolNew& operator=(MemoryPoolNew&& other) noexcept;
+		~MemoryPoolNew();
+
+		void* Allocate(const size_t& size);
+		void* Allocate(const size_t& size, const size_t& alignment, const size_t& offset);
+		void Deallocate(void* ptr, const size_t& size = 0);
+
+	private:
+		void* m_Data;
+		void* m_PoolStart;
+		size_t m_Size;
+		size_t m_PoolSize;
+		AVLTree m_AVLTree;
+
+		std::shared_mutex m_Mutex;
 	};
 
 }

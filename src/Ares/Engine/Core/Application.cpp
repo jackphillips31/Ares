@@ -11,7 +11,8 @@
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/ImGui/ImGuiContext.h"
 #include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/RenderCommand.h"
+
+#include "Engine/Data/MemoryManager/MemoryPool.h"
 
 namespace Ares {
 
@@ -19,8 +20,8 @@ namespace Ares {
 	
 	Application::Application(const ApplicationSettings& settings)
 		: m_MemoryManager(), m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr),
-		m_Systems(Internal::AppAllocator(&m_MemoryManager)),
-		m_SystemOrder(Internal::AppAllocator(&m_MemoryManager))
+		m_Systems(*(m_MemoryManager.GetDefaultAllocator())),
+		m_SystemOrder(*(m_MemoryManager.GetDefaultAllocator()))
 	{
 		if (s_Instance != nullptr)
 		{
@@ -49,7 +50,7 @@ namespace Ares {
 		RegisterSystem<Systems::ThreadPool>(settings.ThreadCount);
 		RegisterSystem<Systems::AssetManager>(GetSystem<Systems::ThreadPool>());
 		RegisterSystem<Systems::EventQueue>();
-		Renderer::Init();
+		RegisterSystem<Systems::Renderer>();
 
 		m_Window->SetEventCallback(
 			AR_BIND_SYSTEM_CALLBACK_FN(Systems::EventQueue::Dispatch, GetSystem<Systems::EventQueue>())
@@ -62,39 +63,17 @@ namespace Ares {
 		GetSystem<Systems::EventQueue>()->AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		GetSystem<Systems::EventQueue>()->AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
 
-		/*
-		Internal::MemoryManager testManager;
-		void* data1 = testManager.Allocate(32);
-		void* data2 = testManager.Allocate(64);
-		void* data3 = testManager.Allocate(32);
-		testManager.Deallocate(data2);
-		testManager.Deallocate(data1);
 
-		void* data4 = testManager.Allocate(4);
-		void* data5 = testManager.Allocate(1);
-		*reinterpret_cast<uint32_t*>(data4) = 666;
-		AR_CORE_TRACE("TEST: {}", *reinterpret_cast<uint32_t*>(data4));
-		*/
-		//Scope<Systems::AssetManager, Internal::Deleter> m_TestManager = Systems::AssetManager::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), nullptr);
-		//Scope<Systems::Input, Internal::Deleter> m_TestInput = Systems::Input::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), m_Window.get());
-		//Scope<Systems::EventQueue, Internal::Deleter> m_TestQueue = Systems::EventQueue::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager));
-		//Scope<Systems::ThreadPool, Internal::Deleter> m_TestPool = Systems::ThreadPool::Create<Internal::Deleter, Internal::AppAllocator>(Internal::AppAllocator(&m_MemoryManager), 1);
+		Internal::MemoryPoolNew testPool(256);
+		void* data1 = testPool.Allocate(24);
+		testPool.Allocate(24);
 
-		AppScope<TestObject> testObj = Internal::CreateAppScope<TestObject>(32);
-		AppRef<TestObject> testRef = Internal::CreateAppRef<TestObject>(44);
-
-		AppRef<TestObject> testRef2 = testRef;
-
-		AppScope<TestObject> testObj2 = eastl::move(testObj);
-
-		TestObject* testObj3 = testObj2.Release();
-
-		AR_CORE_TRACE("Test: {}", testObj->GetNumber());
+		testPool.Deallocate(data1);
 	}
 
 	Application::~Application()
 	{
-		Renderer::Shutdown();
+		UnregisterSystem<Systems::Renderer>();
 		UnregisterSystem<Systems::AssetManager>();
 		UnregisterSystem<Systems::ThreadPool>();
 		UnregisterSystem<Systems::Input>();
@@ -196,7 +175,7 @@ namespace Ares {
 		}
 
 		m_Minimized = false;
-		Renderer::OnClientResize(e.GetClientWidth(), e.GetClientHeight());
+		GetSystem<Systems::Renderer>()->OnClientResize(e.GetClientWidth(), e.GetClientHeight());
 
 		return false;
 	}

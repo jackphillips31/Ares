@@ -14,12 +14,18 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/BufferLayout.h"
 #include "Engine/Renderer/VertexArray.h"
-#include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/UniformBuffer.h"
 
 const uint32_t g_defaultWhiteTexture = 0xffffffff;
 
 namespace Ares::ECS::Systems {
+
+	RenderSystem::RenderSystem(Ares::Systems::Renderer* renderSys)
+		: m_Renderer(renderSys)
+	{
+
+	}
 
 	void RenderSystem::OnInit(const Scene& scene)
 	{
@@ -196,12 +202,15 @@ namespace Ares::ECS::Systems {
 		Components::Camera* activeCamera = scene.GetEntityManager()->GetComponent<Components::Camera>(cameraSystem->GetActiveCameraEntityId());
 		const glm::vec2 viewportSize = cameraSystem->GetViewportSize();
 
-		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-		RenderCommand::Clear();
-		RenderCommand::SetViewport(
-			0, 0,
-			static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y)
-		);
+		if (m_Renderer)
+		{
+			m_Renderer->RenderCommand()->SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
+			m_Renderer->RenderCommand()->Clear();
+			m_Renderer->RenderCommand()->SetViewport(
+				0, 0,
+				static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y)
+			);
+		}
 
 		for (auto& [key, batch] : m_DynamicBatches)
 		{
@@ -212,8 +221,10 @@ namespace Ares::ECS::Systems {
 			}
 
 			batch.material->Bind();
-			
-			RenderCommand::DrawInstanced(batch.vao, batch.instanceCount);
+
+			if (m_Renderer)
+				m_Renderer->RenderCommand()->DrawInstanced(batch.vao, batch.instanceCount);
+
 			batch.vao->Unbind();
 			batch.transforms.clear();
 			batch.properties.clear();

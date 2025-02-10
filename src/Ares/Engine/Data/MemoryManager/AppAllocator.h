@@ -35,9 +35,28 @@ namespace Ares::Internal {
 
 	private:
 		MemoryManager* m_Manager;
-#if EASTL_NAME_ENABLED
+	#if EASTL_NAME_ENABLED
 		const char* m_pName;
-#endif
+	#endif
 	};
+
+}
+
+namespace eastl {
+
+	inline Ares::Internal::AppAllocator* get_default_allocator(const Ares::Internal::AppAllocator*)
+	{
+		return Ares::Internal::GetDefaultAllocator();
+	}
+
+	inline bool operator==(const Ares::Internal::AppAllocator& a, const Ares::Internal::AppAllocator& b)
+	{
+		return a.GetManager() == b.GetManager();
+	}
+
+	inline bool operator!=(const Ares::Internal::AppAllocator& a, const Ares::Internal::AppAllocator& b)
+	{
+		return a.GetManager() != b.GetManager();
+	}
 
 }

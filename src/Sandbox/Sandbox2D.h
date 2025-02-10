@@ -35,6 +35,7 @@ private:
 	Ares::Application& m_Application;
 	Ares::Systems::Input* m_InputSystem;
 	Ares::Systems::AssetManager* m_AssetManager;
+	Ares::Systems::Renderer* m_Renderer;
 	ImFont* myFont;
 
 private:

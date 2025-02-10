@@ -15,13 +15,13 @@ namespace Ares {
 
 	Scope<VertexBuffer> VertexBuffer::Create(const RawData& data, const BufferUsage usage)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLVertexBuffer>(data, usage);
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateScope<OpenGLVertexBuffer>(data, usage);
 		}
 
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 
@@ -32,13 +32,13 @@ namespace Ares {
 
 	Scope<IndexBuffer> IndexBuffer::Create(const RawData& data, const BufferUsage usage)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLIndexBuffer>(data, usage);
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateScope<OpenGLIndexBuffer>(data, usage);
 		}
 
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 

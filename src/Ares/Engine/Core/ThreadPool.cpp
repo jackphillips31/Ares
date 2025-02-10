@@ -13,6 +13,7 @@ namespace Ares::Systems {
 	ThreadPool::ThreadPool(size_t threadCount)
 		: m_ShutdownRequested(false)
 	{
+		AR_CORE_INFO("Initializing System: ThreadPool");
 		std::unique_lock lock(m_WorkerMutex);
 
 		m_Workers.reserve(threadCount);

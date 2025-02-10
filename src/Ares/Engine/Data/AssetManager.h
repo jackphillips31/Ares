@@ -453,7 +453,7 @@ namespace Ares {
 
 		private:
 			// Asset Cache
-			eastl::hash_map<AssetId, Ref<Asset>> m_AssetCache;
+			eastl::hash_map<AssetId, Ref<Asset>, eastl::hash<AssetId>, eastl::equal_to<AssetId>, Internal::AppAllocator> m_AssetCache;
 			eastl::atomic<AssetId> m_NextAssetId;
 			std::shared_mutex m_CacheMutex;
 
@@ -470,7 +470,7 @@ namespace Ares {
 
 			// Asset Listeners
 			eastl::hash_map<AssetListener, AssetListenerCallbackFn> m_Listeners;
-			eastl::vector<AssetListener> m_ListenerOrder;
+			eastl::vector<AssetListener, Internal::AppAllocator> m_ListenerOrder;
 			eastl::hash_map<AssetListener, eastl::string> m_ListenerNameMap;
 			eastl::hash_set<AssetListener> m_GlobalListeners;
 			eastl::atomic<AssetListener> m_NextListenerId;

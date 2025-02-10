@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Renderer/RendererAPI.h"
 
-namespace Ares {
+namespace Ares::Internal {
 
 	class OpenGLRendererAPI : public RendererAPI
 	{

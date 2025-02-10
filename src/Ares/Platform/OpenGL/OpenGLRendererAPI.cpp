@@ -6,7 +6,7 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/VertexArray.h"
 
-namespace Ares {
+namespace Ares::Internal {
 
 	void OpenGLMessageCallback(
 		GLenum source,

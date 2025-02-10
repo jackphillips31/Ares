@@ -8,13 +8,13 @@ namespace Ares {
 
 	Scope<ImGuiContext> ImGuiContext::Create()
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::OpenGL: return CreateScope<OpenGLImGuiContext>();
-		case RendererAPI::API::None: AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL: return CreateScope<OpenGLImGuiContext>();
+		case RenderAPI::None: AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
 		}
 	
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 

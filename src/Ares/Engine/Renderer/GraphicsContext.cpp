@@ -11,10 +11,11 @@ namespace Ares {
 
 	Scope<GraphicsContext> GraphicsContext::Create(void* window)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-			case RendererAPI::API::None: AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::API::OpenGL: {
+		case RenderAPI::None: AR_CORE_ASSERT(false, "RenderAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:
+		{
 			#if AR_PLATFORM_WINDOWS
 				return CreateScope<WinOpenGLContext>(window);
 			#else
@@ -24,7 +25,7 @@ namespace Ares {
 			}
 		}
 
-		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
+		AR_CORE_ASSERT(false, "Unknown RenderAPI!");
 		return nullptr;
 	}
 

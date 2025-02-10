@@ -11,6 +11,7 @@ namespace Ares::Systems {
 
 	WinInput::WinInput(Window* window)
 	{
+		AR_CORE_INFO("Initializing System: WinInput");
 		m_Window = static_cast<HWND>(window->GetNativeWindow());
 	}
 

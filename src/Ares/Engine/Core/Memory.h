@@ -55,7 +55,12 @@ namespace Ares {
 				ReleaseReference();
 			}
 
-			inline ObjectType* operator->() { std::shared_lock lock(m_Mutex); return m_Object; }
+			inline ObjectType* operator->() {
+				std::shared_lock lock(m_Mutex);
+				if (!m_Object)
+					throw Internal::Exception(ErrorCode::DEREF_NULL_POINTER);
+				return m_Object;
+			}
 		};
 
 	}

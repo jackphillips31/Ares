@@ -1,69 +1,46 @@
 #pragma once
-#include "Engine/Renderer/RendererAPI.h"
+#include <glm/vec4.hpp>
 
 namespace Ares {
 
-	class Renderer;
 	class VertexArray;
-	
-	class RenderCommand
-	{
-	private:
-		friend class Renderer;
-		inline static void Init()
-		{
-			s_RendererAPI = RendererAPI::Create();
-			s_RendererAPI->Init();
-		}
 
-		inline static void Shutdown()
-		{
-			s_RendererAPI.reset();
-		}
+	namespace Systems {
 
-	public:
-		inline static void SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height)
-		{
-			s_RendererAPI->SetViewport(x, y, width, height);
-		}
+		class Renderer;
 
-		inline static void SetClearColor(const glm::vec4& color)
-		{
-			s_RendererAPI->SetClearColor(color);
-		}
+	}
 
-		inline static void SetFaceCulling(const bool set)
-		{
-			s_RendererAPI->SetFaceCulling(set);
-		}
+	namespace Internal {
 
-		inline static void Clear()
-		{
-			s_RendererAPI->Clear();
-		}
+		class RendererAPI;
 
-		inline static void Finish()
+		class RenderCommand
 		{
-			s_RendererAPI->Finish();
-		}
+		public:
+			~RenderCommand();
 
-		inline static void Flush()
-		{
-			s_RendererAPI->Flush();
-		}
+			void SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height);
+			void SetClearColor(const glm::vec4& color);
+			void SetFaceCulling(const bool set);
+			void Clear();
+			void Finish();
+			void Flush();
+			void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t indexCount = 0);
+			void DrawInstanced(const Ref<VertexArray>& vertexArray, const uint32_t instanceCount = 1);
 
-		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t indexCount = 0)
-		{
-			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
-		}
+			static Scope<RenderCommand> Create(RendererAPI* rendererAPI);
 
-		inline static void DrawInstanced(const Ref<VertexArray>& vertexArray, const uint32_t instanceCount = 1)
-		{
-			s_RendererAPI->DrawInstanced(vertexArray, instanceCount);
-		}
+		private:
+			template <typename ObjectType, typename... Args>
+			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
 
-	private:
-		static Scope<RendererAPI> s_RendererAPI;
-	};
+			RenderCommand(RendererAPI* rendererAPI);
+
+		private:
+			RendererAPI* m_RendererAPI;
+		};
+
+	}
 
 }

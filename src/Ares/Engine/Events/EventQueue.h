@@ -35,7 +35,6 @@ namespace Ares {
 			using ListenerCallbackFn = eastl::function<bool(T&)>;
 			using StoredCallbackFn = eastl::function<bool(Event&)>;
 		public:
-			EventQueue();
 			~EventQueue();
 
 			void Dispatch(Event& e);
@@ -56,6 +55,8 @@ namespace Ares {
 		private:
 			template <typename ObjectType, typename... Args>
 			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
+
+			EventQueue();
 
 			struct ListenerEntry
 			{

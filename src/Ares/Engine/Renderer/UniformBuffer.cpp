@@ -8,10 +8,10 @@ namespace Ares {
 
 	Scope<UniformBuffer> UniformBuffer::Create(const size_t size, const uint32_t bindingPoint, const BufferUsage usage)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLUniformBuffer>(size, bindingPoint, usage);
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateScope<OpenGLUniformBuffer>(size, bindingPoint, usage);
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -20,10 +20,10 @@ namespace Ares {
 
 	Scope<UniformBuffer> UniformBuffer::Create(const RawData& data, const uint32_t bindingPoint, const BufferUsage usage)
 	{
-		switch (Renderer::GetAPI())
+		switch (Systems::Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:	return CreateScope<OpenGLUniformBuffer>(data, bindingPoint, usage);
+		case RenderAPI::None:	AR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RenderAPI::OpenGL:	return CreateScope<OpenGLUniformBuffer>(data, bindingPoint, usage);
 		}
 
 		AR_CORE_ASSERT(false, "Unknown RendererAPI!");

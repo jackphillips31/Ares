@@ -1,8 +1,10 @@
 #include <arespch.h>
 #include "Engine/Data/MemoryManager/MemoryPool.h"
 
+#include "Engine/Data/MemoryManager/AVLNodeData.h"
 #include "Engine/Data/MemoryManager/BlockData.h"
 #include "Engine/Data/MemoryManager/MemoryBlock.h"
+#include "Engine/Data/MemoryManager/MemoryBlockNew.h"
 
 namespace Ares::Internal {
 
@@ -304,6 +306,175 @@ namespace Ares::Internal {
 	#endif
 
 		return adjustedAlignment;
+	}
+
+	constexpr size_t g_MetaDataSize = sizeof(BlockData);
+	constexpr size_t g_FreeListDataSize = sizeof(AVLNodeData);
+	constexpr size_t g_PayloadPaddingFront = AR_PLATFORM_MIN_MALLOC_ALIGNMENT - g_MetaDataSize;
+	constexpr size_t g_MinimumBlockSize = (g_MetaDataSize + g_PayloadPaddingFront + g_FreeListDataSize + g_MetaDataSize + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+	MemoryPoolNew::MemoryPoolNew(size_t poolSize)
+	{
+		size_t minSize = g_MinimumBlockSize;
+		// Ensure the pool size is aligned
+		size_t adjustedSize = (poolSize + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		if (adjustedSize < g_MinimumBlockSize)
+		{
+			AR_CORE_ASSERT(false, "MemoryPool size is less than the minimum MemoryBlock size!");
+			throw std::invalid_argument("MemoryPool size is less than the minimum MemoryBlock size!");
+		}
+
+		// Allocate extra space to ensure alignment
+		void* rawMemory = malloc(adjustedSize);
+		m_Data = rawMemory;
+		m_Size = adjustedSize;
+
+		// Align the pool start
+		m_PoolStart = reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(rawMemory) + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1));
+
+		// Compute usable pool size after alignment
+		m_PoolSize = adjustedSize - (reinterpret_cast<uintptr_t>(m_PoolStart) - reinterpret_cast<uintptr_t>(rawMemory));
+		m_PoolSize &= ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		// Create MemoryBlock
+		MemoryBlockNew poolBlock = m_PoolStart;
+		poolBlock.SetSize(m_PoolSize);
+		poolBlock.SetAlloc(false);
+		poolBlock.SetLastBlock();
+
+		// Initialize AVL Tree
+		m_AVLTree.Insert(poolBlock);
+	}
+
+	MemoryPoolNew::MemoryPoolNew(MemoryPoolNew&& other) noexcept
+	{
+		{
+			std::shared_lock lock(other.m_Mutex);
+			m_Data = other.m_Data;
+			m_PoolStart = other.m_PoolStart;
+			m_Size = other.m_Size;
+			m_PoolSize = other.m_PoolSize;
+			m_AVLTree = other.m_AVLTree;
+		}
+		{
+			std::unique_lock lock(other.m_Mutex);
+			other.m_Data = nullptr;
+			other.m_PoolStart = nullptr;
+			other.m_Size = 0;
+			other.m_PoolSize = 0;
+			other.m_AVLTree = AVLTree();
+		}
+	}
+
+	MemoryPoolNew& MemoryPoolNew::operator=(MemoryPoolNew&& other) noexcept
+	{
+		std::unique_lock lock1(m_Mutex, std::defer_lock);
+		std::unique_lock lock2(other.m_Mutex, std::defer_lock);
+		std::lock(lock1, lock2);
+
+		m_Data = other.m_Data;
+		m_PoolStart = other.m_PoolStart;
+		m_Size = other.m_Size;
+		m_PoolSize = other.m_PoolSize;
+		m_AVLTree = other.m_AVLTree;
+
+		other.m_Data = nullptr;
+		other.m_PoolStart = nullptr;
+		other.m_Size = 0;
+		other.m_PoolSize = 0;
+		other.m_AVLTree = AVLTree();
+
+		return *this;
+	}
+
+	MemoryPoolNew::~MemoryPoolNew()
+	{
+		free(m_Data);
+	}
+
+	void* MemoryPoolNew::Allocate(const size_t& size)
+	{
+		return Allocate(size, AR_PLATFORM_MIN_MALLOC_ALIGNMENT, 0);
+	}
+
+	void* MemoryPoolNew::Allocate(const size_t& size, const size_t& alignment, const size_t& offset)
+	{
+		size_t adjustedAlignment =
+			alignment < AR_PLATFORM_MIN_MALLOC_ALIGNMENT ?
+			AR_PLATFORM_MIN_MALLOC_ALIGNMENT :
+			(alignment + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+		size_t frontPadding = adjustedAlignment - g_MetaDataSize;
+		size_t blockSize = ((g_MetaDataSize * 2) + adjustedAlignment + offset + size + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+		
+		if (blockSize < g_MinimumBlockSize)
+			blockSize = g_MinimumBlockSize;
+
+		MemoryBlockNew bestFit = m_AVLTree.FindBestFit(blockSize);
+
+		if (bestFit.GetSize() - blockSize >= g_MinimumBlockSize)
+		{
+			// Split block
+			std::unique_lock lock(m_Mutex);
+			bool isBestFitLast = bestFit.IsLastBlock();
+			size_t beforeSplitSize = bestFit.GetSize();
+
+			m_AVLTree.Remove(bestFit);
+
+			bestFit.SetSize(blockSize);
+			bestFit.SetAlloc(true);
+
+			MemoryBlockNew newBlock(static_cast<void*>(bestFit + blockSize), beforeSplitSize - blockSize);
+			newBlock.SetAlloc(false);
+
+			if (isBestFitLast)
+				newBlock.SetLastBlock();
+
+			m_AVLTree.Insert(newBlock);
+
+			return bestFit.GetPayloadPtr(adjustedAlignment, offset);
+		}
+		else
+		{
+			// Don't split block
+			std::unique_lock lock(m_Mutex);
+			m_AVLTree.Remove(bestFit);
+
+			return bestFit.GetPayloadPtr(adjustedAlignment, offset);
+		}
+
+		return nullptr;
+	}
+
+	void MemoryPoolNew::Deallocate(void* ptr, const size_t& size)
+	{
+		if (!ptr)
+			return;
+
+		uintptr_t currentPtr = (reinterpret_cast<uintptr_t>(ptr) - AR_PLATFORM_MIN_MALLOC_ALIGNMENT) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		while (!MemoryBlockNew(reinterpret_cast<void*>(currentPtr)).IsValid())
+			currentPtr -= AR_PLATFORM_MIN_MALLOC_ALIGNMENT;
+
+		MemoryBlockNew freedBlock(reinterpret_cast<void*>(currentPtr));
+		bool isFreedLast = freedBlock.IsLastBlock();
+		freedBlock.SetAlloc(false);
+		freedBlock.GetAVLNode()->Init();
+
+		if (isFreedLast)
+			freedBlock.SetLastBlock();
+
+		//m_AVLTree.Insert(freedBlock);
+
+		/*
+		if (freedBlock != m_PoolStart)
+		{
+			BlockData* leftBlockFooter = reinterpret_cast<BlockData*>(freedBlock - g_MetaDataSize);
+			BlockData* rightBlockHeader = reinterpret_cast<BlockData*>(freedBlock + freedBlock.GetSize());
+
+			if ()
+		}
+		*/
 	}
 
 }
