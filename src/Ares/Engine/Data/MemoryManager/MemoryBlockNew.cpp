@@ -7,10 +7,16 @@
 namespace Ares::Internal {
 
 	constexpr size_t g_MetaDataSize = sizeof(BlockData);
-	constexpr size_t g_FreeListDataSize = sizeof(AVLNodeData);
+	constexpr size_t g_FreeListDataSize = sizeof(AVLNode);
 	constexpr size_t g_PayloadPaddingFront = AR_PLATFORM_MIN_MALLOC_ALIGNMENT - g_MetaDataSize;
 	constexpr size_t g_MinimumBlockSize = (g_MetaDataSize + g_PayloadPaddingFront + g_FreeListDataSize + g_MetaDataSize + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
 
+	AVLNode* FreeBlock::GetAVLNode() const
+	{
+		return reinterpret_cast<AVLNode*>(reinterpret_cast<char*>(const_cast<FreeBlock*>(this)) + g_MetaDataSize + g_PayloadPaddingFront);
+	}
+
+	/*
 	MemoryBlockNew::MemoryBlockNew()
 		: m_Header(nullptr), m_Footer(nullptr), m_AVLNode(nullptr)
 	{
@@ -245,5 +251,7 @@ namespace Ares::Internal {
 	{
 		return reinterpret_cast<char*>(m_Header);
 	}
+
+	*/
 
 }

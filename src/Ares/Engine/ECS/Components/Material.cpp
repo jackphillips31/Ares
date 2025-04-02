@@ -1,9 +1,14 @@
 #include <arespch.h>
 #include "Engine/ECS/Components/Material.h"
 
+#include "Engine/Core/Application.h"
 #include "Engine/Data/Asset.h"
 #include "Engine/Renderer/Assets/Texture.h"
 #include "Engine/Renderer/Assets/Shader.h"
+#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommandQueue.h"
+#include "Engine/Renderer/CommandQueue/Commands.h"
+#include "Engine/Utility/Hash.h"
 
 namespace Ares::ECS::Components {
 
@@ -33,8 +38,10 @@ namespace Ares::ECS::Components {
 
 	Material& Material::operator=(const Material& other)
 	{
-		std::shared_lock lock(other.m_Mutex);
-		std::unique_lock lock1(m_Mutex);
+		std::shared_lock lock1(other.m_Mutex, std::defer_lock);
+		std::unique_lock lock2(m_Mutex, std::defer_lock);
+		std::lock(lock1, lock2);
+
 		m_ShaderAsset = other.m_ShaderAsset;
 		m_Properties = other.m_Properties;
 		m_TextureAssets = other.m_TextureAssets;
@@ -65,6 +72,15 @@ namespace Ares::ECS::Components {
 		return m_MaterialProperties;
 	}
 
+	ShaderProgram* Material::GetShader() const
+	{
+		std::shared_lock lock(m_Mutex);
+		if (m_ShaderAsset != nullptr)
+			return m_ShaderAsset->GetAsset<ShaderProgram>();
+		else
+			return nullptr;
+	}
+
 	void Material::SetShader(const Ref<Asset>& asset)
 	{
 		if (asset->GetType() != typeid(ShaderProgram))
@@ -78,13 +94,13 @@ namespace Ares::ECS::Components {
 	}
 
 	template <typename PropertyType>
-	void Material::SetUniformProperty(const std::string& name, const PropertyType& value)
+	void Material::SetUniformProperty(const String& name, const PropertyType& value)
 	{
 		std::unique_lock lock(m_Mutex);
-		m_Properties[name] = value;
+		m_Properties[name.c_str()] = value;
 	}
 
-	void Material::SetTexture(const std::string& name, const Ref<Asset>& texture)
+	void Material::SetTexture(const String& name, const Ref<Asset>& texture)
 	{
 		if (texture->GetType() != typeid(Texture))
 		{
@@ -93,7 +109,7 @@ namespace Ares::ECS::Components {
 		}
 
 		std::unique_lock lock(m_Mutex);
-		m_TextureAssets[name] = texture;
+		m_TextureAssets[name.c_str()] = texture;
 	}
 
 	void Material::SetProperties(const MaterialProperties& props)
@@ -160,21 +176,17 @@ namespace Ares::ECS::Components {
 			return;
 		}
 
-		shader->Bind();
+		Internal::RenderCommandQueue* command = Application::Get().GetSystem<Ares::Systems::Renderer>()->RenderCommandQueue();
+		command->SubmitCommand<RenderCommands::BindShader>(shader);
 
 		// Set properties based on type
 		for (const auto& [name, value] : m_Properties)
 		{
-			std::visit([this, shader, &name](auto&& arg) {
-				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, int32_t>) shader->SetInt(name, arg);
-				else if constexpr (std::is_same_v<T, float>) shader->SetFloat(name, arg);
-				else if constexpr (std::is_same_v<T, glm::vec2>) shader->SetFloat2(name, arg);
-				else if constexpr (std::is_same_v<T, glm::vec3>) shader->SetFloat3(name, arg);
-				else if constexpr (std::is_same_v<T, glm::vec4>) shader->SetFloat4(name, arg);
-				else if constexpr (std::is_same_v<T, glm::mat3>) shader->SetMat3(name, arg);
-				else if constexpr (std::is_same_v<T, glm::mat4>) shader->SetMat4(name, arg);
-			}, value);
+			eastl::visit([this, command, shader, name](auto&& actualValue)
+				{
+					using UniformType = std::decay_t<decltype(actualValue)>;
+					command->SubmitCommand<RenderCommands::SetMaterialUniform<const UniformType&>>(shader, name, actualValue);
+				}, value);
 		}
 
 		// Bind textures
@@ -183,8 +195,8 @@ namespace Ares::ECS::Components {
 		{
 			if (texture->GetState() == AssetState::Loaded)
 			{
-				texture->GetAsset<Texture>()->Bind(textureUnit);
-				shader->SetInt(name, textureUnit);
+				command->SubmitCommand<RenderCommands::BindTexture>(texture->GetAsset<Texture>(), textureUnit);
+				command->SubmitCommand<RenderCommands::SetMaterialUniform<int32_t>>(shader, name, textureUnit);
 				textureUnit++;
 			}
 			else
@@ -194,11 +206,26 @@ namespace Ares::ECS::Components {
 		}
 	}
 
-	template void Material::SetUniformProperty<int32_t>(const std::string&, const int32_t&);
-	template void Material::SetUniformProperty<float>(const std::string&, const float&);
-	template void Material::SetUniformProperty<glm::vec2>(const std::string&, const glm::vec2&);
-	template void Material::SetUniformProperty<glm::vec3>(const std::string&, const glm::vec3&);
-	template void Material::SetUniformProperty<glm::mat3>(const std::string&, const glm::mat3&);
-	template void Material::SetUniformProperty<glm::mat4>(const std::string&, const glm::mat4&);
+	template void Material::SetUniformProperty<int32_t>(const String&, const int32_t&);
+	template void Material::SetUniformProperty<float>(const String&, const float&);
+	template void Material::SetUniformProperty<glm::vec2>(const String&, const glm::vec2&);
+	template void Material::SetUniformProperty<glm::vec3>(const String&, const glm::vec3&);
+	template void Material::SetUniformProperty<glm::mat3>(const String&, const glm::mat3&);
+	template void Material::SetUniformProperty<glm::mat4>(const String&, const glm::mat4&);
+
+}
+
+namespace eastl {
+
+	size_t hash<Ares::ECS::Components::Material>::operator()(const Ares::ECS::Components::Material& material) const
+	{
+		std::shared_lock lock(material.m_Mutex);
+		size_t hash = static_cast<size_t>(material.m_ShaderAsset->GetAssetId());
+		for (const auto& [name, asset] : material.m_TextureAssets)
+		{
+			Ares::CombineHash<uint32_t>(hash, asset->GetAssetId());
+		}
+		return hash;
+	}
 
 }

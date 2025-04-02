@@ -10,6 +10,7 @@ public:
 
 	void Draw() override;
 	void OnUpdate(const Ares::Timestep& ts) override;
+	void OnRender() override;
 
 	inline ImVec2 GetContentRegionAvail() { return m_ContentRegionAvailable; }
 	inline Ares::FrameBuffer* GetFrameBuffer() { return m_FrameBuffer.get(); }

@@ -39,7 +39,7 @@ namespace Ares {
 
 			void Dispatch(Event& e);
 
-			void OnUpdate(Timestep& ts) override;
+			void OnUpdate(const Timestep& ts) override;
 
 			void SetEventCallback(ApplicationCallback&& callback);
 
@@ -60,12 +60,13 @@ namespace Ares {
 
 			struct ListenerEntry
 			{
-				EventListener ListenerId;
-				EventType ListenerType;
-				StoredCallbackFn CallbackFn;
+				EventListener ListenerId = 0;
+				EventType ListenerType = EventType::None;
+				StoredCallbackFn CallbackFn = nullptr;
 			};
 
 		private:
+			eastl::queue<Event> m_TestQueue;
 			eastl::queue<Scope<Event>> m_WriteQueue;
 			eastl::queue<Scope<Event>> m_ReadQueue;
 			std::shared_mutex m_WriteMutex;

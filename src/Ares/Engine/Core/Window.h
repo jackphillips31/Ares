@@ -73,7 +73,7 @@ namespace Ares {
 		 * @typedef EventCallbackFn
 		 * @brief Alias for a function type that takes an Event reference and returns void.
 		 */
-		using EventCallbackFn = std::function<void(Event&)>;
+		using EventCallbackFn = eastl::function<void(Event&)>;
 
 		virtual ~Window() {}
 

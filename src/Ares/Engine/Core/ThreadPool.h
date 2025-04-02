@@ -37,24 +37,16 @@
  * tasks and retrieve results via `std::future`.
  */
 #pragma once
-#include "Engine/Core/System.h"
-#include "Engine/Data/MemoryManager/AppAllocator.h"
 #include <future>
-#include <shared_mutex>
-#include <EASTL/vector.h>
-#include <EASTL/atomic.h>
-#include <EASTL/queue.h>
+
+#include "Engine/Containers/Atomic.h"
+#include "Engine/Containers/Queue.h"
+#include "Engine/Containers/Vector.h"
+#include "Engine/Core/System.h"
 
 namespace Ares {
 
 	class Application;
-
-	namespace Internal {
-
-		class AppAllocator;
-		struct Deleter;
-
-	}
 
 	namespace Systems {
 
@@ -98,7 +90,18 @@ namespace Ares {
 		 */
 		class ThreadPool : public Internal::System
 		{
+		private:
+			/**
+			 * @brief Constructs a ThreadPool.
+			 * 
+			 * @param threadCount The number of worker threads to create (default: hardware concurrency).
+			 */
+			ThreadPool(size_t threadCount);
+
 		public:
+			/**
+			 * @brief Destroys the ThreadPool and cleans up all workers.
+			 */
 			~ThreadPool() override;
 
 			/**
@@ -138,18 +141,14 @@ namespace Ares {
 		private:
 			template <typename ObjectType, typename... Args>
 			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
-			ThreadPool(size_t threadCount);
 
 		private:
-			eastl::vector<std::thread, Internal::AppAllocator> m_Workers;	///< Vector of worker threads.
-			eastl::queue<
-				eastl::function<void()>,
-				eastl::deque<eastl::function<void()>, Internal::AppAllocator>
-			> m_TaskQueue;												///< Queue of tasks to be executed.
+			Vector<std::thread> m_Workers;								///< Vector of worker threads.
+			Queue<eastl::function<void()>> m_TaskQueue;					///< Queue of tasks to be executed.
 			std::mutex m_QueueMutex;									///< Mutex for synchronizing task queue access.
 			std::shared_mutex m_WorkerMutex;							///< Mutex for synchronizing work done on worker.
 			std::condition_variable m_Condition;						///< Condition variable for task synchronization.
-			eastl::atomic<bool> m_ShutdownRequested;					///< Flag to indicate shutdown.
+			Atomic<bool> m_ShutdownRequested;							///< Flag to indicate shutdown.
 		};
 
 		template <typename Func, typename... Args>

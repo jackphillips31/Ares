@@ -12,6 +12,11 @@ FrameBufferViewerElement::~FrameBufferViewerElement()
 
 void FrameBufferViewerElement::OnUpdate(const Ares::Timestep& ts)
 {
+	
+}
+
+void FrameBufferViewerElement::OnRender()
+{
 	if (m_ContentRegionAvailable.x && m_ContentRegionAvailable.y)
 	{
 		uint32_t newWidth = static_cast<uint32_t>(m_ContentRegionAvailable.x);
@@ -19,8 +24,13 @@ void FrameBufferViewerElement::OnUpdate(const Ares::Timestep& ts)
 
 		if (m_FrameBuffer == nullptr)
 			m_FrameBuffer = Ares::FrameBuffer::Create(newWidth, newHeight);
-		else if (m_FrameBuffer->GetWidth() != newWidth || m_FrameBuffer->GetHeight() != newHeight)
+		else if ((m_FrameBuffer->GetWidth() != newWidth || m_FrameBuffer->GetHeight() != newHeight) && m_FrameBuffer != nullptr)
 		{
+			//Ares::Application::Get().GetSystem<Ares::Systems::Renderer>()->RenderCommandQueue()->SubmitCommand<Ares::RenderCommands::ResizeFrameBuffer>(m_FrameBuffer.get(), newWidth, newHeight);
+			//Ares::Application::Get().GetSystem<Ares::Systems::MainThreadQueue>()->SubmitTask([this, newWidth, newHeight]()
+				//{
+					//m_FrameBuffer->Resize(newWidth, newHeight);
+				//});
 			m_FrameBuffer->Resize(newWidth, newHeight);
 		}
 	}

@@ -243,16 +243,17 @@ namespace Ares {
 		}
 		switch (uMsg)
 		{
+		case WM_CLOSE:
+		{
+			ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
+			PostQuitMessage(0);
+			return 0;
+		}
 		case WM_QUIT:
 		{
 			WindowCloseEvent event;
 			EventCallback(event);
 			return wParam;
-		}
-		case WM_DESTROY: {
-			ChangeDisplaySettings(&m_Data.OriginalDisplay, 0);
-			PostQuitMessage(0);
-			return 0;
 		}
 		case WM_SIZING: {
 			return 0;

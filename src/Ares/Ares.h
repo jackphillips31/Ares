@@ -15,13 +15,21 @@
  * - ECS (Entity Component System)
  * - Event Handling
  * - ImGui Integration
+ * - Utility
  * - Renderer
  * 
  * @note This file is intended for use by the Ares application and provides the
  * necessary includes for interacting with the Ares game engine.
  * 
+ * @section containers Container Aliases
+ * - Atomic.h: Provides Atomic type.
+ * - HashMap.h: Provides HashMap type.
+ * - Queue.h: Provides Queue type.
+ * - Vector.h: Provides Vector type.
+ * 
  * @section core Core Engine Components
  * - Core.h: Essential engine functions and types.
+ * - Log.h: Logging functionality.
  * - Application.h: Base application class.
  * - Flags.h: Flags for configuration and settings.
  * - Input.h: Input handling.
@@ -29,7 +37,6 @@
  * - MainThreadQueue.h: Main thread task queue for renderer commands and other tasks.
  * - ThreadPool.h: Multi-threading support for background tasks.
  * - Timestep.h: Time step calculations.
- * - Utility.h: Utility functions.
  * - Window.h: Base window class.
  * 
  * @section data Data Management and Asset Handling
@@ -55,13 +62,23 @@
  * - AssetEvent.h: Events triggered by asset loading and management.
  * - Event.h: Base event class for custom event types.
  * - EventQueue.h: Event queue for managing events in the application.
- * - KeyCodes.h: Key codes for keyboard input events.
  * - KeyEvent.h: Key event classes.
- * - MouseCodes.h: Mouse input codes.
  * - MouseEvent.h Mouse event classes.
+ * 
+ * @section input Input Handling
+ * - KeyCodes.h: Key codes for keyboard input events.
+ * - MouseCodes.h: Mouse input codes for mouse input events.
+ * - MousePosition.h: Mouse position class for mouse movement events.
  * 
  * @section imgui ImGui Integration
  * - ImGuiElement.h: Base class for custom ImGui elements.
+ * 
+ * @section utility Utility
+ * - Data.h: Data related utility methods.
+ * - File.h: File related utility methods.
+ * - Hash.h: Hash related utility methods and template instantiations.
+ * - String.h: String related utility methods.
+ * - Type.h: Type related utility methods.
  * 
  * @section renderer Renderer
  * - Renderer.h: Main rendering interface and setup.
@@ -71,7 +88,7 @@
  * - Texture.h: Texture handling and loading.
  * - Buffer.h: Buffer management for GPU data.
  * - BufferLayout.h: Defines buffer layouts for vertex data.
- * - FrameBuffer.h: Framebuffer management for offscreen rendering.
+ * - FrameBuffer.h: Framebuffer management for off screen rendering.
  * - UniformBuffer.h: Uniform buffer handling for shader data.
  * - VertexArray.h: Vertex array object management for rendering.h
  */
@@ -83,13 +100,18 @@
 
 #include "Engine/Debug/Log.h"
 
+#include "Engine/Containers/Atomic.h"
+#include "Engine/Containers/HashMap.h"
+#include "Engine/Containers/Queue.h"
+#include "Engine/Containers/Vector.h"
+
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Layer.h"
+#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
-#include "Engine/Core/Utility.h"
 #include "Engine/Core/Window.h"
 
 #include "Engine/Data/Asset.h"
@@ -115,16 +137,24 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
 
-#include "Engine/ImGui/ImGuiElement.h"
-
 #include "Engine/Input/KeyCodes.h"
 #include "Engine/Input/MouseCodes.h"
 #include "Engine/Input/MousePosition.h"
+
+#include "Engine/ImGui/ImGuiElement.h"
+
+#include "Engine/Utility/Data.h"
+#include "Engine/Utility/File.h"
+#include "Engine/Utility/Hash.h"
+#include "Engine/Utility/String.h"
+#include "Engine/Utility/Type.h"
 
 //----------------- RENDERER ------------------
 //---------------------------------------------
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Renderer/RenderCommandQueue.h"
+#include "Engine/Renderer/CommandQueue/Commands.h"
 
 #include "Engine/Renderer/Assets/MeshData.h"
 #include "Engine/Renderer/Assets/Shader.h"

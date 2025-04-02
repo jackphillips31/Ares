@@ -676,7 +676,8 @@ General-purpose macros for simplifying common tasks.<br>
 @ref AR_BIND_EVENT_FN <br>
 @ref AR_STATIC_BIND_EVENT_FN <br>
 @ref AR_BIND_ASSET_FN <br>
-@ref AR_STATIC_BIND_ASSET_FN
+@ref AR_STATIC_BIND_ASSET_FN <br>
+@ref AR_BIND_SYSTEM_CALLBACK_FN
 
 @subsection BIT
 <h2 class="memtitle"><span class="permalink"><a href="#BIT">◆&nbsp;</a></span>BIT</h2>
@@ -839,6 +840,42 @@ General-purpose macros for simplifying common tasks.<br>
 		<b>Value:</b>
 		@code{.cpp}
 		std::bind(&fn, std::placeholders::_1)
+		@endcode
+		<div style="margin-block-start: 1em; margin-block-end: 1em; line-height: var(--content-line-height);">This macro creates a <code>std::bind</code> to bind a static asset handler function to the current object and passes the asset as a parameter.</div>
+		<dl class="params">
+			<dt>Parameters</dt>
+			<dd>
+				<table class="params">
+					<tbody><tr><td class="paramname">fn</td><td>The static asset handler function.</td></tr>
+					</tbody>
+				</table>
+  		</dd>
+		</dl>
+	</div>
+</div>
+
+@subsection AR_BIND_SYSTEM_CALLBACK_FN
+<h2 class="memtitle"><span class="permalink"><a href="#AR_BIND_SYSTEM_CALLBACK_FN">◆&nbsp;</a></span>AR_BIND_SYSTEM_CALLBACK_FN</h2>
+<div class="memitem">
+	<div class="memproto">
+    <table class="memname">
+      <tbody>
+				<tr>
+          <td class="memname">#define AR_BIND_SYSTEM_CALLBACK_FN</td>
+          <td>(</td>
+          <td class="paramtype"></td>
+					<td class="paramname">
+						<span class="paramname"><em>fn, object</em></span>
+					</td>
+					<td>)</td>
+        </tr>
+      </tbody>
+		</table>
+	</div>
+	<div class="memdoc">
+		<b>Value:</b>
+		@code{.cpp}
+		std::bind(&fn, object, std::placeholders::_1)
 		@endcode
 		<div style="margin-block-start: 1em; margin-block-end: 1em; line-height: var(--content-line-height);">This macro creates a <code>std::bind</code> to bind a static asset handler function to the current object and passes the asset as a parameter.</div>
 		<dl class="params">

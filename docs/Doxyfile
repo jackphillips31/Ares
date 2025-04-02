@@ -992,18 +992,31 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                   = ./MainPage.md \
+                          ./Groups.md \
                           ./pages/GettingStarted.md \
                           ./pages/Usage.md \
                           ./pages/EventSystem.md \
                           ./pages/AssetManager.md \
                           ./pages/Macros.md \
                           ../src/Ares/Ares.h \
+                          ../src/Ares/Engine/Containers/Atomic.h \
+                          ../src/Ares/Engine/Containers/Function.h \
+                          ../src/Ares/Engine/Containers/HashMap.h \
+                          ../src/Ares/Engine/Containers/HashSet.h \
+                          ../src/Ares/Engine/Containers/InitializerList.h \
+                          ../src/Ares/Engine/Containers/Pair.h \
+                          ../src/Ares/Engine/Containers/Queue.h \
+                          ../src/Ares/Engine/Containers/String.h \
+                          ../src/Ares/Engine/Containers/StringView.h \
+                          ../src/Ares/Engine/Containers/Variant.h \
+                          ../src/Ares/Engine/Containers/Vector.h \
                           ../src/Ares/Engine/Core/Application.h \
                           ../src/Ares/Engine/Core/Core.h \
                           ../src/Ares/Engine/Core/EntryPoint.h \
                           ../src/Ares/Engine/Core/Flags.h \
                           ../src/Ares/Engine/Core/Input.h \
                           ../src/Ares/Engine/Core/Layer.h \
+                          ../src/Ares/Engine/Core/LayerStack.h \
                           ../src/Ares/Engine/Core/MainThreadQueue.h \
                           ../src/Ares/Engine/Core/System.h \
                           ../src/Ares/Engine/Core/ThreadPool.h \

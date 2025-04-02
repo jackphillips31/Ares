@@ -40,8 +40,19 @@ namespace Ares {
 
 			//Hash
 			friend struct std::hash<Mesh>;
+			friend struct eastl::hash<Mesh>;
 		};
 
 	}
+
+}
+
+namespace eastl {
+
+	template <>
+	struct hash<Ares::ECS::Components::Mesh>
+	{
+		size_t operator()(const Ares::ECS::Components::Mesh& mesh) const;
+	};
 
 }

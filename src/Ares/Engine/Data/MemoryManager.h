@@ -1,4 +1,6 @@
 #pragma once
+#include <EASTL/vector.h>
+
 #include "Engine/Data/MemoryManager/AppAllocator.h"
 #include "Engine/Data/MemoryManager/Deleter.h"
 #include "Engine/Data/MemoryManager/MemoryPool.h"

@@ -55,13 +55,6 @@ namespace Ares {
 	struct MousePosition;
 	class Window;
 
-	namespace Internal {
-
-		class AppAllocator;
-		struct Deleter;
-
-	}
-
 	namespace Systems {
 
 		/**
@@ -110,7 +103,7 @@ namespace Ares {
 		 * @warning On **Windows** platforms, [GetMouseClientPosition](#Input::GetMouseClientPosition)
 		 * requires a valid Window instance. If `nullptr` is passed in the [Create](#Input::Create) method,
 		 * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.
-		 * @see Ares::KeyCode, Ares::MouseCode
+		 * @see Ares::KeyCode, Ares::MouseCode, Ares::MousePosition
 		 */
 		class Input : public Internal::System
 		{

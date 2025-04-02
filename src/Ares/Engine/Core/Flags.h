@@ -10,40 +10,37 @@
  */
 #pragma once
 
-namespace Ares {
+/**
+ * @namespace Ares::WindowSettings
+ * @brief Contains settings and flags related to window creation and configuration.
+ *
+ * @details This namespace defines various flags that can be used to configure the behavior and
+ * appearance of the window. The flags are used to specify window properties such as windowed mode,
+ * fullscreen, and resizability.
+ */
+namespace Ares::WindowSettings {
 
 	/**
-	 * @namespace Ares::WindowSettings
-	 * @brief Contains settings and flags related to window creation and configuration.
-	 * 
-	 * @details This namespace defines various flags that can be used to configure the behavior and
-	 * appearance of the window. The flags are used to specify window properties such as windowed mode,
-	 * fullscreen, and resizability.
-	 */
-	namespace WindowSettings {
-
-		/**
-		 * @enum Flags
-		 * @brief A set of flags used to configure window settings.
-		 * 
-		 * @details These flags can be combined to set various properties for the window such as windowed
-		 * or fullscreen mode, borderless, and whether the window is resizable or maximized. The
-		 * flags use bitwise operations for easy combination.
-		 */
-		enum Flags : uint16_t
-		{
-			None = 0,							///< No flags set.
-			Windowed =				BIT(0),		///< Windowed mode flag.
-			Borderless =			BIT(1),		///< Borderless window flag.
-			Fullscreen =			BIT(2),		///< Fullscreen mode flag.
-			FullscreenExclusive =	BIT(3),		///< Fullscreen exclusive mode flag.
-			Resizable =				BIT(4),		///< Resizable window flag.
-			Maximized =				BIT(5),		///< Maximized window flag.
-			DefaultWindow =			0b010001,	///< Default window settings flags (Windowed + Resizable).
-			FullscreenBorderless =	0b000110,	///< Fullscreen borderless window flags (Borderless + Fullscreen).
-			FullscreenWindowed =	0b100001,	///< Fullscreen windowed mode flags (Windowed + Maximized).
-		};
-	}
+		* @enum Flags
+		* @brief A set of flags used to configure window settings.
+		* 
+		* @details These flags can be combined to set various properties for the window such as windowed
+		* or fullscreen mode, borderless, and whether the window is resizable or maximized. The
+		* flags use bitwise operations for easy combination.
+		*/
+	enum Flags : uint16_t
+	{
+		None = 0,
+		Windowed =				BIT(0),		///< Windowed mode flag.
+		Borderless =			BIT(1),		///< Borderless window flag.
+		Fullscreen =			BIT(2),		///< Fullscreen mode flag.
+		FullscreenExclusive =	BIT(3),		///< Fullscreen exclusive mode flag.
+		Resizable =				BIT(4),		///< Resizable window flag.
+		Maximized =				BIT(5),		///< Maximized window flag.
+		DefaultWindow =			0b010001,	///< Default window settings flags (Windowed + Resizable).
+		FullscreenBorderless =	0b000110,	///< Fullscreen borderless window flags (Borderless + Fullscreen).
+		FullscreenWindowed =	0b100001,	///< Fullscreen windowed mode flags (Windowed + Maximized).
+	};
 
 }
 

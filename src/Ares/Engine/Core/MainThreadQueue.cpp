@@ -1,50 +1,37 @@
 #include <arespch.h>
 #include "Engine/Core/MainThreadQueue.h"
 
-namespace Ares {
+namespace Ares::Systems {
 
-	void MainThreadQueue::SubmitTask(std::function<void()>&& function)
+	Scope<MainThreadQueue> MainThreadQueue::Create()
 	{
-		std::lock_guard lock(s_WriteMutex);
-		s_WriteQueue.emplace(std::move(function));
+		return CreateScope<MainThreadQueue>();
 	}
 
-	void MainThreadQueue::Init()
+	MainThreadQueue::MainThreadQueue()
 	{
-		Shutdown();
 	}
 
-	void MainThreadQueue::Shutdown()
+	void MainThreadQueue::SubmitTask(eastl::function<void()>&& task)
 	{
+		std::unique_lock lock(m_WriteMutex);
+		m_WriteQueue.emplace(eastl::move(task));
+	}
+
+	void MainThreadQueue::OnUpdate(const Timestep& ts)
+	{
+		std::unique_lock lock1(m_ReadMutex);
 		{
-			std::lock_guard lock(s_ReadMutex);
-			while (!s_ReadQueue.empty()) s_ReadQueue.pop();
+			std::unique_lock lock2(m_WriteMutex);
+			eastl::swap(m_ReadQueue, m_WriteQueue);
 		}
+
+		while (!m_ReadQueue.empty())
 		{
-			std::lock_guard lock(s_WriteMutex);
-			while (!s_WriteQueue.empty()) s_WriteQueue.pop();
+			auto task = eastl::move(m_ReadQueue.front());
+			m_ReadQueue.pop();
+			task();
 		}
-	}
-
-	void MainThreadQueue::OnUpdate()
-	{
-		SwapQueues();
-
-		std::lock_guard lock(s_ReadMutex);
-		while (!s_ReadQueue.empty())
-		{
-			std::function<void()> func = std::move(s_ReadQueue.front());
-			s_ReadQueue.pop();
-			func();
-		}
-	}
-
-	void MainThreadQueue::SwapQueues()
-	{
-		std::lock_guard lock1(s_WriteMutex);
-		std::lock_guard lock2(s_ReadMutex);
-
-		std::swap(s_WriteQueue, s_ReadQueue);
 	}
 
 }

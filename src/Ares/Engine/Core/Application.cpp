@@ -3,6 +3,7 @@
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/Layer.h"
+#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/ThreadPool.h"
 #include "Engine/Core/Timestep.h"
 #include "Engine/Core/Window.h"
@@ -20,18 +21,17 @@ namespace Ares {
 	
 	Application::Application(const ApplicationSettings& settings)
 		: m_MemoryManager(), m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr),
+		m_LayerStack(nullptr),
 		m_Systems(*(m_MemoryManager.GetDefaultAllocator())),
 		m_SystemOrder(*(m_MemoryManager.GetDefaultAllocator()))
 	{
 		if (s_Instance != nullptr)
 		{
 			AR_CORE_ASSERT(false, "Application already exists!");
-			throw std::exception("Application already exists!");
+			throw std::runtime_error("Application already exists!");
 		}
 
 		s_Instance = this;
-
-		m_LastFrameTime = std::chrono::duration<float>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
 		WindowProps windowProps = WindowProps(
 			settings.Name,
@@ -43,11 +43,15 @@ namespace Ares {
 			settings.Icon
 		);
 
+		Systems::Renderer::SetAPI(settings.Renderer);
+
+		m_LayerStack = LayerStack::Create();
 		m_Window = Window::Create(windowProps);
 		m_ImGuiContext = ImGuiContext::Create();
 
 		RegisterSystem<Systems::Input>(m_Window.get());
 		RegisterSystem<Systems::ThreadPool>(settings.ThreadCount);
+		RegisterSystem<Systems::MainThreadQueue>();
 		RegisterSystem<Systems::AssetManager>(GetSystem<Systems::ThreadPool>());
 		RegisterSystem<Systems::EventQueue>();
 		RegisterSystem<Systems::Renderer>();
@@ -62,19 +66,13 @@ namespace Ares {
 		GetSystem<Systems::EventQueue>()->SetEventCallback(AR_BIND_EVENT_FN(Application::OnEvent));
 		GetSystem<Systems::EventQueue>()->AddListener<WindowCloseEvent>(AR_BIND_EVENT_FN(Application::OnWindowClose));
 		GetSystem<Systems::EventQueue>()->AddListener<WindowResizeEvent>(AR_BIND_EVENT_FN(Application::OnWindowResize));
-
-
-		Internal::MemoryPoolNew testPool(256);
-		void* data1 = testPool.Allocate(24);
-		testPool.Allocate(24);
-
-		testPool.Deallocate(data1);
 	}
 
 	Application::~Application()
 	{
 		UnregisterSystem<Systems::Renderer>();
 		UnregisterSystem<Systems::AssetManager>();
+		UnregisterSystem<Systems::MainThreadQueue>();
 		UnregisterSystem<Systems::ThreadPool>();
 		UnregisterSystem<Systems::Input>();
 		UnregisterSystem<Systems::EventQueue>();
@@ -82,52 +80,85 @@ namespace Ares {
 
 	void Application::PushLayer(Ref<Layer> layer)
 	{
-		m_LayerStack.PushLayer(layer);
+		{
+			std::unique_lock lock(m_LayerStackMutex);
+			m_LayerStack->PushLayer(layer);
+		}
 		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Ref<Layer> overlay)
 	{
-		m_LayerStack.PushOverlay(overlay);
+		{
+			std::unique_lock lock(m_LayerStackMutex);
+			m_LayerStack->PushOverlay(overlay);
+		}
 		overlay->OnAttach();
 	}
 
 	void Application::PopLayer(Ref<Layer> layer)
 	{
-		m_LayerStack.PopLayer(layer);
+		{
+			std::unique_lock lock(m_LayerStackMutex);
+			m_LayerStack->PopLayer(layer);
+		}
 		layer->OnDetach();
 	}
 
 	void Application::PopOverlay(Ref<Layer> overlay)
 	{
-		m_LayerStack.PopOverlay(overlay);
+		{
+			std::unique_lock lock(m_LayerStackMutex);
+			m_LayerStack->PopOverlay(overlay);
+		}
 		overlay->OnDetach();
 	}
 
 	void Application::Run()
 	{
 		AR_CORE_INFO("Engine Running...");
-		while (m_Running)
-		{
-			double currentTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+		m_Running = true;
 
-			while (currentTime - m_LastFrameTime >= (1.0f / static_cast<double>(m_Settings.UpdatesPerSecond)))
+		UpdateLoop();
+		RenderLoop();
+	}
+
+	void Application::UpdateLoop()
+	{
+		GetSystem<Systems::ThreadPool>()->SubmitTask([this]()
 			{
-				Timestep timestep = currentTime - m_LastFrameTime;
-				m_LastFrameTime = currentTime;
+				m_LastUpdateTime = std::chrono::high_resolution_clock::now();
+				std::chrono::nanoseconds targetInterval(1000000000 / m_Settings.UpdatesPerSecond);
+				TimePoint nextUpdateTime = m_LastUpdateTime;
 
-				m_Window->OnUpdate();
-
-				if (!m_Minimized)
+				while (m_Running.load())
 				{
-					for (std::type_index& systemType : m_SystemOrder)
-						m_Systems[systemType]->OnUpdate(timestep);
+					Timestep timestep = std::chrono::duration<double>(nextUpdateTime.time_since_epoch() - m_LastUpdateTime.time_since_epoch()).count();
+					GetSystem<Systems::AssetManager>()->OnUpdate(timestep);
+					GetSystem<Systems::EventQueue>()->OnUpdate(timestep);
 
-					for (Ref<Layer> layer : m_LayerStack)
-						layer->OnUpdate(timestep);
+					{
+						std::shared_lock lock(m_LayerStackMutex);
+						for (Ref<Layer>& entry : *m_LayerStack)
+							entry->OnUpdate(timestep);
+					}
+
+					m_LastUpdateTime = nextUpdateTime;
+					nextUpdateTime += targetInterval;
+					std::this_thread::sleep_until(nextUpdateTime);
 				}
+			});
+	}
 
-			}
+	void Application::RenderLoop()
+	{
+		Systems::MainThreadQueue* mainThreadQueue = GetSystem<Systems::MainThreadQueue>();
+		Systems::Renderer* renderer = GetSystem<Systems::Renderer>();
+		m_LastFrameTime = std::chrono::high_resolution_clock::now();
+
+		while (m_Running.load())
+		{
+			m_Window->OnUpdate();
 
 			if (m_Minimized)
 			{
@@ -135,24 +166,36 @@ namespace Ares {
 				continue;
 			}
 
-			if (!m_Running)
-				break;
+			TimePoint currentTime = std::chrono::high_resolution_clock::now();
+			Timestep timestep = std::chrono::duration<double>(currentTime.time_since_epoch() - m_LastFrameTime.time_since_epoch()).count();
 
-			for (Ref<Layer> layer : m_LayerStack)
-				layer->OnRender();
+			{
+				std::shared_lock lock(m_LayerStackMutex);
+				for (Ref<Layer>& entry : *m_LayerStack)
+				{
+					entry->OnRender();
+				}
 
-			m_ImGuiContext->Begin();
-			for (Ref<Layer> layer : m_LayerStack)
-				layer->OnImGuiRender();
-			m_ImGuiContext->End();
+				mainThreadQueue->OnUpdate(timestep);
+				renderer->OnRender();
+
+				m_ImGuiContext->Begin();
+				for (Ref<Layer>& entry : *m_LayerStack)
+				{
+					entry->OnImGuiRender();
+				}
+				m_ImGuiContext->End();
+			}
 
 			m_Window->SwapBuffers();
+			m_LastFrameTime = currentTime;
 		}
 	}
 
 	void Application::OnEvent(Event& e)
 	{
-		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
+		std::shared_lock lock(m_LayerStackMutex);
+		for (auto it = m_LayerStack->rbegin(); it != m_LayerStack->rend(); ++it)
 		{
 			(*it)->OnEvent(e);
 			if (e.Handled)
@@ -162,6 +205,7 @@ namespace Ares {
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
+		std::unique_lock lock(m_Mutex);
 		m_Running = false;
 		return true;
 	}

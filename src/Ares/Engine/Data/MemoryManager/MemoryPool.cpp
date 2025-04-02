@@ -309,10 +309,165 @@ namespace Ares::Internal {
 	}
 
 	constexpr size_t g_MetaDataSize = sizeof(BlockData);
-	constexpr size_t g_FreeListDataSize = sizeof(AVLNodeData);
+	constexpr size_t g_FreeListDataSize = sizeof(AVLNode);
 	constexpr size_t g_PayloadPaddingFront = AR_PLATFORM_MIN_MALLOC_ALIGNMENT - g_MetaDataSize;
 	constexpr size_t g_MinimumBlockSize = (g_MetaDataSize + g_PayloadPaddingFront + g_FreeListDataSize + g_MetaDataSize + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
 
+	MemoryPoolNew::MemoryPoolNew(const size_t poolSize)
+	{
+		size_t adjustedSize = (poolSize + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		if (adjustedSize < g_MinimumBlockSize)
+		{
+			AR_CORE_ASSERT(false, "MemoryPool size is less than the minimum FreeBlock size!");
+			throw std::invalid_argument("MemoryPool size is less than the minimum FreeBlock size!");
+		}
+
+		m_Data = malloc(adjustedSize);
+		m_Size = adjustedSize;
+
+		m_PoolStart = reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(m_Data) + AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1));
+		m_PoolSize = (adjustedSize - (reinterpret_cast<uintptr_t>(m_PoolStart) - reinterpret_cast<uintptr_t>(m_Data))) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		FreeBlock* poolBlock = FreeBlock::Create(m_PoolStart);
+		poolBlock->SetSize(m_PoolSize);
+		poolBlock->SetAlloc(false);
+		poolBlock->SetLastBlock(true);
+
+		m_AVLTree.Insert(poolBlock);
+	}
+
+	MemoryPoolNew::MemoryPoolNew(MemoryPoolNew&& other) noexcept
+	{
+		std::unique_lock lock(other.m_Mutex);
+
+		m_Data = other.m_Data;
+		m_Size = other.m_Size;
+		m_PoolStart = other.m_PoolStart;
+		m_PoolSize = other.m_PoolSize;
+		m_AVLTree = other.m_AVLTree;
+
+		other.m_Data = nullptr;
+		other.m_Size = 0;
+		other.m_PoolStart = nullptr;
+		other.m_PoolSize = 0;
+	}
+
+	MemoryPoolNew& MemoryPoolNew::operator=(MemoryPoolNew&& other) noexcept
+	{
+		std::unique_lock lock1(m_Mutex, std::defer_lock);
+		std::unique_lock lock2(other.m_Mutex, std::defer_lock);
+		std::lock(lock1, lock2);
+
+		m_Data = other.m_Data;
+		m_Size = other.m_Size;
+		m_PoolStart = other.m_PoolStart;
+		m_PoolSize = other.m_PoolSize;
+		m_AVLTree = other.m_AVLTree;
+
+		other.m_Data = nullptr;
+		other.m_Size = 0;
+		other.m_PoolStart = nullptr;
+		other.m_PoolSize = 0;
+
+		return *this;
+	}
+
+	MemoryPoolNew::~MemoryPoolNew()
+	{
+		free(m_Data);
+	}
+
+	void* MemoryPoolNew::Allocate(const size_t& size)
+	{
+		return Allocate(size, AR_PLATFORM_MIN_MALLOC_ALIGNMENT, 0);
+	}
+
+	void* MemoryPoolNew::Allocate(const size_t& size, const size_t& alignment, const size_t& offset)
+	{
+		size_t adjustedAlignment = (alignment < AR_PLATFORM_MIN_MALLOC_ALIGNMENT) ? AR_PLATFORM_MIN_MALLOC_ALIGNMENT : alignment;
+
+	#if AR_BUILD_DEBUG
+		if ((adjustedAlignment & (adjustedAlignment - 1)) != 0)
+		{
+			AR_CORE_ASSERT(false, "Alignment must be a power of two!");
+			throw std::invalid_argument("Alignment must be a power of two!");
+		}
+	#endif
+
+		size_t adjustedSize = ((g_MetaDataSize * 2) + adjustedAlignment + size + offset) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		FreeBlock* bestFit = nullptr;
+
+		{
+			std::unique_lock lock(m_Mutex);
+			bestFit = m_AVLTree.FindBestFit(adjustedSize);
+		}
+
+		if (bestFit != nullptr)
+		{
+			if (bestFit->GetSize() - adjustedSize >= g_MinimumBlockSize)
+			{
+				// Split the block
+				bool isBestFitLast = bestFit->GetIsLast();
+				size_t beforeSplitSize = bestFit->GetSize();
+
+				std::unique_lock lock(m_Mutex);
+				m_AVLTree.Remove(bestFit);
+
+				bestFit->SetSize(adjustedSize);
+				bestFit->SetAlloc(true);
+
+				FreeBlock* newBlock = reinterpret_cast<FreeBlock*>(reinterpret_cast<char*>(bestFit) + adjustedSize);
+				newBlock->SetSize(beforeSplitSize - adjustedSize);
+				newBlock->SetAlloc(false);
+				newBlock->SetLastBlock(isBestFitLast);
+
+				m_AVLTree.Insert(newBlock);
+
+				return reinterpret_cast<void*>(((reinterpret_cast<uintptr_t>(bestFit) + 4 + adjustedAlignment - 1) & ~(adjustedAlignment - 1)) + offset);
+			}
+		}
+
+		return nullptr;
+	}
+
+	void MemoryPoolNew::Deallocate(void* ptr, const size_t& size)
+	{
+		if (!ptr)
+			return;
+
+		uintptr_t currentPtr = (reinterpret_cast<uintptr_t>(ptr) - AR_PLATFORM_MIN_MALLOC_ALIGNMENT) & ~(AR_PLATFORM_MIN_MALLOC_ALIGNMENT - 1);
+
+		while (!reinterpret_cast<FreeBlock*>(currentPtr)->GetIsValid())
+			currentPtr -= AR_PLATFORM_MIN_MALLOC_ALIGNMENT;
+
+		FreeBlock* freedBlock = reinterpret_cast<FreeBlock*>(currentPtr);
+
+		freedBlock->SetAlloc(false);
+
+		m_AVLTree.Insert(freedBlock);
+	}
+
+	bool MemoryPoolNew::operator==(const MemoryPoolNew& other) const
+	{
+		std::shared_lock lock1(m_Mutex, std::defer_lock);
+		std::shared_lock lock2(other.m_Mutex, std::defer_lock);
+		std::lock(lock1, lock2);
+
+		return (m_Data == other.m_Data && m_Size == other.m_Size && m_PoolStart == other.m_PoolStart && m_PoolSize == other.m_PoolSize);
+	}
+
+	bool MemoryPoolNew::operator!=(const MemoryPoolNew& other) const
+	{
+		std::shared_lock lock1(m_Mutex, std::defer_lock);
+		std::shared_lock lock2(other.m_Mutex, std::defer_lock);
+		std::lock(lock1, lock2);
+
+		return (m_Data != other.m_Data || m_Size != other.m_Size || m_PoolStart != other.m_PoolStart || m_PoolSize != other.m_PoolSize);
+	}
+
+	/*
 	MemoryPoolNew::MemoryPoolNew(size_t poolSize)
 	{
 		size_t minSize = g_MinimumBlockSize;
@@ -475,6 +630,8 @@ namespace Ares::Internal {
 			if ()
 		}
 		*/
-	}
+
+//	}
+
 
 }

@@ -96,3 +96,12 @@ namespace Ares::ECS::Components {
 	}
 
 }
+
+namespace eastl {
+
+	size_t hash<Ares::ECS::Components::Mesh>::operator()(const Ares::ECS::Components::Mesh& mesh) const
+	{
+		return eastl::hash<uint32_t>()(mesh.m_MeshAsset->GetAssetId());
+	}
+
+}

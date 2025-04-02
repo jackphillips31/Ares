@@ -1,4 +1,6 @@
 #pragma once
+#include "Engine/Containers/Atomic.h"
+#include "Engine/Containers/HashMap.h"
 #include "Engine/Data/Asset.h"
 
 namespace Ares {
@@ -18,7 +20,7 @@ namespace Ares {
 	{
 	public:
 		// Core property
-		inline const std::string& GetName() const override { return m_Name; }
+		inline const String& GetName() const override { return m_Name; }
 
 		// Data getters
 		VertexBuffer* GetPositionBuffer() const;
@@ -41,15 +43,15 @@ namespace Ares {
 		template <typename ObjectType, typename... Args>
 		friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
 		friend class Systems::AssetManager;
-		MeshData(const std::string& name, const Ref<ParsedMeshData>& meshData);
-		static Scope<MeshData> Create(const std::string& name, const Ref<ParsedMeshData>& meshData);
+		MeshData(const String& name, const Ref<ParsedMeshData>& meshData);
+		static Scope<MeshData> Create(const String& name, const Ref<ParsedMeshData>& meshData);
 
 	private:
-		inline static std::atomic<uint32_t> s_NextMeshDataId{ 1 };
+		inline static Atomic<uint32_t> s_NextMeshDataId{ 1 };
 		mutable std::shared_mutex m_Mutex;
-		std::string m_Name;
+		String m_Name;
 		uint32_t m_RendererID;
-		std::unordered_map<VertexDataType, Scope<VertexBuffer>> m_VertexBuffers;
+		HashMap<VertexDataType, Scope<VertexBuffer>> m_VertexBuffers;
 		Scope<IndexBuffer> m_IndexBuffer;
 	};
 

@@ -166,7 +166,6 @@ namespace Ares {
 			: m_ErrorCode(errorCode)
 		{
 			std::memset(m_ErrorMessage, 0, sizeof(m_ErrorMessage));
-			//Utility::StringCopy(m_ErrorMessage, GetErrorMessage(errorCode));
 			Utility::StringConcat(m_ErrorMessage, GetErrorSeverity(errorCode));
 			Utility::StringConcat(m_ErrorMessage, GetErrorTitle(errorCode));
 			Utility::StringAppendInteger(m_ErrorMessage, static_cast<uint32_t>(errorCode));
@@ -179,6 +178,15 @@ namespace Ares {
 			return m_ErrorMessage;
 		}
 
+	}
+
+}
+
+namespace eastl {
+
+	size_t hash<Ares::ErrorCode>::operator()(const Ares::ErrorCode& errorCode) const
+	{
+		return static_cast<size_t>(errorCode);
 	}
 
 }

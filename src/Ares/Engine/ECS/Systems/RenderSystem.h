@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/mat4x4.hpp>
 
+#include "Engine/Containers/Atomic.h"
 #include "Engine/ECS/Core/System.h"
 
 namespace Ares {
@@ -28,6 +29,23 @@ namespace Ares {
 		
 		namespace Systems {
 
+			struct MeshBatch
+			{
+				Ref<VertexArray> vao = nullptr;
+				Scope<VertexBuffer> transformBuffer = nullptr;
+				Scope<VertexBuffer> propertiesBuffer = nullptr;
+				Scope<UniformBuffer> uniformBuffer = nullptr;
+				Components::Material* material = nullptr;
+				std::vector<glm::mat4> transforms;
+				std::vector<Components::MaterialProperties> properties;
+				uint32_t instanceCount = 0;
+				bool isDirty = false;
+				size_t transformBufferSize = 0;
+				std::shared_mutex mutex;
+				Atomic<bool> submittedForCreation = false;
+				Atomic<bool> isInitialized = false;
+			};
+
 			class RenderSystem : public System
 			{
 			public:
@@ -51,21 +69,6 @@ namespace Ares {
 					Components::Mesh* mesh,
 					Components::Material* material
 				);
-
-			private:
-				struct MeshBatch
-				{
-					Ref<VertexArray> vao = nullptr;
-					Scope<VertexBuffer> transformBuffer = nullptr;
-					Scope<VertexBuffer> propertiesBuffer = nullptr;
-					Scope<UniformBuffer> uniformBuffer = nullptr;
-					Components::Material* material = nullptr;
-					std::vector<glm::mat4> transforms;
-					std::vector<Components::MaterialProperties> properties;
-					uint32_t instanceCount = 0;
-					bool isDirty = false;
-					size_t transformBufferSize = 0;
-				};
 
 			private:
 				Ares::Systems::Renderer* m_Renderer;

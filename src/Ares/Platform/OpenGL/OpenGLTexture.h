@@ -8,12 +8,12 @@ namespace Ares {
 	class OpenGLTexture : public Texture
 	{
 	public:
-		OpenGLTexture(const std::string& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format);
-		OpenGLTexture(const std::string& name, const RawData& data);
+		OpenGLTexture(const String& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format);
+		OpenGLTexture(const String& name, const RawData& data);
 		~OpenGLTexture() override;
 
 		// Core properties
-		inline const std::string& GetName() const override { return m_Name; }
+		inline const String& GetName() const override { return m_Name; }
 		inline uint32_t GetWidth() const override { return static_cast<uint32_t>(m_Width); }
 		inline uint32_t GetHeight() const override { return static_cast<uint32_t>(m_Height); }
 		inline Format GetFormat() const override { return m_Format; }
@@ -39,7 +39,7 @@ namespace Ares {
 
 	private:
 		std::string m_Path;
-		std::string m_Name;
+		String m_Name;
 		GLsizei m_Width, m_Height;
 		Format m_Format;
 		mutable int32_t m_BoundSlot;

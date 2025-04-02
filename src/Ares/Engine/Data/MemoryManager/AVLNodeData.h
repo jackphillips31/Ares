@@ -2,6 +2,7 @@
 
 namespace Ares::Internal {
 
+	/*
 	class MemoryBlockNew;
 
 	struct AVLNodeData
@@ -13,9 +14,23 @@ namespace Ares::Internal {
 
 		void Init();
 		size_t GetBlockSize();
-		MemoryBlockNew GetMemoryBlock();
+		//MemoryBlockNew GetMemoryBlock();
 
 		operator MemoryBlockNew();
+	};
+	*/
+
+	struct FreeBlock;
+
+	struct AVLNode
+	{
+		AVLNode* LeftPtr;
+		AVLNode* RightPtr;
+		AVLNode* ParentPtr;
+		AVLNode* FreeListNext;
+		uint32_t Height;
+
+		FreeBlock* GetFreeBlock() const;
 	};
 
 }

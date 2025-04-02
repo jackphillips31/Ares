@@ -7,18 +7,20 @@
  * rendering, thread pool, and asset management.
  */
 #pragma once
-#include <EASTL/hash_map.h>
+#include <shared_mutex>
+
+#include "Engine/Containers/Atomic.h"
+#include "Engine/Containers/HashMap.h"
+#include "Engine/Containers/Vector.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
-#include "Engine/Core/System.h"
-#include "Engine/Core/Utility.h"
 #include "Engine/Data/MemoryManager.h"
+#include "Engine/Utility/Hash.h"
 
 int EntryPoint(int argc, char** argv);
 
 namespace Ares {
 
-	class AppSystem;
 	class Event;
 	class ImGuiContext;
 	class ImGuiLayer;
@@ -26,6 +28,13 @@ namespace Ares {
 	class Window;
 	class WindowCloseEvent;
 	class WindowResizeEvent;
+	enum class RenderAPI : uint8_t;
+
+	namespace Internal {
+
+		class System;
+
+	}
 
 	/**
 	 * @struct ApplicationSettings
@@ -38,14 +47,15 @@ namespace Ares {
 	 */
 	struct ApplicationSettings
 	{
-		std::string Name = "Ares Engine";						///< The name of the application.
-		uint32_t Width = 1280;									///< The width of the application window in pixels.
-		uint32_t Height = 720;									///< The height of the application window in pixels.
-		uint32_t UpdatesPerSecond = 120;						///< The update rate (ticks per second).
-		uint8_t ThreadCount = 4;								///< Number of worker threads in the Application's ThreadPool.
+		std::string Name = "Ares Engine";						/// The name of the application.
+		uint32_t Width = 1280;									/// The width of the application window in pixels.
+		uint32_t Height = 720;									/// The height of the application window in pixels.
+		uint32_t UpdatesPerSecond = 120;						/// The update rate (ticks per second).
+		uint8_t ThreadCount = 4;								/// Number of worker threads in the Application's ThreadPool.
+		RenderAPI Renderer = static_cast<RenderAPI>(1);			/// The Renderer API that will be used.
 
-		uint16_t WindowStyle = WindowSettings::DefaultWindow;	///< Style flags for the window.
-		void* Icon = nullptr;									///< Pointer to the window icon resource.
+		uint16_t WindowStyle = WindowSettings::DefaultWindow;	/// Style flags for the window.
+		void* Icon = nullptr;									/// Pointer to the window icon resource.
 
 		/**
 		 * @brief Constructor for the ApplicationSettings struct.
@@ -80,6 +90,8 @@ namespace Ares {
 	 * @details The Application class initializes and runs the main loop of an Ares-based application.
 	 * It handles events, layers, and updates core engine systems like the renderer,
 	 * asset manager, and input manager.
+	 * 
+	 * @see Ares::Systems
 	 */
 	class Application
 	{
@@ -88,6 +100,7 @@ namespace Ares {
 		 * @brief Constructor for the Application class.
 		 * 
 		 * @param settings The configuration settings for the application.
+		 * @throws std::runtime_error If application instance already exists.
 		 */
 		Application(const ApplicationSettings& settings = ApplicationSettings());
 
@@ -125,31 +138,83 @@ namespace Ares {
 		void PopOverlay(Ref<Layer> overlay);
 
 		/**
+		 * @brief Registers a new system with the application.
+		 *
+		 * @details This template method registers a system of the type `SystemType` with the application.
+		 * The system is constructed using the provided arguments (`args`).
+		 *
+		 * @tparam SystemType The type of system to register.
+		 * @tparam Args The types of the arguments used to construct the system.
+		 * @param args The arguments to forward to the system's constructor.
+		 * @return `true` if the system was successfully registered; otherwise, `false`.
+		 * 
+		 * @see Ares::Systems
+		 */
+		template <typename SystemType, typename... Args>
+		bool RegisterSystem(Args&&... args);
+
+		/**
+		 * @brief Retrieves a system of the specified type.
+		 *
+		 * @details This template method retrieves a system of the type `SystemType` that has been
+		 * registered with the application. If the system is not found, it returns `nullptr`.
+		 *
+		 * @tparam SystemType The type of system to be retrieved.
+		 * @return A pointer to the requested system, or `nullptr` if the system is not found.
+		 */
+		template <typename SystemType>
+		SystemType* GetSystem();
+
+		/**
+		 * @brief Unregisters a system from the application.
+		 *
+		 * @details This template method unregisters a system of the type `SystemType` from the application.
+		 * If the system is found, it is removed and destroyed.
+		 *
+		 * @tparam SystemType The type of the system to unregister.
+		 */
+		template <typename SystemType>
+		void UnregisterSystem();
+
+		/**
 		 * @brief Retrieves the application window.
 		 * 
 		 * @return A reference to the Window object.
 		 */
-		inline Window& GetWindow() { return *m_Window; }
+		Window& GetWindow() { return *m_Window; }
 
 		/**
 		 * @brief Retrieves the active Application instance.
 		 * 
 		 * @return A reference to the active Application object.
 		 */
-		inline static Application& Get() { return *s_Instance; }
+		static Application& Get() { return *s_Instance; }
 
-		inline static bool IsValid() { return s_Instance != nullptr; }
+		/**
+		 * @brief Checks if the Application instance is valid.
+		 * 
+		 * @return `true` if the instance is valid; otherwise, `false`.
+		 */
+		static bool IsValid() { return s_Instance != nullptr; }
 
-		inline Internal::MemoryManager& GetMemoryManager() { return m_MemoryManager; }
-
-		template <typename SystemType>
-		SystemType* GetSystem();
+		/**
+		 * @brief Retrieves the [MemoryManager](#Ares::Internal::MemoryManager) instance.
+		 * 
+		 * @details This method provides access to the internal memory manager, which is responsible
+		 * for managing memory allocation and deallocation within the application.
+		 * 
+		 * @return A reference to the internal [MemoryManager](#Ares::Internal::MemoryManager) instance.
+		 */
+		Internal::MemoryManager& GetMemoryManager() { return m_MemoryManager; }
 
 	private:
 		/**
 		 * @brief Runs the main application loop.
 		 */
 		void Run();
+
+		void UpdateLoop();
+		void RenderLoop();
 
 		/**
 		 * @brief Handles events dispatched to the application.
@@ -174,32 +239,25 @@ namespace Ares {
 		 */
 		bool OnWindowResize(WindowResizeEvent& e);
 
-		template <typename SystemType, typename... Args>
-		bool RegisterSystem(Args&&... args);
+		using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds>;
 
-		template <typename SystemType>
-		void UnregisterSystem();
-	
 	private:
-		Internal::MemoryManager m_MemoryManager;		// Application Memory Manager.
-		ApplicationSettings m_Settings;		// Application configuration settings.
-		Scope<Window> m_Window;				// The main application window.
-		Scope<ImGuiContext> m_ImGuiContext;	// ImGui context for UI.
-		bool m_Running = true;				// Flag to indicate if the application is running.
-		bool m_Minimized = false;			// Flag to indicate if the application is minimized.
-		LayerStack m_LayerStack;			// Stack of active layers in the application.
-		double m_LastFrameTime = 0.0f;		// Timestamp of the last frame update.
+		Internal::MemoryManager m_MemoryManager;	///< Application Memory Manager.
+		ApplicationSettings m_Settings;				///< Application configuration settings.
+		Scope<LayerStack> m_LayerStack;				///< Stack of active layers in the application.
+		Scope<Window> m_Window;						///< The main application window.
+		Scope<ImGuiContext> m_ImGuiContext;			///< ImGui context for UI.
+		Atomic<bool> m_Running = true;			///< Flag to indicate if the application is running.
+		bool m_Minimized = false;					///< Flag to indicate if the application is minimized.
+		TimePoint m_LastUpdateTime;
+		TimePoint m_LastFrameTime;
+		std::shared_mutex m_LayerStackMutex;		///< LayerStack mutex.
+		std::shared_mutex m_Mutex;					///< Application mutex.
 
-		eastl::hash_map<
-			std::type_index,
-			Scope<Internal::System>,
-			eastl::hash<std::type_index>,
-			eastl::equal_to<std::type_index>,
-			Internal::AppAllocator
-		> m_Systems;
-		eastl::vector<std::type_index, Internal::AppAllocator> m_SystemOrder;
+		HashMap<std::type_index, Scope<Internal::System>> m_Systems;	///< The application's systems.
+		Vector<std::type_index> m_SystemOrder;							///< The order in which the application's system's `OnUpdate` methods are called.
 	private:
-		static Application* s_Instance;		// Static reference to the active Application instance.
+		static Application* s_Instance;				///< Static reference to the active Application instance.
 
 		friend int ::EntryPoint(int argc, char** argv);
 	};
@@ -218,9 +276,11 @@ namespace Ares {
 	 *    settings.WindowStyle = Ares::WindowSettings::DefaultWindow;
 	 *    settings.ThreadCount = 4;
 	 * 
-	 *    std::shared_ptr<YourLayer> layer = std::make_shared<YourLayer>();
-	 * 
 	 *    Ares::Application* app = new Ares::Application(settings);
+	 * 
+	 *    // Create the layer using Ares::CreateRef after creating the application
+	 *    // so that the layer is allocated using the Application's memory manager.
+	 *    Ares::Ref<YourLayer> layer = Ares::CreateRef<YourLayer>();
 	 *    app->PushLayer(layer);
 	 * 
 	 *    return app;
@@ -234,7 +294,6 @@ namespace Ares {
 	template <typename SystemType, typename... Args>
 	bool Application::RegisterSystem(Args&&... args)
 	{
-		//if (m_Systems[typeid(SystemType)] = SystemType::template Create<Internal::Deleter, Internal::AppAllocator>(m_MemoryManager.GetDefaultAllocator(), std::forward<Args>(args)...))
 		if (m_Systems[typeid(SystemType)] = SystemType::template Create(std::forward<Args>(args)...))
 		{
 			m_SystemOrder.emplace_back(typeid(SystemType));

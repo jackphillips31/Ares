@@ -21,11 +21,11 @@ namespace Ares {
 
 	namespace Internal {
 
-		class MemoryDataProviderSys
+		class MemoryDataProvider
 		{
 		public:
-			MemoryDataProviderSys();
-			~MemoryDataProviderSys();
+			MemoryDataProvider();
+			~MemoryDataProvider();
 
 			MemoryDataKey RegisterData(DataBuffer&& data);
 			MemoryDataKey RegisterData(const void* data, const size_t& size);

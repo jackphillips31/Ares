@@ -16,7 +16,8 @@ namespace Ares {
 	void WinOpenGLContext::Init()
 	{
 		HDC hdc = GetDC(m_WindowHandle);
-		AR_CORE_ASSERT(hdc, "Failed to get device context for pixel format!");
+		GLADloadfunc gladLoaderFunc = (GLADloadfunc)wglGetProcAddress;
+		AR_CORE_ASSERT(hdc, "OpenGL Context: Failed to get device context!");
 
 		PIXELFORMATDESCRIPTOR pfd = {};
 		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -29,7 +30,7 @@ namespace Ares {
 		int pixelFormat = ChoosePixelFormat(hdc, &pfd);
 		if (pixelFormat == 0 || SetPixelFormat(hdc, pixelFormat, &pfd) == 0)
 		{
-			AR_CORE_ASSERT(false, "Failed to set a compatible pixel format!");
+			AR_CORE_ASSERT(false, "OpenGL Context: Failed to set a compatible pixel format!");
 		}
 
 		ReleaseDC(m_WindowHandle, hdc);
@@ -38,16 +39,20 @@ namespace Ares {
 		// Create temporary context
 		HGLRC tempContext = 0;
 		tempContext = wglCreateContext(m_DeviceContext);
-		AR_CORE_ASSERT(tempContext, "Failed to make temporary OpenGL context!");
+		AR_CORE_ASSERT(tempContext, "OpenGL Context: Failed to make temporary OpenGL context!");
 		wglMakeCurrent(m_DeviceContext, tempContext);
 
 		// Load WGL Extensions
-		gladLoaderLoadWGL(m_DeviceContext);
+		if (!gladLoaderLoadWGL(m_DeviceContext))
+		{
+			AR_CORE_ASSERT(false, "OpenGL Context: Failed to load WGL!");
+		}
 
 		// DEBUG FLAGS
 		int attributes[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 6,
+			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 			WGL_CONTEXT_FLAGS_ARB,
 			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
 			0
@@ -55,7 +60,7 @@ namespace Ares {
 
 		// Create the final OpenGL context and get rid of the temporary one
 		m_Context = wglCreateContextAttribsARB(m_DeviceContext, 0, attributes);
-		AR_CORE_ASSERT(m_Context, "Failed to make final OpenGL context!");
+		AR_CORE_ASSERT(m_Context, "OpenGL Context: Failed to make final OpenGL context!");
 
 		wglMakeCurrent(nullptr, nullptr);
 		wglDeleteContext(tempContext);
@@ -65,12 +70,12 @@ namespace Ares {
 		// Glad Loader!
 		if (!gladLoaderLoadGL())
 		{
-			AR_CORE_ASSERT(false, "GLAD loader failed!");
+			AR_CORE_ASSERT(false, "OpenGL Context: GLAD loader failed!");
 		}
 
 		if (!gladLoaderLoadWGL(m_DeviceContext))
 		{
-			AR_CORE_ASSERT(false, "Failed to initialize WGL extensions with GLAD")
+			AR_CORE_ASSERT(false, "OpenGL Context: WGL loader failed!");
 		}
 
 		// Log OpenGL info

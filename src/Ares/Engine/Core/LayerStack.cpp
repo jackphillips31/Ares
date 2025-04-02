@@ -5,6 +5,11 @@
 
 namespace Ares {
 
+	Scope<LayerStack> LayerStack::Create()
+	{
+		return CreateScope<LayerStack>();
+	}
+
 	LayerStack::~LayerStack()
 	{
 		for (Ref<Layer> layer : m_Layers)
@@ -27,7 +32,7 @@ namespace Ares {
 
 	void LayerStack::PopLayer(Ref<Layer> layer)
 	{
-		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
+		auto it = eastl::find(m_Layers.begin(), m_Layers.end(), layer);
 		if (it != m_Layers.end())
 		{
 			m_Layers.erase(it);
@@ -37,7 +42,7 @@ namespace Ares {
 
 	void LayerStack::PopOverlay(Ref<Layer> overlay)
 	{
-		auto it = std::find(m_Layers.begin(), m_Layers.end(), overlay);
+		auto it = eastl::find(m_Layers.begin(), m_Layers.end(), overlay);
 		if (it != m_Layers.end())
 		{
 			m_Layers.erase(it);

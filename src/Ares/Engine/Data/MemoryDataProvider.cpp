@@ -7,17 +7,17 @@ namespace Ares {
 
 	namespace Internal {
 
-		MemoryDataProviderSys::MemoryDataProviderSys()
+		MemoryDataProvider::MemoryDataProvider()
 			: m_NextDataKey(1)
 		{
 		}
 
-		MemoryDataProviderSys::~MemoryDataProviderSys()
+		MemoryDataProvider::~MemoryDataProvider()
 		{
 			m_DataRegistry.clear();
 		}
 
-		MemoryDataKey MemoryDataProviderSys::RegisterData(DataBuffer&& data)
+		MemoryDataKey MemoryDataProvider::RegisterData(DataBuffer&& data)
 		{
 			std::unique_lock lock(m_Mutex);
 			MemoryDataKey key = m_NextDataKey++;
@@ -25,19 +25,18 @@ namespace Ares {
 			return key;
 		}
 
-		MemoryDataKey MemoryDataProviderSys::RegisterData(const void* data, const size_t& size)
+		MemoryDataKey MemoryDataProvider::RegisterData(const void* data, const size_t& size)
 		{
 			std::unique_lock lock(m_Mutex);
 			MemoryDataKey key = m_NextDataKey++;
-			m_DataRegistry[key] = DataBuffer(data, size);
+			m_DataRegistry.try_emplace(eastl::move(key), DataBuffer(data, size));
 			return key;
 		}
 
-		bool MemoryDataProviderSys::UnregisterData(MemoryDataKey& key)
+		bool MemoryDataProvider::UnregisterData(MemoryDataKey& key)
 		{
 			std::unique_lock lock(m_Mutex);
-			auto it = m_DataRegistry.find(key);
-			if (it != m_DataRegistry.end())
+			if (auto it = m_DataRegistry.find(key); it != m_DataRegistry.end())
 			{
 				m_DataRegistry.erase(it);
 				key = 0;
@@ -46,7 +45,7 @@ namespace Ares {
 			return false;
 		}
 
-		const DataBuffer& MemoryDataProviderSys::GetDataBuffer(const MemoryDataKey& key)
+		const DataBuffer& MemoryDataProvider::GetDataBuffer(const MemoryDataKey& key)
 		{
 			std::shared_lock lock(m_Mutex);
 			return m_DataRegistry[key];

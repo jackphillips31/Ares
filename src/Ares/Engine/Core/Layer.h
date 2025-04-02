@@ -28,7 +28,7 @@ namespace Ares {
 		 * 
 		 * @param name The name of the layer, used for debugging purposes.
 		 */
-		Layer(const std::string& name = "Layer");
+		Layer(const char* name = "default_layer_name");
 
 		/**
 		 * @brief Virtual destructor for a layer.
@@ -74,10 +74,10 @@ namespace Ares {
 		 * 
 		 * @return The name of the layer.
 		 */
-		inline const std::string& GetName() const { return m_DebugName; }
+		inline const char* GetName() const { return m_DebugName; }
 
 	protected:
-		std::string m_DebugName;	///< Name of the layer for debugging purposes.
+		const char* m_DebugName;	///< Name of the layer for debugging purposes.
 	};
 
 }

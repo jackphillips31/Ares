@@ -57,4 +57,19 @@ namespace Ares {
 		double m_Time;		///< The time value in seconds.
 	};
 
+	class TimestepNew
+	{
+	public:
+		TimestepNew(uint64_t time = 0);
+
+		operator uint64_t() const;
+
+		uint64_t GetNanoseconds() const;
+		double GetMilliseconds() const;
+		double GetSeconds() const;
+
+	private:
+		uint64_t m_Time;
+	};
+
 }

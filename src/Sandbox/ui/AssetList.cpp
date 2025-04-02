@@ -5,7 +5,7 @@
 AssetListElement::AssetListElement(Ares::Application& app)
 	: m_AssetManager(app.GetSystem<Ares::Systems::AssetManager>())
 {
-	m_AssetList = m_AssetManager->GetCompleteList();
+	m_AssetManager->GetCompleteList(m_AssetList);
 	app.GetSystem<Ares::Systems::EventQueue>()->AddListener<Ares::AssetLoadedEvent>(AR_BIND_EVENT_FN(AssetListElement::OnAssetLoaded));
 }
 
@@ -17,7 +17,7 @@ void AssetListElement::Draw()
 
 	if (ImGui::Button("Refresh List", ImVec2(buttonWidth, 0)))
 	{
-		m_AssetList = m_AssetManager->GetCompleteList();
+		m_AssetManager->GetCompleteList(m_AssetList);
 	}
 
 	ImGui::Separator();
@@ -83,6 +83,6 @@ void AssetListElement::Draw()
 
 bool AssetListElement::OnAssetLoaded(Ares::AssetLoadedEvent& result)
 {
-	m_AssetList = m_AssetManager->GetCompleteList();
+	m_AssetManager->GetCompleteList(m_AssetList);
 	return false;
 }

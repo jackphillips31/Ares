@@ -6,7 +6,7 @@
 
 namespace Ares {
 
-	Scope<VertexShader> VertexShader::Create(const std::string& name, const std::string_view shaderSource)
+	Scope<VertexShader> VertexShader::Create(const StringView name, const StringView shaderSource)
 	{
 		switch (Systems::Renderer::GetAPI())
 		{
@@ -18,7 +18,7 @@ namespace Ares {
 		return nullptr;
 	}
 
-	Scope<FragmentShader> FragmentShader::Create(const std::string& name, const std::string_view shaderSource)
+	Scope<FragmentShader> FragmentShader::Create(const StringView name, const StringView shaderSource)
 	{
 		switch (Systems::Renderer::GetAPI())
 		{
@@ -30,7 +30,7 @@ namespace Ares {
 		return nullptr;
 	}
 
-	Scope<ShaderProgram> ShaderProgram::Create(const std::string& name, const std::vector<Shader*>& shaders)
+	Scope<ShaderProgram> ShaderProgram::Create(const StringView name, const Vector<Shader*>& shaders)
 	{
 		switch (Systems::Renderer::GetAPI())
 		{
@@ -42,7 +42,7 @@ namespace Ares {
 		return nullptr;
 	}
 
-	Scope<ShaderProgram> ShaderProgram::Create(const std::string& name, const Ref<ParsedShaderData>& shaderData)
+	Scope<ShaderProgram> ShaderProgram::Create(const StringView name, const Ref<ParsedShaderData>& shaderData)
 	{
 		switch (Systems::Renderer::GetAPI())
 		{

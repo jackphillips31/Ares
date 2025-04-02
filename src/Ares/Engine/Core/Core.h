@@ -24,7 +24,6 @@
  * 
  */
 #pragma once
-#include <shared_mutex>
 #include <EASTL/unique_ptr.h>
 #include <EASTL/shared_ptr.h>
 /******************************************************/
@@ -644,12 +643,6 @@
 	#define AR_ENABLE_ASSERTS	1
 	#define AR_ENABLE_PROFILING	0
 	#define EASTL_DEBUG			1
-
-	#define AR_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); AR_DEBUG_BREAK(); }
-	#define AR_CORE_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); AR_DEBUG_BREAK(); }
-#else
-	#define AR_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); }
-	#define AR_CORE_EXCEPTION(...) { AR_CORE_CRITICAL("UNCAUGHT EXCEPTION: {0}", __VA_ARGS__); }
 #endif
 
 #if AR_ENABLE_ASSERTS
@@ -659,9 +652,6 @@
 	#define AR_ASSERT(x, ...)
 	#define AR_CORE_ASSERT(x, ...)
 #endif
-
-
-
 
 /******************************************************/
 /*                   Ares Utilities                   */
@@ -673,8 +663,6 @@
 #define AR_STATIC_BIND_ASSET_FN(fn) std::bind(&fn, std::placeholders::_1)
 #define AR_BIND_SYSTEM_CALLBACK_FN(fn, object) std::bind(&fn, object, std::placeholders::_1)
 
-#include "Engine/Debug/Exception.h"
-
 /**
  * @namespace Ares
  * @brief The main namespace for the Ares engine.
@@ -684,132 +672,114 @@
 namespace Ares {
 
 	/**
-	 * @typedef Scope
-	 * @brief A unique pointer alias for managing heap-allocated objects.
+	 * @namespace Ares::Internal
+	 * @brief Internal components of the Ares engine.
 	 *
-	 * @details This alias simplifies the usage of `eastl::unique_ptr` within the engine.
-	 *
-	 * @tparam ObjectType The type of object.
-	 * @tparam DeleterType The type of deleter to use during destruction. **Optional**
+	 * @details The Ares::Internal namespace contains implementation details and internal utilities
+	 * that are not intended for direct use by end-users. These components are subject to change
+	 * and should not be relied upon in external code.
 	 */
-	 /*
-	 template<typename ObjectType, typename DeleterType = eastl::default_delete<ObjectType>>
-	 using Scope = eastl::unique_ptr<ObjectType, DeleterType>;
-	 */
-
-	 /**
-	  * @fn CreateScope(Args&&... args)
-	  * @brief Creates a unique pointer to a new object.
-	  *
-	  * @details This utility function creates a new object and returns a Scope (unique pointer)
-	  * to it. It forwards the provided arguments to the constructor of the object.
-	  *
-	  * @tparam ObjectType The type of object to be created.
-	  * @param args The arguments to be forwarded to the object's constructor.
-	  * @return A Scope<ObjectType> pointing to the newly created object.
-	  *
-	  * **Example usage**:
-	  * ```cpp
-	  * Scope<uint32_t> unsignedInt = CreateScope<uint32_t>(5);
-	  * ```
-	  */
-	  /*
-	  template<typename ObjectType, typename ... Args>
-	  constexpr Scope<ObjectType> CreateScope(Args&& ... args)
-	  {
-		  return eastl::make_unique<ObjectType>(std::forward<Args>(args)...);
-	  }
-	  */
-
-	  /**
-	   * @typedef Ref
-	   * @brief A shared pointer alias for managing shared ownership of objects.
-	   *
-	   * @details This alias simplifies the usage of `eastl::shared_ptr` within the engine.
-	   *
-	   * @tparam ObjectType The type of object.
-	   */
-	template<typename ObjectType>
-	using Ref = eastl::shared_ptr<ObjectType>;
-
-	/**
-	 * @brief Creates a shared pointer to a new object.
-	 *
-	 * @details This utility function creates a new object and returns a Ref (shared pointer)
-	 * to it. It forwards the provided arguments to the constructor of the object.
-	 *
-	 * @tparam ObjectType The type of object to be created.
-	 * @param args The arguments to be forwarded to the object's constructor.
-	 * @return A Ref<ObjectType> pointing to the newly created object.
-	 *
-	 * **Example usage**:
-	 * ```cpp
-	 * Ref<uint32_t> unsignedInt = CreateRef<uint32_t>(5);
-	 * ```
-	 */
-	 /*
-	 template<typename ObjectType, typename ... Args>
-	 constexpr Ref<ObjectType> CreateRef(Args&& ... args)
-	 {
-		 return eastl::make_shared<ObjectType>(std::forward<Args>(args)...);
-	 }
-	 */
-
-	 /*
-	 template <typename ObjectType, typename DeleterType, typename... Args>
-	 constexpr Ref<ObjectType> CreateRefWithDeleter(const DeleterType& deleter, Args&&... args)
-	 {
-		 return eastl::shared_ptr<ObjectType>(eastl::forward<Args>(args)..., deleter);
-	 }
-	 */
-
 	namespace Internal {
 
 		class AppAllocator;
 
+		/**
+		 * @brief Checks if the [Application](#Ares::Application) is in a valid state.
+		 * 
+		 * @details This function verifies whether the [Application](#Ares::Application)
+		 * is initialized and running correctly. It is used internally to ensure that operations
+		 * are performed only when the [Application](#Ares::Application) is in a valid state.
+		 * 
+		 * @return `true` if the [Application](#Ares::Application) is valid; otherwise, `false`.
+		 */
 		bool IsApplicationValid();
+
+		/**
+		 * @brief Retrieves the default allocator used by the Ares engine.
+		 * 
+		 * @details This function returns a pointer to the default [AppAllocator](#Ares::Internal::AppAllocator)
+		 * instance used for memory management within the Ares engine. The allocator is thread-safe
+		 * and should not be deleted or modified by external code.
+		 * 
+		 * @return A pointer to the default [AppAllocator](#Ares::Internal::AppAllocator) instance.
+		 */
 		AppAllocator* GetDefaultAllocator();
 
+		/**
+		 * @brief Allocates a block of memory of the specified size.
+		 * 
+		 * @details This function allocates a contiguous block of memory using the default
+		 * allocator. It is intended for internal use and should not be called directly by
+		 * external code.
+		 * 
+		 * @param size The size of the memory block to allocate, in bytes.
+		 * @return A pointer to the allocated memory block, or `nullptr` if allocation fails.
+		 */
 		void* Allocate(size_t size);
+
+		/**
+		 * @brief Allocates a block of memory with specific alignment and offset.
+		 * 
+		 * @details This function allocates a block of memory using the default allocator,
+		 * ensuring that memory is aligned and offset as specified. It is intended for internal
+		 * use and should not be called directly by external code.
+		 * 
+		 * @param size The size of the memory block to allocate, in bytes.
+		 * @param alignment The alignment requirement for the allocated memory.
+		 * @param offset The offset from the aligned memory address.
+		 * @return A pointer to the allocated memory block, or `nullptr` if allocation failed.
+		 */
 		void* Allocate(size_t size, size_t alignment, size_t offset);
+
+		/**
+		 * @brief Deallocates a block of memory previously allocated by the Ares engine.
+		 * 
+		 * @details This function releases a block of memory back to the default allocator.
+		 * It is intended for internal use and should not be called directly by external code.
+		 * 
+		 * @param ptr A pointer to the memory block to deallocate.
+		 * @param size The size of the memory block to deallocate, in bytes. If `0`, the
+		 * size is determined automatically by the allocator.
+		 */
 		void Deallocate(void* ptr, size_t size = 0);
 
 	}
 
-}
-
-#include "Engine/Core/Memory.h"
-
-namespace Ares {
-	
-	namespace Internal {
-
-		template <typename ObjectType, typename... Args>
-		AppScope<ObjectType> CreateAppScope(Args&&... args)
-		{
-			if (!IsApplicationValid()) throw std::runtime_error("Object Creation Error: Cannot create AppScope before Application construction!");
-			return AppScope<ObjectType>(new (Allocate(sizeof(ObjectType))) ObjectType(std::forward<Args>(args)...));
-		}
-
-		template <typename ObjectType, typename... Args>
-		AppRef<ObjectType> CreateAppRef(Args&&... args)
-		{
-			if (!IsApplicationValid()) throw std::runtime_error("Object Creation Error: Cannot create AppRef before Application construction!");
-			return AppRef<ObjectType>(new (Allocate(sizeof(ObjectType))) ObjectType(std::forward<Args>(args)...));
-		}
-
-		template <typename ObjectType>
-		void Delete(ObjectType* ptr)
-		{
-			ptr->~ObjectType();
-			Deallocate(static_cast<void*>(ptr));
-		}
-
-	}
-
+	/**
+	 * @typedef Scope
+	 * @brief A unique pointer alias for managing heap-allocated objects.
+	 *
+	 * @details This alias simplifies the usage of `eastl::unique_ptr` within the engine.
+	 * 
+	 * @note It is important to use [CreateScope](#Ares::CreateScope) when instantiating a Scope
+	 * object. The [CreateScope](#Ares::CreateScope) method allocates memory for the object using
+	 * the Application's [MemoryManager](#Ares::Internal::MemoryManager). (If the Application
+	 * is instantiated)
+	 * 
+	 * @tparam ObjectType The type of object.
+	 * @tparam DeleterType The type of deleter to use during destruction. **Optional**
+	 */
 	template <typename ObjectType>
 	using Scope = eastl::unique_ptr<ObjectType, eastl::function<void(void*)>>;
 
+	/**
+	* @fn CreateScope(Args&&... args)
+	* @brief Creates a unique pointer to a new object.
+	*
+	* @details This utility function creates a new object and returns a Scope (unique pointer)
+	* to it. It forwards the provided arguments to the constructor of the object. If the
+	* [Application](#Ares::Application) is instantiated, CreateScope will use the Application's
+	* [MemoryManager[(#Ares::Internal::MemoryManager) to allocate space for the object.
+	*
+	* @tparam ObjectType The type of object to be created.
+	* @param args The arguments to be forwarded to the object's constructor.
+	* @return A Scope<ObjectType> pointing to the newly created object.
+	*
+	* **Example usage**:
+	* ```cpp
+	* Scope<uint32_t> unsignedInt = CreateScope<uint32_t>(5);
+	* ```
+	*/
 	template <typename ObjectType, typename... Args>
 	Scope<ObjectType> CreateScope(Args&&... args)
 	{
@@ -841,6 +811,39 @@ namespace Ares {
 		}
 	}
 
+	/**
+	* @typedef Ref
+	* @brief A shared pointer alias for managing shared ownership of objects.
+	*
+	* @details This alias simplifies the usage of `eastl::shared_ptr` within the engine.
+	* 
+	* @note It is important to use [CreateRef](#Ares::CreateRef) when instantiating a Ref
+	* object. The [CreateRef](#Ares::CreateRef) method allocates memory for the object using
+	* the Application's [MemoryManager](#Ares::Internal::MemoryManager). (If the Application
+	* is instantiated)
+	*
+	* @tparam ObjectType The type of object.
+	*/
+	template<typename ObjectType>
+	using Ref = eastl::shared_ptr<ObjectType>;
+
+	/**
+	 * @brief Creates a shared pointer to a new object.
+	 *
+	 * @details This utility function creates a new object and returns a Ref (shared pointer)
+	 * to it. It forwards the provided arguments to the constructor of the object. If the
+	 * [Application](#Ares::Application) is instantiated, CreateRef will use the Application's
+	 * [MemoryManager](#Ares::Internal::MemoryManager) to allocate space for the object.
+	 *
+	 * @tparam ObjectType The type of object to be created.
+	 * @param args The arguments to be forwarded to the object's constructor.
+	 * @return A Ref<ObjectType> pointing to the newly created object.
+	 *
+	 * **Example usage**:
+	 * ```cpp
+	 * Ref<uint32_t> unsignedInt = CreateRef<uint32_t>(5);
+	 * ```
+	 */
 	template <typename ObjectType, typename... Args>
 	Ref<ObjectType> CreateRef(Args&&... args)
 	{

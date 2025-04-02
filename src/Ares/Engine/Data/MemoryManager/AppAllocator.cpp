@@ -7,8 +7,11 @@
 namespace Ares::Internal {
 
 	AppAllocator::AppAllocator()
-		: m_Manager(nullptr), m_pName(nullptr)
+		: m_Manager(nullptr)
 	{
+	#if AR_BUILD_DEBUG
+		m_pName = nullptr;
+	#endif
 		m_Manager = &Ares::Application::Get().GetMemoryManager();
 		if (!m_Manager)
 		{
@@ -20,7 +23,7 @@ namespace Ares::Internal {
 	EASTL_ALLOCATOR_EXPLICIT AppAllocator::AppAllocator(const char* pName)
 		: m_Manager(nullptr)
 	{
-	#if EASTL_NAME_ENABLED
+	#if AR_BUILD_DEBUG
 		m_pName = pName;
 	#endif
 		m_Manager = &Ares::Application::Get().GetMemoryManager();
@@ -32,18 +35,24 @@ namespace Ares::Internal {
 	}
 
 	EASTL_ALLOCATOR_EXPLICIT AppAllocator::AppAllocator(MemoryManager* manager)
-		: m_Manager(manager), m_pName(nullptr)
+		: m_Manager(manager)
 	{
+	#if AR_BUILD_DEBUG
+		m_pName = nullptr;
+	#endif
 	}
 	EASTL_ALLOCATOR_EXPLICIT AppAllocator::AppAllocator(MemoryManager& manager)
-		: m_Manager(&manager), m_pName(nullptr)
+		: m_Manager(&manager)
 	{
+	#if AR_BUILD_DEBUG
+		m_pName = nullptr;
+	#endif
 	}
 
 	AppAllocator::AppAllocator(const AppAllocator& other)
 		: m_Manager(other.m_Manager)
 	{
-	#if EASTL_NAME_ENABLED
+	#if AR_BUILD_DEBUG
 		m_pName = other.m_pName;
 	#endif
 	}
@@ -51,7 +60,7 @@ namespace Ares::Internal {
 	AppAllocator::AppAllocator(const AppAllocator& other, const char* pName)
 		: m_Manager(other.m_Manager)
 	{
-	#if EASTL_NAME_ENABLED
+	#if AR_BUILD_DEBUG
 		m_pName = pName;
 	#endif
 	}
@@ -60,7 +69,7 @@ namespace Ares::Internal {
 	{
 		m_Manager = other.m_Manager;
 
-	#if EASTL_NAME_ENABLED
+	#if AR_BUILD_DEBUG
 		m_pName = other.m_pName;
 	#endif
 
@@ -69,7 +78,7 @@ namespace Ares::Internal {
 
 	void* AppAllocator::allocate(size_t size, int flags) const
 	{
-		AR_CORE_TRACE("APP ALLOCATION: {}", size);
+		//AR_CORE_TRACE("APP ALLOCATION: {}", size);
 		AR_CORE_ASSERT(m_Manager != nullptr, "Tried to use Allocator without MemoryManager!");
 		if (!m_Manager)
 			throw std::runtime_error("Allocator does not have MemoryManager instance!");
@@ -78,7 +87,7 @@ namespace Ares::Internal {
 
 	void* AppAllocator::allocate(size_t size, size_t alignment, size_t offset, int flags) const
 	{
-		AR_CORE_TRACE("APP ALLOCATION: {}", size);
+		//AR_CORE_TRACE("APP ALLOCATION: {}", size);
 		AR_CORE_ASSERT(m_Manager != nullptr, "Tried to use Allocator without MemoryManager");
 		if (!m_Manager)
 			throw std::runtime_error("Allocator does not have MemoryManager instance!");
@@ -95,15 +104,15 @@ namespace Ares::Internal {
 
 	const char* AppAllocator::get_name() const
 	{
-#if EASTL_NAME_ENABLED
+	#if AR_BUILD_DEBUG
 		return m_pName;
-#endif
+	#endif
 		return nullptr;
 	}
 
 	void AppAllocator::set_name(const char* pName)
 	{
-	#if EASTL_NAME_ENABLED
+	#if AR_BUILD_DEBUG
 		m_pName = pName;
 	#endif
 	}

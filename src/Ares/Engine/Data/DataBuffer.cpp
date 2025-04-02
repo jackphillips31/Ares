@@ -6,7 +6,7 @@
 namespace Ares {
 
 	DataBuffer::DataBuffer(const void* data, const size_t size)
-		: m_Data(std::malloc(size)), m_Size(size)
+		: m_Data(Internal::Allocate(size)), m_Size(size)
 	{
 		if (data && m_Data && size)
 		{
@@ -17,7 +17,7 @@ namespace Ares {
 	DataBuffer::~DataBuffer()
 	{
 		std::unique_lock lock(m_Mutex);
-		std::free(m_Data);
+		Internal::Deallocate(m_Data);
 		m_Size = 0;
 	}
 

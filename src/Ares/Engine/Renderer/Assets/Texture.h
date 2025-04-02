@@ -79,8 +79,8 @@ namespace Ares {
 	private:
 		// Only Asset Manager can create Textures
 		friend class Systems::AssetManager;
-		static Scope<Texture> Create(const std::string& name, const RawData& data);
-		static Scope<Texture> Create(const std::string& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format = Format::RGBA);
+		static Scope<Texture> Create(const String& name, const RawData& data);
+		static Scope<Texture> Create(const String& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format = Format::RGBA);
 	};
 
 }

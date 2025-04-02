@@ -234,3 +234,16 @@ namespace Ares {
 	}
 
 }
+
+namespace eastl {
+
+	template <>
+	struct hash<Ares::EventType>
+	{
+		size_t operator()(const Ares::EventType& eventType) const
+		{
+			return eastl::hash<uint16_t>()(static_cast<uint16_t>(eventType));
+		}
+	};
+
+}

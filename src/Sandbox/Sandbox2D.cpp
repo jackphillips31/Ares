@@ -100,8 +100,6 @@ void Sandbox2D::OnUpdate(const Ares::Timestep& ts)
 	if (m_InputSystem->IsKeyPressed(Ares::Key::A))
 		AR_CORE_TRACE("A IS PRESSED!");
 
-	m_FrameBufferElement.OnUpdate(ts);
-
 	m_EntityListElement.OnUpdate(ts);
 
 	m_SandboxScene->OnUpdate(ts);
@@ -112,9 +110,11 @@ void Sandbox2D::OnRender()
 	//Ares::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.1f });
 	//Ares::RenderCommand::Clear();
 
-	m_Renderer->RenderCommand()->SetClearColor({ 0.1f, 0.1f, 0.1f, 0.1f });
-	m_Renderer->RenderCommand()->Clear();
+	Ares::Internal::RenderCommandQueue* commandQueue = m_Renderer->RenderCommandQueue();
+	commandQueue->SubmitCommand<Ares::RenderCommands::SetClearColor>(0.1f, 0.1f, 0.1f, 0.1f);
+	commandQueue->SubmitCommand<Ares::RenderCommands::Clear>();
 
+	m_FrameBufferElement.OnRender();
 	Ares::FrameBuffer* frameBuffer = m_FrameBufferElement.GetFrameBuffer();
 	ImVec2 availableSize = m_FrameBufferElement.GetContentRegionAvail();
 
@@ -127,9 +127,9 @@ void Sandbox2D::OnRender()
 
 	if (frameBuffer)
 	{
-		frameBuffer->Bind();
+		commandQueue->SubmitCommand<Ares::RenderCommands::BindFrameBuffer>(frameBuffer);
 		m_SandboxScene->OnRender();
-		frameBuffer->Unbind();
+		commandQueue->SubmitCommand<Ares::RenderCommands::UnbindFrameBuffer>(frameBuffer);
 	}
 }
 

@@ -7,6 +7,7 @@
  * rendered on top.
  */
 #pragma once
+#include "Engine/Containers/Vector.h"
 
 namespace Ares {
 
@@ -14,18 +15,20 @@ namespace Ares {
 
 	/**
 	 * @class LayerStack
-	 * @brief Manages the stack of layers in the application.
+	 * @brief Manages the stack of [Layers](#Ares::Layer) in the Application.
 	 * 
 	 * @details Layers are stored in a vector, with overlays added to the end of the stack.
 	 * Layers and overlays can be dynamically added or removed during runtime.
 	 */
 	class LayerStack
 	{
-	public:
+	private:
 		/**
 		 * @brief Constructs a LayerStack.
 		 */
 		LayerStack() = default;
+
+	public:
 
 		/**
 		 * @brief Destroys the LayerStack and cleans up all layers.
@@ -65,59 +68,72 @@ namespace Ares {
 		 * 
 		 * @return An iterator pointing to the first layer.
 		 */
-		std::vector<Ref<Layer>>::iterator begin() { return m_Layers.begin(); }
+		Vector<Ref<Layer>>::iterator begin() { return m_Layers.begin(); }
 
 		/**
 		 * @brief Retrieves an iterator to the end of the layer stack.
 		 * 
 		 * @return An iterator pointing to the last layer.
 		 */
-		std::vector<Ref<Layer>>::iterator end() { return m_Layers.end(); }
+		Vector<Ref<Layer>>::iterator end() { return m_Layers.end(); }
 
 		/**
 		 * @brief Retrieves a reverse iterator to the beginning of the stack.
 		 * 
 		 * @return A reverse iterator pointing to the last layer.
 		 */
-		std::vector<Ref<Layer>>::reverse_iterator rbegin() { return m_Layers.rbegin(); }
+		Vector<Ref<Layer>>::reverse_iterator rbegin() { return m_Layers.rbegin(); }
 
 		/**
 		 * @brief Retrieves a reverse iterator to the end of the stack.
 		 * 
 		 * @return A reverse iterator pointing before the first layer.
 		 */
-		std::vector<Ref<Layer>>::reverse_iterator rend() { return m_Layers.rend(); }
+		Vector<Ref<Layer>>::reverse_iterator rend() { return m_Layers.rend(); }
 
 		/**
 		 * @brief Retrieves a constant iterator to the beginning of the stack.
 		 * 
 		 * @return A constant iterator pointing to the first layer.
 		 */
-		std::vector<Ref<Layer>>::const_iterator begin() const { return m_Layers.begin(); }
+		Vector<Ref<Layer>>::const_iterator begin() const { return m_Layers.begin(); }
 
 		/**
 		 * @brief Retrieves a constant iterator to the end of the stack.
 		 * 
 		 * @return A constant iterator pointing pas the last layer.
 		 */
-		std::vector<Ref<Layer>>::const_iterator end() const { return m_Layers.end(); }
+		Vector<Ref<Layer>>::const_iterator end() const { return m_Layers.end(); }
 
 		/**
 		 * @brief Retrieves a constant reverse iterator to the beginning of the stack.
 		 * 
 		 * @return A constant reverse iterator pointing to the last layer.
 		 */
-		std::vector<Ref<Layer>>::const_reverse_iterator rbegin() const { return m_Layers.rbegin(); }
+		Vector<Ref<Layer>>::const_reverse_iterator rbegin() const { return m_Layers.rbegin(); }
 		
 		/**
 		 * @brief Retrieves a constant reverse iterator to the end of the stack.
 		 * 
 		 * @return A constant reverse iterator pointing before the first layer.
 		 */
-		std::vector<Ref<Layer>>::const_reverse_iterator rend() const { return m_Layers.rend(); }
+		Vector<Ref<Layer>>::const_reverse_iterator rend() const { return m_Layers.rend(); }
+
+		/**
+		 * @brief Creates an instance of the LayerStack class. Called during Application construction.
+		 * 
+		 * @details This static method creates an instance of the LayerStack class.
+		 * 
+		 * @return A Scope to the created LayerStack object.
+		 */
+		static Scope<LayerStack> Create();
 
 	private:
-		std::vector<Ref<Layer>> m_Layers;	///< Vector containing all layers and overlays.
+		template <typename ObjectType, typename... Args>
+		friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
+
+	private:
+		Vector<Ref<Layer>> m_Layers;		///< Vector containing all layers and overlays.
 		uint32_t m_LayerInsertIndex = 0;	///< Index indicating where layers end and overlays begin.
 	};
 

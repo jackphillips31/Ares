@@ -35,7 +35,7 @@ namespace Ares {
 		return rendererID;
 	}
 
-	OpenGLVertexShader::OpenGLVertexShader(const std::string& name, const std::string_view shaderSource)
+	OpenGLVertexShader::OpenGLVertexShader(const StringView name, const StringView shaderSource)
 		: m_Name(name), m_RendererID(0)
 	{
 		size_t shaderSize = shaderSource.size() * sizeof(char);
@@ -56,11 +56,11 @@ namespace Ares {
 		}
 	}
 
-	OpenGLFragmentShader::OpenGLFragmentShader(const std::string& name, const std::string_view shaderSource)
+	OpenGLFragmentShader::OpenGLFragmentShader(const StringView name, const StringView shaderSource)
 		: m_Name(name), m_RendererID(0)
 	{
 		size_t shaderSize = shaderSource.size() * sizeof(char);
-		if (shaderSize > std::numeric_limits<GLint>::max())
+		if (static_cast<GLint>(shaderSize) > std::numeric_limits<GLint>::max())
 		{
 			AR_CORE_ASSERT(false, "Shader source size exceeds GLint maximum value!");
 			return;
@@ -77,17 +77,17 @@ namespace Ares {
 		}
 	}
 
-	OpenGLShaderProgram::OpenGLShaderProgram(const std::string& name, const std::vector<Shader*>& shaders)
+	OpenGLShaderProgram::OpenGLShaderProgram(const StringView name, const Vector<Shader*>& shaders)
 		: m_Name(name), m_RendererID(0)
 	{
 		LinkShaders(shaders);
 	}
 
-	OpenGLShaderProgram::OpenGLShaderProgram(const std::string& name, const Ref<ParsedShaderData>& shaderData)
+	OpenGLShaderProgram::OpenGLShaderProgram(const StringView name, const Ref<ParsedShaderData>& shaderData)
 		: m_Name(name), m_RendererID(0)
 	{
-		OpenGLVertexShader vertexShader = OpenGLVertexShader(name + "_VertexShader", shaderData->VertexSource);
-		OpenGLFragmentShader fragmentShader = OpenGLFragmentShader(name + "_FragmentShader", shaderData->FragmentSource);
+		OpenGLVertexShader vertexShader = OpenGLVertexShader(String(name.data()) + "_Vertex", shaderData->VertexSource.c_str());
+		OpenGLFragmentShader fragmentShader = OpenGLFragmentShader(String(name.data()) + "_FragmentShader", shaderData->FragmentSource.c_str());
 		LinkShaders({ &vertexShader, &fragmentShader });
 	}
 
@@ -100,7 +100,7 @@ namespace Ares {
 		}
 	}
 
-	void OpenGLShaderProgram::LinkShaders(const std::vector<Shader*>& shaders)
+	void OpenGLShaderProgram::LinkShaders(const Vector<Shader*>& shaders)
 	{
 		m_RendererID = glCreateProgram();
 
@@ -149,91 +149,91 @@ namespace Ares {
 		glUseProgram(0);
 	}
 
-	void OpenGLShaderProgram::SetInt(const std::string& name, const int32_t value)
+	void OpenGLShaderProgram::SetInt(const StringView name, const int32_t value)
 	{
 		UploadUniformInt(name, static_cast<GLint>(value));
 	}
 
-	void OpenGLShaderProgram::SetIntArray(const std::string& name, const int32_t* values, const uint32_t count)
+	void OpenGLShaderProgram::SetIntArray(const StringView name, const int32_t* values, const uint32_t count)
 	{
 		UploadUniformIntArray(name, static_cast<const GLint*>(values), static_cast<GLsizei>(count));
 	}
 
-	void OpenGLShaderProgram::SetFloat(const std::string& name, const float value)
+	void OpenGLShaderProgram::SetFloat(const StringView name, const float value)
 	{
 		UploadUniformFloat(name, static_cast<GLfloat>(value));
 	}
 
-	void OpenGLShaderProgram::SetFloat2(const std::string& name, const glm::vec2& values)
+	void OpenGLShaderProgram::SetFloat2(const StringView name, const glm::vec2& values)
 	{
 		UploadUniformFloat2(name, static_cast<GLfloat>(values.x), static_cast<GLfloat>(values.y));
 	}
 
-	void OpenGLShaderProgram::SetFloat3(const std::string& name, const glm::vec3& values)
+	void OpenGLShaderProgram::SetFloat3(const StringView name, const glm::vec3& values)
 	{
 		UploadUniformFloat3(name, static_cast<GLfloat>(values.x), static_cast<GLfloat>(values.y), static_cast<GLfloat>(values.z));
 	}
 
-	void OpenGLShaderProgram::SetFloat4(const std::string& name, const glm::vec4& values)
+	void OpenGLShaderProgram::SetFloat4(const StringView name, const glm::vec4& values)
 	{
 		UploadUniformFloat4(name, static_cast<GLfloat>(values.x), static_cast<GLfloat>(values.y), static_cast<GLfloat>(values.z), static_cast<GLfloat>(values.w));
 	}
 
-	void OpenGLShaderProgram::SetMat3(const std::string& name, const glm::mat3& matrix)
+	void OpenGLShaderProgram::SetMat3(const StringView name, const glm::mat3& matrix)
 	{
 		UploadUniformMat3(name, static_cast<const GLfloat*>(glm::value_ptr(matrix)));
 	}
 
-	void OpenGLShaderProgram::SetMat4(const std::string& name, const glm::mat4& matrix)
+	void OpenGLShaderProgram::SetMat4(const StringView name, const glm::mat4& matrix)
 	{
 		UploadUniformMat4(name, static_cast<const GLfloat*>(glm::value_ptr(matrix)));
 	}
 
-	void OpenGLShaderProgram::UploadUniformInt(const std::string& name, GLint value)
+	void OpenGLShaderProgram::UploadUniformInt(const StringView name, GLint value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniform1i(location, value);
 	}
 
-	void OpenGLShaderProgram::UploadUniformIntArray(const std::string& name, const GLint* values, const GLsizei count)
+	void OpenGLShaderProgram::UploadUniformIntArray(const StringView name, const GLint* values, const GLsizei count)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniform1iv(location, count, values);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat(const std::string& name, GLfloat value)
+	void OpenGLShaderProgram::UploadUniformFloat(const StringView name, GLfloat value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniform1f(location, value);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat2(const std::string& name, GLfloat v0, GLfloat v1)
+	void OpenGLShaderProgram::UploadUniformFloat2(const StringView name, GLfloat v0, GLfloat v1)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniform2f(location, v0, v1);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat3(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2)
+	void OpenGLShaderProgram::UploadUniformFloat3(const StringView name, GLfloat v0, GLfloat v1, GLfloat v2)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniform3f(location, v0, v1, v2);
 	}
 
-	void OpenGLShaderProgram::UploadUniformFloat4(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)
+	void OpenGLShaderProgram::UploadUniformFloat4(const StringView name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniform4f(location, v0, v1, v2, v3);
 	}
 
-	void OpenGLShaderProgram::UploadUniformMat3(const std::string& name, const GLfloat* values)
+	void OpenGLShaderProgram::UploadUniformMat3(const StringView name, const GLfloat* values)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniformMatrix3fv(location, 1, GL_FALSE, values);
 	}
 
-	void OpenGLShaderProgram::UploadUniformMat4(const std::string& name, const GLfloat* values)
+	void OpenGLShaderProgram::UploadUniformMat4(const StringView name, const GLfloat* values)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_RendererID, name.data());
 		glUniformMatrix4fv(location, 1, GL_FALSE, values);
 	}
 

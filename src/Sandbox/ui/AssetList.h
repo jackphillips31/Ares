@@ -12,7 +12,7 @@ private:
 	bool OnAssetLoaded(Ares::AssetLoadedEvent& result);
 
 private:
-	eastl::vector<Ares::Ref<Ares::Asset>> m_AssetList;
+	Ares::Vector<Ares::Ref<Ares::Asset>> m_AssetList;
 	int32_t m_ActiveTooltipIndex = -1;
 	Ares::Systems::AssetManager* m_AssetManager;
 };

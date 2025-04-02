@@ -3,19 +3,23 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Engine/Core/Application.h"
+#include "Engine/Core/MainThreadQueue.h"
 #include "Engine/Core/Timestep.h"
-#include "Engine/Core/Utility.h"
 #include "Engine/Data/RawData.h"
 #include "Engine/ECS/Components/AllComponents.h"
 #include "Engine/ECS/Core/EntityManager.h"
 #include "Engine/ECS/Core/Scene.h"
 #include "Engine/ECS/Systems/CameraSystem.h"
 #include "Engine/ECS/Systems/LightSystem.h"
+#include "Engine/Renderer/CommandQueue/Commands.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/BufferLayout.h"
 #include "Engine/Renderer/VertexArray.h"
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommandQueue.h"
 #include "Engine/Renderer/UniformBuffer.h"
+#include "Engine/Utility/Hash.h"
 
 const uint32_t g_defaultWhiteTexture = 0xffffffff;
 
@@ -64,7 +68,7 @@ namespace Ares::ECS::Systems {
 	{
 		for (auto& [key, batch] : m_DynamicBatches)
 		{
-			if (batch.isDirty)
+			if (batch.isDirty && batch.vao != nullptr)
 			{
 				if (batch.transformBuffer == nullptr)
 				{
@@ -163,31 +167,44 @@ namespace Ares::ECS::Systems {
 		Components::Transform* transform
 	)
 	{
+		Internal::RenderCommandQueue* commandQueue = m_Renderer->RenderCommandQueue();
 		if (mesh->IsLoaded() && material->IsLoaded())
 		{
 			MeshBatch& batch = m_DynamicBatches[GenerateBatchKey(mesh, material)];
+			std::unique_lock lock(batch.mutex);
 
-			if (!batch.isDirty)
-				batch.instanceCount = 0;
-
-			if (batch.vao == nullptr)
+			if (batch.isInitialized.load() == false)
 			{
 				// New batch
-				batch.vao = VertexArray::Create();
-				batch.vao->AddVertexBuffer(mesh->GetPositionBuffer());
-				batch.vao->AddVertexBuffer(mesh->GetTextureBuffer());
-				batch.vao->AddVertexBuffer(mesh->GetNormalBuffer());
-				batch.vao->SetIndexBuffer(mesh->GetIndexBuffer());
+				/*
+				MeshBatch* batchPtr = &batch;
+				Application::Get().GetSystem<Ares::Systems::MainThreadQueue>()->SubmitTask([batchPtr, mesh]() {
+					batchPtr->vao = VertexArray::Create();
+					batchPtr->vao->AddVertexBuffer(mesh->GetPositionBuffer());
+					batchPtr->vao->AddVertexBuffer(mesh->GetTextureBuffer());
+					batchPtr->vao->AddVertexBuffer(mesh->GetNormalBuffer());
+					batchPtr->vao->SetIndexBuffer(mesh->GetIndexBuffer());
+				});
+				*/
+				commandQueue->SubmitCommand<RenderCommands::CreateBatchVAO>(&batch, mesh);
+				batch.isInitialized = true;
+				return;
 			}
-			if (batch.material == nullptr)
+			else if (batch.vao != nullptr)
 			{
-				batch.material = material;
-			}
-			batch.transforms.push_back(transform->GetTransformationMatrix());
-			batch.properties.push_back(material->GetProperties());
+				if (!batch.isDirty)
+					batch.instanceCount = 0;
 
-			batch.instanceCount++;
-			batch.isDirty = true;
+				if (batch.material == nullptr)
+				{
+					batch.material = material;
+				}
+				batch.transforms.push_back(transform->GetTransformationMatrix());
+				batch.properties.push_back(material->GetProperties());
+
+				batch.instanceCount++;
+				batch.isDirty = true;
+			}
 		}
 		else if (mesh != nullptr && material != nullptr && mesh->IsValid() && material->IsValid())
 		{
@@ -198,22 +215,26 @@ namespace Ares::ECS::Systems {
 
 	void RenderSystem::RenderDynamic(const Scene& scene)
 	{
+		Internal::RenderCommandQueue* commandQueue = m_Renderer->RenderCommandQueue();
 		Systems::CameraSystem* cameraSystem = scene.GetSystem<Systems::CameraSystem>();
 		Components::Camera* activeCamera = scene.GetEntityManager()->GetComponent<Components::Camera>(cameraSystem->GetActiveCameraEntityId());
 		const glm::vec2 viewportSize = cameraSystem->GetViewportSize();
 
 		if (m_Renderer)
 		{
-			m_Renderer->RenderCommand()->SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
-			m_Renderer->RenderCommand()->Clear();
-			m_Renderer->RenderCommand()->SetViewport(
-				0, 0,
-				static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y)
+			commandQueue->SubmitCommand<RenderCommands::SetClearColor>(0.0f, 0.0f, 0.0f, 1.0f);
+			commandQueue->SubmitCommand<RenderCommands::Clear>();
+			commandQueue->SubmitCommand<RenderCommands::SetViewport>(
+				glm::uvec2(0, 0),
+				glm::uvec2(static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y))
 			);
 		}
 
 		for (auto& [key, batch] : m_DynamicBatches)
 		{
+			if (batch.vao == nullptr || batch.material == nullptr)
+				continue;
+
 			if (activeCamera != nullptr)
 			{
 				batch.material->SetUniformProperty("u_ViewProjection", activeCamera->GetViewProjectionMatrix());
@@ -223,9 +244,10 @@ namespace Ares::ECS::Systems {
 			batch.material->Bind();
 
 			if (m_Renderer)
-				m_Renderer->RenderCommand()->DrawInstanced(batch.vao, batch.instanceCount);
+			{
+				commandQueue->SubmitCommand<RenderCommands::DrawInstanced>(batch.vao, batch.instanceCount);
+			}
 
-			batch.vao->Unbind();
 			batch.transforms.clear();
 			batch.properties.clear();
 		}

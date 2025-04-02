@@ -15,6 +15,7 @@ namespace Ares {
 
 		class RendererAPI;
 		class RenderCommand;
+		class RenderCommandQueue;
 
 	}
 
@@ -23,17 +24,20 @@ namespace Ares {
 		class Renderer : public Internal::System
 		{
 		public:
-			~Renderer();
+			~Renderer() override;
 
+			void OnRender() override;
 			void OnClientResize(const uint32_t width, const uint32_t height);
 			Internal::RenderCommand* RenderCommand();
+			Internal::RenderCommandQueue* RenderCommandQueue();
 
-			static Scope<Renderer> Create();
+			static Scope<Renderer> Create(const RenderAPI api = RenderAPI::OpenGL);
 
 			static RenderAPI GetAPI();
+			static void SetAPI(const RenderAPI api);
 
 		private:
-			Renderer();
+			Renderer(const RenderAPI api);
 
 			template <typename ObjectType, typename... Args>
 			friend Scope<ObjectType> Ares::CreateScope(Args&&... args);
@@ -41,6 +45,7 @@ namespace Ares {
 		private:
 			Scope<Internal::RendererAPI> m_RendererAPI;
 			Scope<Internal::RenderCommand> m_RenderCommand;
+			Scope<Internal::RenderCommandQueue> m_CommandQueue;
 		};
 
 	}

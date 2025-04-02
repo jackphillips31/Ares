@@ -31,6 +31,11 @@ namespace Ares {
 		: m_VertexBufferIndex(0), m_IndexBuffer(nullptr), m_RendererID(0)
 	{
 		glCreateVertexArrays(1, &m_RendererID);
+		//glGenVertexArrays(1, &m_RendererID);
+		if (m_RendererID == 0)
+		{
+			AR_CORE_ASSERT(false, "OpenGL Vertex Array: Failed to create!");
+		}
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
@@ -124,7 +129,7 @@ namespace Ares {
 						ShaderDataTypeToOpenGLBaseType(element.DataType),
 						element.Normalized ? GL_TRUE : GL_FALSE,
 						static_cast<GLsizei>(layout.GetStride()),
-						reinterpret_cast<const void*>(element.Offset + element.UnitSize * count * i)
+						reinterpret_cast<GLvoid*>(element.Offset + element.UnitSize * count * i)
 					);
 					if (element.Instanced)
 						glVertexAttribDivisor(m_VertexBufferIndex + i, 1);
@@ -141,7 +146,7 @@ namespace Ares {
 				ShaderDataTypeToOpenGLBaseType(element.DataType),
 				element.Normalized ? GL_TRUE : GL_FALSE,
 				static_cast<GLsizei>(layout.GetStride()),
-				reinterpret_cast<const void*>(element.Offset)
+				reinterpret_cast<GLvoid*>(element.Offset)
 			);
 			if (element.Instanced)
 				glVertexAttribDivisor(m_VertexBufferIndex, 1);

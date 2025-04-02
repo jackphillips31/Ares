@@ -4,6 +4,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "Engine/Containers/Atomic.h"
 #include "Engine/ECS/Core/Component.h"
 
 namespace Ares::ECS::Components {
@@ -84,9 +85,9 @@ namespace Ares::ECS::Components {
 		glm::mat4 m_ViewProjectionMatrix;
 
 		// Are matrices dirty
-		std::atomic<bool> m_ViewMatrixDirty = true;
-		std::atomic<bool> m_ProjectionMatrixDirty = true;
-		std::atomic<bool> m_ViewProjectionMatrixDirty = true;
+		Atomic<bool> m_ViewMatrixDirty = true;
+		Atomic<bool> m_ProjectionMatrixDirty = true;
+		Atomic<bool> m_ViewProjectionMatrixDirty = true;
 	};
 
 }

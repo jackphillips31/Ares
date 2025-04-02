@@ -20,7 +20,7 @@ namespace Ares::Internal {
 	void* MemoryManager::Allocate(size_t size, int flags)
 	{
 		size_t poolSize = m_Pools.size();
-		for (size_t i = 0; i < m_Pools.size(); i++)
+		for (size_t i = 0; i < poolSize; i++)
 		{
 			void* result = m_Pools[i].Allocate(static_cast<uint32_t>(size));
 			if (result != nullptr)
@@ -32,7 +32,7 @@ namespace Ares::Internal {
 		}
 
 		// Create new pool
-		m_Pools.emplace_back(MemoryPool(1024 * 4));
+		m_Pools.emplace_back(MemoryPool(1024 * 1024));
 		void* result = m_Pools[poolSize].Allocate(static_cast<uint32_t>(size));
 		AR_CORE_ASSERT(result != nullptr, "Something went wrong when creating a new pool!");
 		m_PtrPoolMap[reinterpret_cast<uintptr_t>(result)] = poolSize;
@@ -42,7 +42,7 @@ namespace Ares::Internal {
 	void* MemoryManager::Allocate(size_t size, size_t alignment, size_t offset, int flags)
 	{
 		size_t poolSize = m_Pools.size();
-		for (size_t i = 0; i < m_Pools.size(); i++)
+		for (size_t i = 0; i < poolSize; i++)
 		{
 			void* result = m_Pools[i].Allocate(static_cast<uint32_t>(size), static_cast<uint32_t>(alignment), static_cast<uint32_t>(offset));
 			if (result != nullptr)

@@ -1,26 +1,9 @@
 #pragma once
+#include "Engine/Containers/String.h"
 
 namespace Ares::Utility {
 
-	std::string IncrementStringSuffix(const std::string& input);
-
-	constexpr size_t StringLength(const char* str)
-	{
-		size_t len = 0;
-		while (str[len] != '\0')
-			++len;
-
-		return len;
-	}
-
-	constexpr void StringCopy(char* destination, const char* source)
-	{
-		for (size_t i = 0; source[i] != '\0'; i++)
-		{
-			destination[i] = source[i];
-		}
-		destination[size_t(-1)] = '\0';
-	}
+	void IncrementStringSuffix(String& input);
 
 	constexpr void StringConcat(char* destination, const char* source)
 	{

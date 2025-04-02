@@ -9,7 +9,7 @@ project "GLAD"
 	files
 	{
 		"include/glad/gl.h",
-		"include/glad/wgl.h",
+		"include/glad/wgl.h.h",
 		"include/KHR/khrplatform.h",
 		"src/gl.c",
 		"src/wgl.c"
@@ -36,15 +36,21 @@ project "GLAD"
 		optimize "speed"
 
 --[[
-	Created using glen.glad.sh
+	Created using glad.dav1d.de - glad 2.0.8 on Mon Mar 31 20:12:01 2025
 	Generator: C/C++
-	gl: Version 4.5
-	wgl: Version 1.0
-	Compatibility: CORE
+	Specification: gl
+	Extensions: 620 (ALL)
+	
+	APIs:
+	 - gl:core=4.6
 
-	Extensions:
-	- WGL_ARB_create_context
-	- WGL_EXT_swap_control
+	Options:
+	 - ALIAS = True
+	 - DEBUG = True
+	 - HEADER_ONLY = False
+	 - LOADER = True
+	 - MX = False
+	 - ON_DEMAND = False
 
 	Options:
 	- loader

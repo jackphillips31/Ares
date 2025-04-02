@@ -58,3 +58,13 @@ namespace Ares {
 	}
 
 }
+
+namespace eastl {
+
+	template <>
+	struct hash<Ares::ErrorCode>
+	{
+		size_t operator()(const Ares::ErrorCode& errorCode) const;
+	};
+
+}

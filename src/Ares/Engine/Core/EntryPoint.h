@@ -34,27 +34,19 @@ int EntryPoint(int argc, char** argv)
 	Ares::Application* app = nullptr;
 	try
 	{
-		// Initialize the logging system with a trace level.
-		Ares::Log::Init(spdlog::level::trace);
-
-		// Create the application instance.
-		app = Ares::CreateApplication();
-
-		// Run the application.
-		app->Run();
+		Ares::Log::Init(spdlog::level::trace);	// Initialize logging
+		app = Ares::CreateApplication();		// Create application instance
+		app->Run();								// Run the application
 	}
 	catch (std::exception& e)
 	{
-		AR_CORE_CRITICAL(e.what());
+		AR_CORE_CRITICAL(e.what());				// Log critical errors
 		if (app) delete app;
 		return 1;
 	}
 
-	// Clean up by deleting the application instance.
-	if (app) delete app;
-
-	// Return a successful exit code.
-	return 0;
+	if (app) delete app;						// Clean up application instance
+	return 0;									// Return success exit code
 }
 
 /**

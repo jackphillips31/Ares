@@ -3,7 +3,7 @@
 
 namespace Ares {
 
-	Layer::Layer(const std::string& debugName)
+	Layer::Layer(const char* debugName)
 		: m_DebugName(debugName)
 	{
 	}

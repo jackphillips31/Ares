@@ -12,6 +12,7 @@ namespace Ares {
 
 		virtual void Draw() {};
 		virtual void OnUpdate(const Timestep& ts) {};
+		virtual void OnRender() {};
 
 		virtual void OnEvent(Event& e) {};
 	};

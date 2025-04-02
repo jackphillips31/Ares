@@ -1,18 +1,19 @@
 #include <arespch.h>
 #include "Engine/Data/Asset.h"
 
-#include "Engine/Core/Utility.h"
 #include "Engine/Data/AssetManager.h"
 #include "Engine/Data/DataBuffer.h"
 #include "Engine/Data/MemoryDataProvider.h"
+#include "Engine/Utility/Hash.h"
+#include "Engine/Utility/Type.h"
 
 namespace Ares {
 
 	Ref<Asset> Asset::Create(
 		const std::type_index& type,
 		const AssetState state,
-		const eastl::string& filepath,
-		const eastl::vector<uint32_t>& dependencies,
+		const String& filepath,
+		const Vector<uint32_t>& dependencies,
 		const MemoryDataKey dataKey,
 		Systems::AssetManager* parentManager
 	)
@@ -27,8 +28,8 @@ namespace Ares {
 	Asset::Asset(
 		const std::type_index& type,
 		const AssetState state,
-		const eastl::string& filepath,
-		const eastl::vector<uint32_t>& dependencies,
+		const String& filepath,
+		const Vector<uint32_t>& dependencies,
 		const MemoryDataKey dataKey,
 		Systems::AssetManager* parentManager
 	)
@@ -68,7 +69,7 @@ namespace Ares {
 		m_AssetManager->Load(m_AssetManager->GetAsset(m_AssetId), eastl::move(callback));
 	}
 
-	eastl::string Asset::GetStateString() const
+	String Asset::GetStateString() const
 	{
 		std::shared_lock lock(m_Mutex);
 		switch (m_State)
@@ -94,7 +95,7 @@ namespace Ares {
 		return 0;
 	}
 
-	void Asset::SetName(const eastl::string& name)
+	void Asset::SetName(const String& name)
 	{
 		std::unique_lock lock(m_Mutex);
 		m_Name = name;
@@ -146,6 +147,44 @@ namespace Ares {
 		m_Asset = nullptr;
 		m_State = AssetState::None;
 		m_DataKey = 0;
+	}
+
+}
+
+namespace eastl {
+
+	size_t hash<Ares::Asset>::operator()(const Ares::Asset& asset) const
+	{
+		size_t seed = asset.m_Type.hash_code();
+
+		if (!asset.m_Filepath.empty())
+			Ares::CombineHash<const char*>(seed, asset.m_Filepath.c_str());
+		else if (asset.m_DataKey)
+			Ares::CombineHash<uint32_t>(seed, asset.m_DataKey);
+
+		for (const uint32_t& assetId : asset.m_Dependencies)
+		{
+			Ares::CombineHash<uint32_t>(seed, assetId);
+		}
+
+		return seed;
+	}
+
+	size_t hash<Ares::Asset>::operator()(const Ares::Ref<Ares::Asset>& asset) const
+	{
+		size_t seed = asset->m_Type.hash_code();
+
+		if (!asset->m_Filepath.empty())
+			Ares::CombineHash<const char*>(seed, asset->m_Filepath.c_str());
+		else if (asset->m_DataKey)
+			Ares::CombineHash<uint32_t>(seed, asset->m_DataKey);
+
+		for (const uint32_t& assetId : asset->m_Dependencies)
+		{
+			Ares::CombineHash<uint32_t>(seed, assetId);
+		}
+
+		return seed;
 	}
 
 }

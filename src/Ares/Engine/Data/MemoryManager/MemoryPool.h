@@ -36,6 +36,7 @@ namespace Ares::Internal {
 	struct AVLNodeData;
 	class MemoryBlockNew;
 
+	/*
 	class MemoryPoolNew
 	{
 	public:
@@ -59,5 +60,32 @@ namespace Ares::Internal {
 
 		std::shared_mutex m_Mutex;
 	};
+	*/
 
+	class MemoryPoolNew
+	{
+	public:
+		MemoryPoolNew(const size_t poolSize);
+		MemoryPoolNew(const MemoryPoolNew&) = delete;
+		MemoryPoolNew& operator=(const MemoryPoolNew&) = delete;
+		MemoryPoolNew(MemoryPoolNew&& other) noexcept;
+		MemoryPoolNew& operator=(MemoryPoolNew&& other) noexcept;
+		~MemoryPoolNew();
+
+		void* Allocate(const size_t& size);
+		void* Allocate(const size_t& size, const size_t& alignment, const size_t& offset);
+		void Deallocate(void* ptr, const size_t& size = 0);
+
+		bool operator==(const MemoryPoolNew& other) const;
+		bool operator!=(const MemoryPoolNew& other) const;
+	private:
+		void* m_Data;
+		size_t m_Size;
+		void* m_PoolStart;
+		size_t m_PoolSize;
+
+		AVLTree m_AVLTree;
+
+		mutable std::shared_mutex m_Mutex;
+	};
 }

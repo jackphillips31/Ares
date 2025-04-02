@@ -1,12 +1,17 @@
 #pragma once
 
 // EA Standard Library
+#include <EASTL/atomic.h>		// Atomic
 #include <EASTL/allocator.h>	// Allocation handling
 #include <EASTL/functional.h>	// Functions
 #include <EASTL/hash_map.h>		// Hash map
+#include <EASTL/hash_set.h>		// Hash set
 #include <EASTL/queue.h>		// Queue data structure
 #include <EASTL/string.h>		// String
+#include <EASTL/string_view.h>	// String View
+#include <EASTL/variant.h>		// Variant
 #include <EASTL/vector.h>		// Vector
+#include <EASTL/utility.h>		// Utility
 
 // Standard Library
 #include <iostream>				// I/O streams
@@ -25,6 +30,8 @@
 #include <type_traits>			// Metaprogramming
 #include <cstdio>				// C standard library
 #include <stdio.h>				// Generic file operation
+#include <limits>				// Generic type limits
+#include <chrono>				// Time
 
 #include <future>				// Asynchronous programming
 #include <thread>				// Threading
@@ -34,7 +41,8 @@
 #include <atomic>				// Atomic operations
 
 // Internal headers (e.g., engine-specific)
-#include "Engine/Debug/Log.h"	// Logging functionality
+#include "Engine/Debug/Log.h"		// Logging functionality
+//#include "Engine/Utility/Hash.h"	// Hashing functionality
 
 // Platform-specific includes (Windows)
 #if AR_PLATFORM_WINDOWS

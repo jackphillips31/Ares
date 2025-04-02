@@ -46,7 +46,7 @@ namespace Ares::Systems {
 		m_WriteQueue.emplace(e.Clone());
 	}
 
-	void EventQueue::OnUpdate(Timestep& ts)
+	void EventQueue::OnUpdate(const Timestep& ts)
 	{
 		{
 			std::unique_lock lock1(m_WriteMutex);
@@ -64,7 +64,7 @@ namespace Ares::Systems {
 
 				for (auto& listenerEntry : m_Listeners)
 				{
-					if (event->Handled)
+					if (event->Handled || listenerEntry.ListenerType == EventType::None)
 						break;
 
 					if (listenerEntry.ListenerType == EventType::None || listenerEntry.ListenerType == event->GetEventType())
