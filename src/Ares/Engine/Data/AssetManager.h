@@ -515,16 +515,16 @@ namespace Ares {
 
 		private:
 			// Asset Cache
-			HashMap<AssetId, Ref<Asset>, true> m_AssetCache;
+			HashMap<AssetId, Ref<Asset>> m_AssetCache;
 			Atomic<AssetId> m_NextAssetId;
 			std::shared_mutex m_CacheMutex;
 
-			HashMap<AssetId, Vector<AssetId>, true> m_DependencyCache;
+			HashMap<AssetId, Vector<AssetId>> m_DependencyCache;
 			std::shared_mutex m_DependencyMutex;
 
 			// Secondary Lookup Maps
 			HashMap<String, AssetId, true> m_NameIdMap;
-			HashMap<size_t, AssetId, true> m_HashIdMap;
+			HashMap<size_t, AssetId> m_HashIdMap;
 			std::shared_mutex m_MapMutex;
 
 			// Callback Queues
@@ -534,10 +534,10 @@ namespace Ares {
 			std::shared_mutex m_WriteCallbackMutex;
 
 			// Asset Listeners
-			HashMap<AssetListener, EventCallbackFn, true> m_Listeners;
+			HashMap<AssetListener, EventCallbackFn> m_Listeners;
 			Vector<AssetListener> m_ListenerOrder;
-			HashMap<AssetListener, String, true> m_ListenerNameMap;
-			HashSet<AssetListener, true> m_GlobalListeners;
+			HashMap<AssetListener, String> m_ListenerNameMap;
+			HashSet<AssetListener> m_GlobalListeners;
 			Atomic<AssetListener> m_NextListenerId;
 			std::shared_mutex m_ListenerMutex;
 

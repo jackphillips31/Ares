@@ -5,7 +5,6 @@
  * operation on the specified type. This alias is useful for ensuring safe concurrent
  * access to variables, especially in multi-threaded environments.
  * 
- * @ingroup aliases
  * @ingroup multithreading
  */
 #pragma once
@@ -23,14 +22,10 @@ namespace Ares {
 	 * @li Uses `eastl::atomic<Type>` to provide atomic operations on the specified type.
 	 * @li Supports atomic load, store, fetch-add, and compare-exchange operations.
 	 * @li Ensures safe concurrent access to shared data in multi-threaded applications.
+	 * @li Lightweight compared to manual synchronization methods like mutexes.
+	 * @li Operations are optimized for cache-line alignment to avoid false sharing.
 	 * 
-	 * |Feature|Description|
-	 * |-|-|
-	 * |**Atomic Operations**|Provides atomic operations such as load, store, fetch-add, and CAS.|
-	 * |**Memory Ordering**|Supports different memory ordering options (e.g., relaxed, aquire, release).|
-	 * |**Concurrency Safety**|Ensures safe concurrent access in multi-threaded applications.|
-	 * |**Performance**|Lightweight compared to manual synchronization methods like mutexes.|
-	 * |**Cache Efficiency**|Operations are optimized for cache-line alignment to avoid false sharing.|
+	 * @tparam Type The type of atomic value.
 	 * 
 	 * @note The Atomic alias is designed for safe usage in multi-threaded environments.
 	 * It ensures that operations on the variable are performed atomically, preventing

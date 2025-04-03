@@ -1,11 +1,11 @@
 /**
  * @file Pair.h
- * @brief Defines a convenient alias for an EASTL pair.
- * @details This file provides a type alias for `eastl::pair`, allowing for more readability
- * and concise code when working with pairs of values. Using this alias can improve
- * maintainability and consistency across the engine or application.
+ * @brief Defines a convenient alias for an EASTL pair, a lightweight container for storing two related values.
  * 
- * @ingroup aliases
+ * @details **This file provides**:
+ * @li [Pair<Type1, Type2](#Ares::Pair) -> A lightweight container for storing two related values.
+ * @li [MakePair(Type1, Type2)](#Ares::MakePair) -> A helper function for constructing [Pair](#Ares::Pair)
+ * objects with automatic type deduction.
  */
 #pragma once
 #include <EASTL/utility.h>
@@ -14,18 +14,46 @@ namespace Ares {
 
 	/**
 	 * @typedef Pair
-	 * @brief Alias for `std::pair`.
+	 * @brief Alias for `std::pair`, a simple container for holding two values.
 	 * 
-	 * @details Provies a shorthand for `eastl::pair`, making it easier to define and use
-	 * pairs of related values. This alias improves readability and simplifies code
-	 * when working with pairs of elements.
+	 * @details **Features**:
+	 * @li Stores two values of potentially different types.
+	 * @li Provides **structured return values** from functions.
+	 * @li Supports **comparison operators** for easy sorting and lookup.
+	 * @li Works with **EASTL containers** like [HashMap](#Ares::HashMap) and [Vector](#Ares::Vector).
 	 * 
-	 * @tparam T1 Type of the first element of the pair.
-	 * @tparam T2 Type of the second element of the pair.
+	 * @tparam Type1 Type of the first value.
+	 * @tparam Type2 Type of the second value.
+	 * 
+	 * @note Use [MakePair](#Ares::MakePair) for convenient pair creation without specifying template arguments.
 	 * 
 	 * @ingroup aliases
 	 */
-	template <typename T1, typename T2>
-	using Pair = eastl::pair<T1, T2>;
+	template <typename Type1, typename Type2>
+	using Pair = eastl::pair<Type1, Type2>;
+
+	/**
+	 * @brief Creates a [Pair](#Ares::Pair) with automatically deduced types.
+	 * 
+	 * @details **Features**:
+	 * @li **Automatic Type Deduction** -> Eliminates the need to specify [Pair](#Ares::Pair) template arguments.
+	 * @li **Convenient Syntax** -> Simplifies pair initialization.
+	 * @li **Compatible with EASTL Containers** -> Works seamlessly with [HashMap](#Ares::HashMap),
+	 * [Vector](#Ares::Vector), and others.
+	 * 
+	 * @tparam Type1 Type of the first value (deduced automatically).
+	 * @tparam Type2 Type of the second value (deduced automatically).
+	 * 
+	 * @return A [Pair<Type1, Type2>](#Ares::Pair) containing the given values.
+	 * 
+	 * @note Prefer [MakePair](#Ares::MakePair) over explicit [Pair<Type1, Type2>](#Ares::Pair) construction for readability.
+	 * 
+	 * @ingroup aliases
+	 */
+	template <typename Type1, typename Type2>
+	constexpr auto MakePair(Type1&& first, Type2 second) -> Pair<Type1, Type2>
+	{
+		return eastl::make_pair(eastl::forward<Type1>(first), eastl::forward<Type2>(second));
+	}
 
 }

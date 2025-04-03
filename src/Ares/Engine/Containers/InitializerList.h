@@ -1,13 +1,9 @@
 /**
  * @file InitializerList.h
- * @brief Defines a convenient alias for an initializer list.
- * @details This file provides a type alias for `std::initializer_list`, allowing
- * for easier usage in contexts where a list of elements is needed,
- * such as in initialization of containers or arguments.
- * Using this alias improves code readability and ensures consistency
- * across the engine or application.
+ * @brief Defines a convenient alias for an initializer list, simplifying uniform initialization syntax.
  * 
- * @ingroup aliases
+ * @details This file provides a type alias for `std::initializer_list`, which is used for convenient
+ * initialization of containers and aggregates in a uniform and readable manner.
  */
 #pragma once
 
@@ -15,17 +11,21 @@ namespace Ares {
 
 	/**
 	 * @typedef InitializerList
-	 * @brief Alias for `std::initializer_list`
+	 * @brief Alias for `std::initializer_list`, providing convenient list-style initialization.
 	 * 
-	 * @details Provides a shorthand for `std::initializer_list`, simplifying its usage
-	 * in cases where a list of elements needs to be passed to constructors
-	 * or functions.
+	 * @details **Features**:
+	 * @li Enables **uniform initialization** for containers and aggregates.
+	 * @li Provides **read-only** access to a sequence of elements.
+	 * @li Often used in **constructor initialization lists** for collection types.
+	 * @li Works seamlessly with **C++ range based for loops**.
 	 * 
-	 * @tparam T Type of elements in the initializer list.
+	 * @tparam Type Element type stored in the initializer list.
+	 * 
+	 * @note `std::initializer_list` is a lightweight wrapper for a C-style array with a known size at compile time.
 	 * 
 	 * @ingroup aliases
 	 */
-	template <class E>
-	using InitializerList = std::initializer_list<E>;
+	template <typename Type>
+	using InitializerList = std::initializer_list<Type>;
 
 }

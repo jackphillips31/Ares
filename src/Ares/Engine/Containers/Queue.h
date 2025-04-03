@@ -1,12 +1,10 @@
 /**
  * @file Queue.h
- * @brief Defines a convenient alias for the EASTL queue container.
- * @details This file provides a type alias for `eastl::queue`, allowing for more readable
- * and concise code when working with queues. Using this alias can improve
- * maintainability and ensure consistency across the engine or application,
- * especially when working with FIFO (First-In-First-Out) data structures.
+ * @brief Defines a convenient alias for the EASTL queue container, a FIFO (First-In, First-Out) container.
  * 
- * @ingroup aliases
+ * @details This file provides a type alias for `eastl::queue`, which provides an efficient
+ * queue implementation using `eastl::deque` as the underlying container.
+ * 
  * @ingroup containers
  */
 #pragma once
@@ -18,31 +16,21 @@ namespace Ares {
 
 	/**
 	 * @typedef Queue
-	 * @brief Alias for `eastl::queue` using `eastl::deque` as the underlying container.
+	 * @brief Alias for `eastl::queue`, a FIFO (First-In, First-Out) container.
 	 * 
 	 * @details **Features**:
-	 * @li Uses a customizable allocator, defaulting to [AppAllocator](#Ares::Internal::AppAllocator),
-	 * optimizing memory allocation for high-performance applications.
-	 * @li The underlying container is `eastl::deque<Type, Allocator>`, which supports
-	 * efficient FIFO operations.
-	 * @li Provides better memory control and performance compared to `std::queue`.
+	 * @li Provides **constant time** push and pop operations.
+	 * @li Backed by `eastl::deque` for dynamic resizing.
+	 * @li Uses [AppAllocator](#Ares::Internal::AppAllocator) for memory management
+	 * @li Supports **custom allocators** for specialized memory control.
 	 * 
 	 * **Performance Characteristics**:
-	 * |Feature|Description|
-	 * |-|-|
-	 * |**Allocator**|Uses a customizable allocator, defaulting to[AppAllocator](#Ares::Internal::AppAllocator).|
-	 * |**Container**|Uses `eastl::deque` as the underlying container for efficient FIFO.|
-	 * |**Performance**|Better iteration performance compared to `std::queue`.|
-	 * |**Memory Control**|Fine-grained control over memory allocation due to custom allocator.|
-	 * |**Reallocation**|Reduced reallocations during queue operations.|
-	 * |**Thread-Safety**|Safe to use in multi-threaded environments with careful synchronization.|
+	 * @li **O(1)** - Operations are O(1).
 	 * 
-	 * @tparam T Type of elements stored in the queue.
-	 * @tparam Allocator The allocator type used for memory management (defaults to [AppAllocator](#Ares::Internal::AppAllocator)).
+	 * @tparam Type The type of elements stored in the queue.
+	 * @tparam Allocator The memory allocator used (default: [AppAllocator](#Ares::Internal::AppAllocator)).
 	 * 
-	 * @note This alias offers a highly customizable queue implementation that
-	 * allows the use of different allocators, with [AppAllocator](#Ares::Internal::AppAllocator)
-	 * being the default.
+	 * @note Unlike `std::queue`, this version supports EASTL-specific optimizations.
 	 * 
 	 * @ingroup aliases
 	 */

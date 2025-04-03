@@ -1,12 +1,10 @@
 /**
  * @file Function.h
  * @brief Defines a convenient alias for EASTL function objects.
- * @details This file provides a type alias for function pointers or callable objects,
- * improving readability and maintainability. Using this alias allows the engine to
- * easily swap between `eastl::function` and raw function pointers for performance
- * tuning.
- * 
- * @ingroup aliases
+ * @details This file provides a type alias for `eastl::function`, which allows the creation of
+ * type-safe function objects that can store and invoke callable objects such as
+ * regular functions, function pointers, or lambdas. This alias simplifies the usage
+ * of `eastl::function` for storing and invoking functions with various signatures.
  */
 #pragma once
 #include <EASTL/functional.h>
@@ -15,36 +13,26 @@ namespace Ares {
 
 	/**
 	 * @typedef Function
-	 * @brief Alias for `eastl::function`.
+	 * @brief Alias for `eastl::function` to store callable objects.
 	 * 
-	 * @details Features:
-	 * @li **Allocation-free** for callables <= 64 bytes (configurable).
-	 * @li **Exception-safe** invocation.
-	 * @li **Move-only** semantics.
-	 * @li Compatible with lambdas, function pointers, and `std::bind` results.
+	 * @details **Features**:
+	 * @li Uses `eastl::function<T>` to store and invoke callable objects.
+	 * @li Supports various callable types, including regular functions, function pointers,
+	 * and lambdas.
+	 * @li Type-safe and flexible, allowing different signatures to be handled.
 	 * 
 	 * **Performance Characteristics**:
-	 * |Operation|Cost|
-	 * |-|-|
-	 * |Construction|O(1) + potential copy|
-	 * |Invocation|1 indirect call|
-	 * |Move|1 pointer call|
+	 * @li **Overhead** - May introduce some overhead due to type erause (comparable to std::function).
+	 * @li **Memory Usage** - Slightly higher memory usage compared to plain function pointers.
 	 * 
-	 * **Example Usage**:
-	 * ```cpp
-	 * Function<void(Asset*)> callback = [](Asset* a)
-	 * {
-	 *     ProcessAsset(a);
-	 * };
-	 * callback(&asset);
-	 * ```
+	 * @tparam Type The type of callable object (e.g., a function signature).
 	 * 
-	 * @tparam T Function signature (e.g., `void(int, float)`)
+	 * @note The Function alias is designed to simplify the usage of `eastl::function` by
+	 * providing a clean interface for working with type-erased callable objects.
 	 * 
-	 * @warning Not thread-safe for concurrent invocations.
 	 * @ingroup aliases
 	 */
-	template <typename T>
-	using Function = eastl::function<T>;
+	template <typename Type>
+	using Function = eastl::function<Type>;
 
 }
