@@ -1,7 +1,6 @@
 #include <arespch.h>
 #include "Engine/Events/EventQueue.h"
 
-
 #include "Engine/Core/Application.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Events/ApplicationEvent.h"
@@ -49,12 +48,15 @@ namespace Ares::Systems {
 	void EventQueue::OnUpdate(const Timestep& ts)
 	{
 		{
-			std::unique_lock lock1(m_WriteMutex);
-			std::unique_lock lock2(m_ReadMutex);
+			std::unique_lock lock1(m_WriteMutex, std::defer_lock);
+			std::unique_lock lock2(m_ReadMutex, std::defer_lock);
+			std::lock(lock1, lock2);
 			eastl::swap(m_WriteQueue, m_ReadQueue);
 		}
 		{
-			std::unique_lock lock(m_ReadMutex);
+			std::unique_lock lock1(m_ReadMutex, std::defer_lock);
+			std::shared_lock lock2(m_CallbackMutex, std::defer_lock);
+			std::lock(lock1, lock2);
 			while (!m_ReadQueue.empty())
 			{
 				Scope<Event> event = eastl::move(m_ReadQueue.front());

@@ -26,6 +26,7 @@
 #pragma once
 #include <EASTL/unique_ptr.h>
 #include <EASTL/shared_ptr.h>
+
 /******************************************************/
 /*     Platform detection using predefined macros     */
 /******************************************************/

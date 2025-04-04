@@ -14,7 +14,7 @@
  */
 #pragma once
 #if AR_PLATFORM_WINDOWS
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 /**

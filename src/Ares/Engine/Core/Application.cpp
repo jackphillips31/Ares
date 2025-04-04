@@ -22,6 +22,7 @@ namespace Ares {
 	Application::Application(const ApplicationSettings& settings)
 		: m_MemoryManager(), m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr),
 		m_LayerStack(nullptr),
+		m_Running(true),
 		m_Systems(*(m_MemoryManager.GetDefaultAllocator())),
 		m_SystemOrder(*(m_MemoryManager.GetDefaultAllocator()))
 	{
@@ -52,7 +53,7 @@ namespace Ares {
 		RegisterSystem<Systems::Input>(m_Window.get());
 		RegisterSystem<Systems::ThreadPool>(settings.ThreadCount);
 		RegisterSystem<Systems::MainThreadQueue>();
-		RegisterSystem<Systems::AssetManager>(GetSystem<Systems::ThreadPool>());
+		RegisterSystem<Systems::AssetManager>(GetSystem<Systems::ThreadPool>(), GetSystem<Systems::MainThreadQueue>());
 		RegisterSystem<Systems::EventQueue>();
 		RegisterSystem<Systems::Renderer>();
 
@@ -134,9 +135,17 @@ namespace Ares {
 				while (m_Running.load())
 				{
 					Timestep timestep = std::chrono::duration<double>(nextUpdateTime.time_since_epoch() - m_LastUpdateTime.time_since_epoch()).count();
-					GetSystem<Systems::AssetManager>()->OnUpdate(timestep);
-					GetSystem<Systems::EventQueue>()->OnUpdate(timestep);
-
+					{
+						std::shared_lock lock(m_SystemMutex);
+						for (const std::type_index& element : m_SystemOrder)
+						{
+							if (const auto& it = m_Systems.find(element); it != m_Systems.end())
+							{
+								it->second->OnUpdate(timestep);
+							}
+						}
+					}
+					
 					{
 						std::shared_lock lock(m_LayerStackMutex);
 						for (Ref<Layer>& entry : *m_LayerStack)
@@ -154,7 +163,7 @@ namespace Ares {
 	{
 		Systems::MainThreadQueue* mainThreadQueue = GetSystem<Systems::MainThreadQueue>();
 		Systems::Renderer* renderer = GetSystem<Systems::Renderer>();
-		m_LastFrameTime = std::chrono::high_resolution_clock::now();
+		m_LastRenderTime = std::chrono::high_resolution_clock::now();
 
 		while (m_Running.load())
 		{
@@ -167,7 +176,7 @@ namespace Ares {
 			}
 
 			TimePoint currentTime = std::chrono::high_resolution_clock::now();
-			Timestep timestep = std::chrono::duration<double>(currentTime.time_since_epoch() - m_LastFrameTime.time_since_epoch()).count();
+			Timestep timestep = std::chrono::duration<double>(currentTime.time_since_epoch() - m_LastRenderTime.time_since_epoch()).count();
 
 			{
 				std::shared_lock lock(m_LayerStackMutex);
@@ -176,8 +185,16 @@ namespace Ares {
 					entry->OnRender();
 				}
 
-				mainThreadQueue->OnUpdate(timestep);
-				renderer->OnRender();
+				{
+					std::shared_lock lock2(m_SystemMutex);
+					for (const std::type_index& element : m_SystemOrder)
+					{
+						if (const auto& it = m_Systems.find(element); it != m_Systems.end())
+						{
+							it->second->OnRender();
+						}
+					}
+				}
 
 				m_ImGuiContext->Begin();
 				for (Ref<Layer>& entry : *m_LayerStack)
@@ -188,7 +205,7 @@ namespace Ares {
 			}
 
 			m_Window->SwapBuffers();
-			m_LastFrameTime = currentTime;
+			m_LastRenderTime = currentTime;
 		}
 	}
 

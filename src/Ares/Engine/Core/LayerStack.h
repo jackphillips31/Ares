@@ -7,7 +7,6 @@
  * rendered on top.
  */
 #pragma once
-#include "Engine/Containers/Vector.h"
 
 namespace Ares {
 
@@ -17,7 +16,7 @@ namespace Ares {
 	 * @class LayerStack
 	 * @brief Manages the stack of [Layers](#Ares::Layer) in the Application.
 	 * 
-	 * @details Layers are stored in a vector, with overlays added to the end of the stack.
+	 * @details Layers are stored in a [Vector](#Ares::Vector), with overlays added to the end of the stack.
 	 * Layers and overlays can be dynamically added or removed during runtime.
 	 */
 	class LayerStack
@@ -26,7 +25,7 @@ namespace Ares {
 		/**
 		 * @brief Constructs a LayerStack.
 		 */
-		LayerStack() = default;
+		LayerStack();
 
 	public:
 

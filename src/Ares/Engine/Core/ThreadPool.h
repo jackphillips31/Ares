@@ -157,7 +157,7 @@ namespace Ares {
 			using ReturnType = decltype(func(args...));
 
 			auto task = CreateRef<std::packaged_task<ReturnType()>>(
-				std::bind(std::forward<Func>(func), std::forward<Args>(args)...)
+				std::bind(eastl::forward<Func>(func), eastl::forward<Args>(args)...)
 			);
 
 			std::future<ReturnType> result = task->get_future();

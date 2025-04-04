@@ -54,21 +54,24 @@ namespace Ares::Systems {
 	template void AssetManager::DispatchAssetEvent<AssetUnstagedEvent>(const Ref<Asset>&, const char*);
 	template void AssetManager::DispatchAssetEvent<AssetFailedEvent>(const Ref<Asset>&, const char*);
 
-	Scope<AssetManager> AssetManager::Create(Systems::ThreadPool* threadPool)
+	Scope<AssetManager> AssetManager::Create(Systems::ThreadPool* threadPool, Systems::MainThreadQueue* mainThreadQueue)
 	{
-		return CreateScope<AssetManager>(threadPool);
+		return CreateScope<AssetManager>(threadPool, mainThreadQueue);
 	}
 
-	AssetManager::AssetManager(Systems::ThreadPool* threadPool)
-		: m_NextAssetId(1), m_NextListenerId(1), m_MainThreadQueue(nullptr), m_ThreadPool(threadPool), m_MemoryDataProvider(CreateScope<Internal::MemoryDataProvider>())
+	AssetManager::AssetManager(Systems::ThreadPool* threadPool, Systems::MainThreadQueue* mainThreadQueue)
+		: m_NextAssetId(1), m_NextListenerId(1), m_ThreadPool(threadPool), m_MainThreadQueue(mainThreadQueue), m_MemoryDataProvider(CreateScope<Internal::MemoryDataProvider>())
 	{
 		AR_CORE_INFO("Initializing System: AssetManager");
-		m_MainThreadQueue = Application::Get().GetSystem<Systems::MainThreadQueue>();
 
 	#if AR_BUILD_DEBUG
-		if (m_MainThreadQueue == nullptr && m_ThreadPool != nullptr)
+		if (!m_ThreadPool)
 		{
-			AR_CORE_WARN("AssetManager: Failed to retrieve MainThreadQueue! This is necessary when running on a ThreadPool.");
+			AR_CORE_WARN("AssetManager: ThreadPool not provided, loading will execute on the main thread!");
+		}
+		else if (!m_MainThreadQueue)
+		{
+			AR_CORE_WARN("AssetManager: Failed to retrieve MainThreadQueue. This is necessary when running on a ThreadPool!");
 		}
 	#endif
 

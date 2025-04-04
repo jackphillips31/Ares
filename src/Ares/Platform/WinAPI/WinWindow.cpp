@@ -60,7 +60,7 @@ namespace Ares {
 		m_Window = CreateWindowExW(
 			0,
 			wc.lpszClassName,
-			std::wstring(props.Title.begin(), props.Title.end()).c_str(),
+			CharToLPCWSTR(props.Title),
 			0,
 			m_Data.XPos, m_Data.YPos,
 			m_Data.Width, m_Data.Height,
@@ -233,6 +233,18 @@ namespace Ares {
 	{
 		if (m_EventCallback)
 			m_EventCallback(e);
+	}
+
+	LPCWSTR WinWindow::CharToLPCWSTR(const char* narrowStr)
+	{
+		int32_t wideStrLen = MultiByteToWideChar(CP_UTF8, 0, narrowStr, -1, nullptr, 0);
+		if (wideStrLen == 0) return nullptr;
+
+		wchar_t* wideStr = new (Internal::Allocate(wideStrLen * sizeof(wchar_t))) wchar_t[wideStrLen];
+
+		MultiByteToWideChar(CP_UTF8, 0, narrowStr, -1, wideStr, wideStrLen);
+
+		return wideStr;
 	}
 
 	LRESULT WinWindow::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

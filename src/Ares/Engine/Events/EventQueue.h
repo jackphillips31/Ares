@@ -3,15 +3,11 @@
  * @brief Defines the EventQueue class for managing event processing.
  * 
  * @details The EventQueue class is responsible for queuing and dispatching events in the application.
- * It supports adding listeners for specific event types and propagating events to all listeners.
+ * It supports adding listeners for specific event types, as well as global listeners,
+ * and propagates events to all listeners.
  */
 #pragma once
-#include <EASTL/hash_map.h>
-#include <EASTL/hash_set.h>
-
 #include "Engine/Core/System.h"
-#include "Engine/Core/Utility.h"
-#include "Engine/Events/Event.h"
 
 namespace Ares {
 
@@ -30,10 +26,10 @@ namespace Ares {
 		class EventQueue : public Internal::System
 		{
 		private:
-			using ApplicationCallback = eastl::function<void(Event&)>;
+			using ApplicationCallback = Function<void(Event&)>;
 			template <typename T>
-			using ListenerCallbackFn = eastl::function<bool(T&)>;
-			using StoredCallbackFn = eastl::function<bool(Event&)>;
+			using ListenerCallbackFn = Function<bool(T&)>;
+			using StoredCallbackFn = Function<bool(Event&)>;
 		public:
 			~EventQueue();
 
@@ -61,20 +57,19 @@ namespace Ares {
 			struct ListenerEntry
 			{
 				EventListener ListenerId = 0;
-				EventType ListenerType = EventType::None;
+				EventType ListenerType = static_cast<EventType>(0);
 				StoredCallbackFn CallbackFn = nullptr;
 			};
 
 		private:
-			eastl::queue<Event> m_TestQueue;
-			eastl::queue<Scope<Event>> m_WriteQueue;
-			eastl::queue<Scope<Event>> m_ReadQueue;
+			Queue<Scope<Event>> m_WriteQueue;
+			Queue<Scope<Event>> m_ReadQueue;
 			std::shared_mutex m_WriteMutex;
 			std::shared_mutex m_ReadMutex;
 
-			eastl::atomic<uint32_t> m_NextListenerId;
-			eastl::vector<ListenerEntry> m_Listeners;
-			eastl::hash_map<EventListener, size_t> m_ListenerIndexMap;
+			Atomic<uint32_t> m_NextListenerId;
+			Vector<ListenerEntry> m_Listeners;
+			HashMap<EventListener, size_t> m_ListenerIndexMap;
 			std::shared_mutex m_ListenerMutex;
 
 			ApplicationCallback m_AppCallback;

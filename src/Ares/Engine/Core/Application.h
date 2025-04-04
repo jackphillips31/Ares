@@ -9,9 +9,6 @@
 #pragma once
 #include <shared_mutex>
 
-#include "Engine/Containers/Atomic.h"
-#include "Engine/Containers/HashMap.h"
-#include "Engine/Containers/Vector.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Data/MemoryManager.h"
@@ -47,15 +44,15 @@ namespace Ares {
 	 */
 	struct ApplicationSettings
 	{
-		std::string Name = "Ares Engine";						/// The name of the application.
-		uint32_t Width = 1280;									/// The width of the application window in pixels.
-		uint32_t Height = 720;									/// The height of the application window in pixels.
-		uint32_t UpdatesPerSecond = 120;						/// The update rate (ticks per second).
-		uint8_t ThreadCount = 4;								/// Number of worker threads in the Application's ThreadPool.
-		RenderAPI Renderer = static_cast<RenderAPI>(1);			/// The Renderer API that will be used.
+		const char* Name = "Ares Engine";						///< The name of the application.
+		uint32_t Width = 1280;									///< The width of the application window in pixels.
+		uint32_t Height = 720;									///< The height of the application window in pixels.
+		uint32_t UpdatesPerSecond = 120;						///< The update rate (ticks per second).
+		uint8_t ThreadCount = 4;								///< Number of worker threads in the Application's ThreadPool.
+		RenderAPI Renderer = static_cast<RenderAPI>(1);			///< The Renderer API that will be used.
 
-		uint16_t WindowStyle = WindowSettings::DefaultWindow;	/// Style flags for the window.
-		void* Icon = nullptr;									/// Pointer to the window icon resource.
+		uint16_t WindowStyle = WindowSettings::DefaultWindow;	///< Style flags for the window.
+		void* Icon = nullptr;									///< Pointer to the window icon resource.
 
 		/**
 		 * @brief Constructor for the ApplicationSettings struct.
@@ -72,7 +69,7 @@ namespace Ares {
 		 * @param icon A pointer to the application icon (default: `nullptr`).
 		 */
 		ApplicationSettings(
-			const std::string& name = "Ares Engine",
+			const char* name = "Ares Engine",
 			uint32_t width = 1280,
 			uint32_t height = 720,
 			uint8_t threadCount = std::thread::hardware_concurrency(),
@@ -239,23 +236,28 @@ namespace Ares {
 		 */
 		bool OnWindowResize(WindowResizeEvent& e);
 
-		using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds>;
-
 	private:
+		/**
+		 * @typedef TimePoint
+		 * @brief Alias for an `std::chrono::time_point`.
+		 */
+		using TimePoint = std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds>;
+
 		Internal::MemoryManager m_MemoryManager;	///< Application Memory Manager.
 		ApplicationSettings m_Settings;				///< Application configuration settings.
 		Scope<LayerStack> m_LayerStack;				///< Stack of active layers in the application.
 		Scope<Window> m_Window;						///< The main application window.
 		Scope<ImGuiContext> m_ImGuiContext;			///< ImGui context for UI.
-		Atomic<bool> m_Running = true;			///< Flag to indicate if the application is running.
-		bool m_Minimized = false;					///< Flag to indicate if the application is minimized.
-		TimePoint m_LastUpdateTime;
-		TimePoint m_LastFrameTime;
+		Atomic<bool> m_Running = false;				///< Flag to indicate if the application is running.
+		Atomic<bool> m_Minimized = false;					///< Flag to indicate if the application is minimized.
+		TimePoint m_LastUpdateTime;					///< Last update time.
+		TimePoint m_LastRenderTime;					///< Last render time.
 		std::shared_mutex m_LayerStackMutex;		///< LayerStack mutex.
 		std::shared_mutex m_Mutex;					///< Application mutex.
 
 		HashMap<std::type_index, Scope<Internal::System>> m_Systems;	///< The application's systems.
 		Vector<std::type_index> m_SystemOrder;							///< The order in which the application's system's `OnUpdate` methods are called.
+		std::shared_mutex m_SystemMutex;								///< Systems mutex
 	private:
 		static Application* s_Instance;				///< Static reference to the active Application instance.
 
@@ -294,6 +296,7 @@ namespace Ares {
 	template <typename SystemType, typename... Args>
 	bool Application::RegisterSystem(Args&&... args)
 	{
+		std::unique_lock lock(m_SystemMutex);
 		if (m_Systems[typeid(SystemType)] = SystemType::template Create(std::forward<Args>(args)...))
 		{
 			m_SystemOrder.emplace_back(typeid(SystemType));
@@ -306,8 +309,8 @@ namespace Ares {
 	template <typename SystemType>
 	SystemType* Application::GetSystem()
 	{
-		auto it = m_Systems.find(typeid(SystemType));
-		if (it != m_Systems.end())
+		std::shared_lock lock(m_SystemMutex);
+		if (const auto& it = m_Systems.find(typeid(SystemType)); it != m_Systems.end())
 			return static_cast<SystemType*>(it->second.get());
 		else
 			return nullptr;
@@ -316,14 +319,13 @@ namespace Ares {
 	template <typename SystemType>
 	void Application::UnregisterSystem()
 	{
-		auto it = m_Systems.find(typeid(SystemType));
-		if (it != m_Systems.end())
+		std::unique_lock lock(m_SystemMutex);
+		if (const auto& it = m_Systems.find(typeid(SystemType)); it != m_Systems.end())
 		{
 			it->second.reset();
 			m_Systems.erase(it);
 		}
-		auto orderIt = std::find(m_SystemOrder.begin(), m_SystemOrder.end(), typeid(SystemType));
-		if (orderIt != m_SystemOrder.end())
+		if (const auto& orderIt = eastl::find(m_SystemOrder.begin(), m_SystemOrder.end(), typeid(SystemType)); orderIt != m_SystemOrder.end())
 		{
 			m_SystemOrder.erase(orderIt);
 		}

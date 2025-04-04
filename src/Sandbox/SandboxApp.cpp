@@ -11,8 +11,11 @@ Ares::Application* Ares::CreateApplication()
 	
 	Ares::ApplicationSettings settings;
 	settings.WindowStyle = AR_WINDOW_DEFAULT_WINDOW;
+	settings.Renderer = Ares::RenderAPI::OpenGL;
 	settings.Icon = &appIcon;
 	settings.ThreadCount = 4;
+	settings.UpdatesPerSecond = 120;
+	settings.Name = "Ares Sandbox";
 
 	Ares::Application* app = new Application(settings);
 	app->PushLayer(Ares::CreateRef<Sandbox2D>(*app));

@@ -140,10 +140,12 @@ namespace Ares {
 			/**
 			 * @brief The constructor for the AssetManager.
 			 *
-			 * @param threadPool A pointer to a ThreadPool instance. If you pass `nullptr` as the argument,
+			 * @param threadPool A pointer to a [ThreadPool](#Ares::Systems::ThreadPool) instance. If you pass `nullptr` as the argument,
 			 * the AssetManager will load [Assets](#Ares::Asset) on the **main thread**.
+			 * @param mainThreadQueue A pointer to a [MainThreadQueue](#Ares::Systems::MainThreadQueue) instance. The AssetManager will not use
+			 * the ThreadPool if a MainThreadQueue is not provided.
 			 */
-			AssetManager(Systems::ThreadPool* threadPool);
+			AssetManager(Systems::ThreadPool* threadPool, Systems::MainThreadQueue* mainThreadQueue);
 
 			/**
 			 * @typedef AssetId
@@ -165,9 +167,9 @@ namespace Ares {
 			 *
 			 * @param threadPool A pointer to a ThreadPool instance. If you pass `nullptr` as the argument,
 			 * the AssetManager will load Assets on the **main thread**.
-			 * @return A Scope of the created AssetManager object.
+			 * @return A Scope<AssetManager> object.
 			 */
-			static Scope<AssetManager> Create(Systems::ThreadPool* threadPool = nullptr);
+			static Scope<AssetManager> Create(Systems::ThreadPool* threadPool = nullptr, Systems::MainThreadQueue* mainThreadQueue = nullptr);
 
 			/**
 			 * @brief Destroys the AssetManager and cleans up resources.
@@ -548,8 +550,8 @@ namespace Ares {
 			std::shared_mutex m_WriteTaskQueueMutex;
 
 			// AssetManager Systems
-			Systems::MainThreadQueue* m_MainThreadQueue;
 			Systems::ThreadPool* m_ThreadPool;
+			Systems::MainThreadQueue* m_MainThreadQueue;
 			Scope<Internal::MemoryDataProvider> m_MemoryDataProvider;
 
 			// Event callback

@@ -10,6 +10,11 @@ namespace Ares {
 		return CreateScope<LayerStack>();
 	}
 
+	LayerStack::LayerStack()
+	{
+		m_Layers.reserve(10);
+	}
+
 	LayerStack::~LayerStack()
 	{
 		for (Ref<Layer> layer : m_Layers)

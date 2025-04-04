@@ -37,10 +37,11 @@
  *     // Do something when 'W' key is pressed.
  * }
  * ```
+ * 
+ * **Current Platform Implementations**:
+ * @li Windows
  *
  * @note The Input class is a base class. A platform-specific instance is created using the [Create](#Input::Create) method.
- * <br> **Current Platform Implementations**:
- * @li Windows
  * @warning On **Windows** platforms, [GetMouseClientPosition](#Input::GetMouseClientPosition)
  * requires a valid Window instance. If `nullptr` is passed in the [Create](#Input::Create) method,
  * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.
@@ -62,7 +63,8 @@ namespace Ares {
 		 * @brief Interface class for handling user input (keyboard and mouse).
 		 *
 		 * @details Provides methods to check key states, mouse button states, and
-		 * retrieve mouse positions.<br>
+		 * retrieve mouse positions.
+		 * 
 		 * Platform-specific implementations are provided by derived classes through
 		 * the [Create](#Input::Create) method.
 		 *
@@ -96,10 +98,11 @@ namespace Ares {
 		 *     // Do something when 'W' key is pressed.
 		 * }
 		 * ```
+		 * 
+		 * **Current Platform Implementations**:
+		 * @li Windows
 		 *
 		 * @note The Input class is a base class. A platform-specific instance is created using the [Create](#Input::Create) method.
-		 * <br> **Current Platform Implementations**:
-		 * @li Windows
 		 * @warning On **Windows** platforms, [GetMouseClientPosition](#Input::GetMouseClientPosition)
 		 * requires a valid Window instance. If `nullptr` is passed in the [Create](#Input::Create) method,
 		 * [GetMouseClientPosition](#Input::GetMouseClientPosition) will return `{ 0, 0 }`.

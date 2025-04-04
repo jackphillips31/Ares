@@ -4,7 +4,8 @@
  * 
  * @details The System base class is an abstract class that defines the common
  * interface for all systems in the Ares engine. Derived systems optionally implement
- * the `OnUpdate` method to define their behavior during each frame update.
+ * the `OnUpdate` method to define their behavior during each frame update or the
+ * `OnRender` method to define their behavior during each render update.
  * 
  * This file also includes documentation for the [Internal](#Ares::Internal) namespace
  * as well as documentation for the [Systems](#Ares::Systems) namespace.

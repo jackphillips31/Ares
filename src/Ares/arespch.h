@@ -1,6 +1,7 @@
 #pragma once
 
 // EA Standard Library
+/*
 #include <EASTL/atomic.h>		// Atomic
 #include <EASTL/allocator.h>	// Allocation handling
 #include <EASTL/functional.h>	// Functions
@@ -12,6 +13,7 @@
 #include <EASTL/variant.h>		// Variant
 #include <EASTL/vector.h>		// Vector
 #include <EASTL/utility.h>		// Utility
+*/
 
 // Standard Library
 #include <iostream>				// I/O streams
@@ -41,8 +43,19 @@
 #include <atomic>				// Atomic operations
 
 // Internal headers (e.g., engine-specific)
-#include "Engine/Debug/Log.h"		// Logging functionality
-//#include "Engine/Utility/Hash.h"	// Hashing functionality
+#include "Engine/Core/Core.h"			// Platform Defines and global methods
+#include "Engine/Debug/Log.h"			// Logging functionality
+#include "Engine/Containers/Atomic.h"	// Atomic alias
+#include "Engine/Containers/Function.h"	// Function alias
+#include "Engine/Containers/HashMap.h"	// Hash Map alias
+#include "Engine/Containers/HashSet.h"	// Hash Set alias
+#include "Engine/Containers/InitializerList.h" // Initializer List alias
+#include "Engine/Containers/Pair.h"		// Pair alias
+#include "Engine/Containers/Queue.h"	// Queue alias
+#include "Engine/Containers/String.h"	// String alias
+#include "Engine/Containers/StringView.h" // String View alias
+#include "Engine/Containers/Variant.h"	// Variant alias
+#include "Engine/Containers/Vector.h"	// Vector alias
 
 // Platform-specific includes (Windows)
 #if AR_PLATFORM_WINDOWS
