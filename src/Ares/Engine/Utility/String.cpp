@@ -41,4 +41,16 @@ namespace Ares::Utility {
 		}
 	}
 
+	wchar_t* CharToWChar(const char* narrowStr)
+	{
+		int32_t wideStrLen = MultiByteToWideChar(CP_UTF8, 0, narrowStr, -1, nullptr, 0);
+		if (wideStrLen == 0) return nullptr;
+
+		wchar_t* wideStr = new (Internal::Allocate(wideStrLen * sizeof(wchar_t))) wchar_t[wideStrLen];
+
+		MultiByteToWideChar(CP_UTF8, 0, narrowStr, -1, wideStr, wideStrLen);
+
+		return wideStr;
+	}
+
 }

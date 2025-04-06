@@ -18,6 +18,7 @@
 namespace Ares {
 
 	Application* Application::s_Instance = nullptr;
+	std::shared_mutex Application::s_StaticMutex;
 	
 	Application::Application(const ApplicationSettings& settings)
 		: m_MemoryManager(), m_Settings(settings), m_Window(nullptr), m_ImGuiContext(nullptr),
@@ -222,7 +223,6 @@ namespace Ares {
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
-		std::unique_lock lock(m_Mutex);
 		m_Running = false;
 		return true;
 	}

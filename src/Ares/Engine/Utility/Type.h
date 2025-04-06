@@ -13,6 +13,6 @@ namespace Ares::Utility {
 	};
 
 	const AssetType GetAssetType(const std::type_index& type);
-	const std::string ExtractClassName(const std::type_index& type);
+	const String ExtractClassName(const std::type_index& type);
 
 }

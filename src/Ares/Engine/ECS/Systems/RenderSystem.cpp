@@ -45,6 +45,11 @@ namespace Ares::ECS::Systems {
 	{
 		EntityManager* entityManager = scene.GetEntityManager();
 
+		for (auto& [key, batch] : m_DynamicBatches)
+		{
+			batch.transforms.clear();
+			batch.properties.clear();
+		}
 		for (const auto& entity : entityManager->GetEntityComponents())
 		{
 			const uint32_t entityId = entity.first;
@@ -68,36 +73,35 @@ namespace Ares::ECS::Systems {
 	{
 		for (auto& [key, batch] : m_DynamicBatches)
 		{
-			if (batch.isDirty && batch.vao != nullptr)
+			if (batch.isDirty.load() && batch.VAO != nullptr)
 			{
-				if (batch.transformBuffer == nullptr)
+				if (batch.TransformBuffer == nullptr)
 				{
-					batch.transformBufferSize = batch.transforms.size() * sizeof(glm::mat4);
-					batch.transformBuffer = VertexBuffer::Create(
-						{ batch.transforms.data(), batch.transformBufferSize },
+					batch.TransformBuffer = VertexBuffer::Create(
+						{ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) },
 						BufferUsage::Dynamic
 					);
 
 					BufferLayout transformLayout({ { VertexDataType::Transform, true } });
-					batch.transformBuffer->SetBufferLayout(transformLayout);
-					batch.vao->AddVertexBuffer(batch.transformBuffer.get());
+					batch.TransformBuffer->SetBufferLayout(transformLayout);
+					batch.VAO->AddVertexBuffer(batch.TransformBuffer.get());
 				}
 				else
 				{
-					if (batch.transforms.size() * sizeof(glm::mat4) > batch.transformBufferSize)
+					if (batch.transforms.size() * sizeof(glm::mat4) > batch.TransformBuffer->GetSize())
 					{
-						batch.transformBufferSize = batch.transforms.size() * sizeof(glm::mat4);
-						batch.transformBuffer->SetData({ batch.transforms.data(), batch.transformBufferSize });
+						batch.TransformBuffer->SetData({ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) });
 					}
 					else
 					{
-						batch.transformBuffer->SetSubData({ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) });
+						batch.TransformBuffer->SetSubData({ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) });
 					}
 				}
 
-				if (batch.propertiesBuffer == nullptr)
+				if (batch.PropertiesBuffer == nullptr)
 				{
-					std::vector<uint8_t> propsBuffer(batch.properties.size() * 56);
+					Vector<uint8_t>& propsBuffer = batch.TempPropsBuffer;
+					propsBuffer.resize(batch.properties.size() * 44);
 					size_t offset = 0;
 					for (Components::MaterialProperties& props : batch.properties)
 					{
@@ -105,7 +109,7 @@ namespace Ares::ECS::Systems {
 						offset += props.GetSize();
 					}
 
-					batch.propertiesBuffer = VertexBuffer::Create({ propsBuffer.data(), propsBuffer.size() }, BufferUsage::Dynamic);
+					batch.PropertiesBuffer = VertexBuffer::Create({ propsBuffer.data(), propsBuffer.size() }, BufferUsage::Dynamic);
 					BufferLayout propsLayout({
 						{ VertexDataType::ColorRGB, true },
 						{ VertexDataType::Alpha, true, true },
@@ -115,101 +119,50 @@ namespace Ares::ECS::Systems {
 						{ VertexDataType::EmissiveColor, true },
 						{ VertexDataType::EmissiveIntensity, true, true }
 					});
-					batch.propertiesBuffer->SetBufferLayout(propsLayout);
-					batch.vao->AddVertexBuffer(batch.propertiesBuffer.get());
+					batch.PropertiesBuffer->SetBufferLayout(propsLayout);
+					batch.VAO->AddVertexBuffer(batch.PropertiesBuffer.get());
 				}
 				else
 				{
-					std::vector<uint8_t> propsBuffer(batch.properties.size() * 56);
+					Vector<uint8_t>& propsBuffer = batch.TempPropsBuffer;
+					propsBuffer.resize(batch.properties.size() * 44);
 					size_t offset = 0;
 					for (Components::MaterialProperties& props : batch.properties)
 					{
 						std::memcpy(propsBuffer.data() + offset, props.GetBuffer(), props.GetSize());
 						offset += props.GetSize();
 					}
-					if (propsBuffer.size() > batch.propertiesBuffer->GetSize())
+					if (propsBuffer.size() > batch.PropertiesBuffer->GetSize())
 					{
-						batch.propertiesBuffer->SetData({ propsBuffer.data(), propsBuffer.size() });
+						batch.PropertiesBuffer->SetData({ propsBuffer.data(), propsBuffer.size() });
 					}
 					else
 					{
-						batch.propertiesBuffer->SetSubData({ propsBuffer.data(), propsBuffer.size() });
+						batch.PropertiesBuffer->SetSubData({ propsBuffer.data(), propsBuffer.size() });
 					}
 				}
 
-				if (batch.uniformBuffer == nullptr)
+				if (batch.UniformBuffer == nullptr)
 				{
 					Systems::LightSystem* lights = scene.GetSystem<Systems::LightSystem>();
-					batch.uniformBuffer = UniformBuffer::Create(lights->GetLightBuffer(), 0, BufferUsage::Dynamic);
+					batch.UniformBuffer = UniformBuffer::Create(lights->GetLightBuffer(), 0, BufferUsage::Dynamic);
 				}
 				else
 				{
 					Systems::LightSystem* lights = scene.GetSystem<Systems::LightSystem>();
 					RawData lightBuffer = lights->GetLightBuffer();
-					if (lightBuffer.Size > batch.uniformBuffer->GetSize())
+					if (lightBuffer.Size > batch.UniformBuffer->GetSize())
 					{
-						batch.uniformBuffer->SetData(lightBuffer);
+						batch.UniformBuffer->SetData(lightBuffer);
 					}
 					else
 					{
-						batch.uniformBuffer->SetSubData(lightBuffer);
+						batch.UniformBuffer->SetSubData(lightBuffer);
 					}
 				}
 
 				batch.isDirty = false;
 			}
-		}
-	}
-
-	void RenderSystem::SubmitDynamic(
-		Components::Mesh* mesh,
-		Components::Material* material,
-		Components::Transform* transform
-	)
-	{
-		Internal::RenderCommandQueue* commandQueue = m_Renderer->RenderCommandQueue();
-		if (mesh->IsLoaded() && material->IsLoaded())
-		{
-			MeshBatch& batch = m_DynamicBatches[GenerateBatchKey(mesh, material)];
-			std::unique_lock lock(batch.mutex);
-
-			if (batch.isInitialized.load() == false)
-			{
-				// New batch
-				/*
-				MeshBatch* batchPtr = &batch;
-				Application::Get().GetSystem<Ares::Systems::MainThreadQueue>()->SubmitTask([batchPtr, mesh]() {
-					batchPtr->vao = VertexArray::Create();
-					batchPtr->vao->AddVertexBuffer(mesh->GetPositionBuffer());
-					batchPtr->vao->AddVertexBuffer(mesh->GetTextureBuffer());
-					batchPtr->vao->AddVertexBuffer(mesh->GetNormalBuffer());
-					batchPtr->vao->SetIndexBuffer(mesh->GetIndexBuffer());
-				});
-				*/
-				commandQueue->SubmitCommand<RenderCommands::CreateBatchVAO>(&batch, mesh);
-				batch.isInitialized = true;
-				return;
-			}
-			else if (batch.vao != nullptr)
-			{
-				if (!batch.isDirty)
-					batch.instanceCount = 0;
-
-				if (batch.material == nullptr)
-				{
-					batch.material = material;
-				}
-				batch.transforms.push_back(transform->GetTransformationMatrix());
-				batch.properties.push_back(material->GetProperties());
-
-				batch.instanceCount++;
-				batch.isDirty = true;
-			}
-		}
-		else if (mesh != nullptr && material != nullptr && mesh->IsValid() && material->IsValid())
-		{
-			const size_t batchKey = GenerateBatchKey(mesh, material);
-			m_DynamicBatches.erase(batchKey);
 		}
 	}
 
@@ -232,7 +185,7 @@ namespace Ares::ECS::Systems {
 
 		for (auto& [key, batch] : m_DynamicBatches)
 		{
-			if (batch.vao == nullptr || batch.material == nullptr)
+			if (batch.VAO == nullptr || batch.material == nullptr)
 				continue;
 
 			if (activeCamera != nullptr)
@@ -245,11 +198,49 @@ namespace Ares::ECS::Systems {
 
 			if (m_Renderer)
 			{
-				commandQueue->SubmitCommand<RenderCommands::DrawInstanced>(batch.vao, batch.instanceCount);
+				commandQueue->SubmitCommand<RenderCommands::DrawInstanced>(batch.VAO, batch.instanceCount);
 			}
+		}
+	}
 
-			batch.transforms.clear();
-			batch.properties.clear();
+	void RenderSystem::SubmitDynamic(
+		Components::Mesh* mesh,
+		Components::Material* material,
+		Components::Transform* transform
+	)
+	{
+		Internal::RenderCommandQueue* commandQueue = m_Renderer->RenderCommandQueue();
+		if (mesh->IsLoaded() && material->IsLoaded())
+		{
+			MeshBatch& batch = m_DynamicBatches[GenerateBatchKey(mesh, material)];
+
+			if (batch.isInitialized.load() == false)
+			{
+				// New batch
+				commandQueue->SubmitCommand<RenderCommands::CreateBatchVAO>(&batch, mesh);
+				batch.isInitialized = true;
+				return;
+			}
+			else if (batch.VAO != nullptr)
+			{
+				if (batch.isDirty.load() == false)
+					batch.instanceCount = 0;
+
+				if (batch.material == nullptr)
+				{
+					batch.material = material;
+				}
+				batch.transforms.push_back(transform->GetTransformationMatrix());
+				batch.properties.push_back(material->GetProperties());
+
+				batch.instanceCount++;
+				batch.isDirty = true;
+			}
+		}
+		else if (mesh != nullptr && material != nullptr && mesh->IsValid() && material->IsValid())
+		{
+			const size_t batchKey = GenerateBatchKey(mesh, material);
+			m_DynamicBatches.erase(batchKey);
 		}
 	}
 

@@ -24,9 +24,9 @@ namespace Ares::Utility {
 			return AssetType::None;
 	}
 
-	const std::string ExtractClassName(const std::type_index& type)
+	const String ExtractClassName(const std::type_index& type)
 	{
-		std::string typeName = type.name();
+		String typeName = type.name();
 
 		// Find the last occurrence of "::"
 		size_t pos = typeName.rfind("::");

@@ -31,7 +31,7 @@ namespace Ares {
 			Material& operator=(const Material& other);
 
 			// Getters
-			std::string GetShaderName() const;
+			StringView GetShaderName() const;
 			size_t GetShaderSize() const;
 			MaterialProperties GetProperties() const;
 			ShaderProgram* GetShader() const;

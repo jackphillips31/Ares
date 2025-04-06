@@ -27,7 +27,7 @@ void AssetListElement::Draw()
 	for (size_t i = 0; i < m_AssetList.size(); i++)
 	{
 		Ares::Ref<Ares::Asset>& currentAsset = m_AssetList[i];
-		ImGui::BulletText("%s - %s", currentAsset->GetTypeName().c_str(), currentAsset->GetName().c_str());
+		ImGui::BulletText("%s - %s", currentAsset->GetTypeName().data(), currentAsset->GetName().data());
 
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
 		{
@@ -37,10 +37,10 @@ void AssetListElement::Draw()
 		if (ImGui::BeginPopup(("pop up" + std::to_string(i)).c_str()))
 		{
 			ImGui::Text("Asset ID: %u", currentAsset->GetAssetId());
-			std::string filepath = currentAsset->HasFilepath() ? currentAsset->GetFilepath().c_str() : "N/A";
+			std::string filepath = currentAsset->HasFilepath() ? currentAsset->GetFilepath().data() : "N/A";
 			ImGui::Text("Filepath:");
 			ImGui::Text(filepath.c_str());
-			ImGui::Text("Asset State: %s", currentAsset->GetStateString().c_str());
+			ImGui::Text("Asset State: %s", currentAsset->GetStateString().data());
 			ImGui::Text("Asset Ref Count: %u", currentAsset.use_count());
 			ImGui::Separator();
 			std::string loadLabel = [currentAsset]() {

@@ -8,7 +8,7 @@
 
 namespace Ares {
 
-	OpenGLTexture::OpenGLTexture(const String& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format)
+	OpenGLTexture::OpenGLTexture(StringView name, const glm::uvec2& dimensions, const RawData& rawData, const Format format)
 		: m_Name(name), m_Width(static_cast<GLsizei>(dimensions.x)), m_Height(static_cast<GLsizei>(dimensions.y)), m_Format(format), m_RendererID(0), m_BoundSlot(-1)
 	{
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
@@ -27,7 +27,7 @@ namespace Ares {
 		SetWrap(Wrap::Repeat);
 	}
 
-	OpenGLTexture::OpenGLTexture(const String& name, const RawData& data)
+	OpenGLTexture::OpenGLTexture(StringView name, const RawData& data)
 		: m_Name(name), m_Format(Format::None), m_RendererID(0), m_BoundSlot(-1)
 	{
 		const size_t dataSize = data.Size;

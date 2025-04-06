@@ -8,7 +8,7 @@
 
 namespace Ares {
 
-	MeshData::MeshData(const String& name, const Ref<ParsedMeshData>& meshData)
+	MeshData::MeshData(StringView name, const Ref<ParsedMeshData>& meshData)
 		: m_Name(name), m_RendererID(s_NextMeshDataId++)
 	{
 		m_VertexBuffers[VertexDataType::Position] = VertexBuffer::Create({ meshData->Positions.data(), meshData->Positions.size() * sizeof(float) }, BufferUsage::Static);
@@ -20,7 +20,7 @@ namespace Ares {
 		m_IndexBuffer = IndexBuffer::Create({ meshData->Indices.data(), meshData->Indices.size() * sizeof(uint32_t)}, BufferUsage::Static);
 	}
 
-	Scope<MeshData> MeshData::Create(const String& name, const Ref<ParsedMeshData>& meshData)
+	Scope<MeshData> MeshData::Create(StringView name, const Ref<ParsedMeshData>& meshData)
 	{
 		return CreateScope<MeshData>(name, meshData);
 	}

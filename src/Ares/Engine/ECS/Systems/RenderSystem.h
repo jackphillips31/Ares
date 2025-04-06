@@ -31,19 +31,19 @@ namespace Ares {
 
 			struct MeshBatch
 			{
-				Ref<VertexArray> vao = nullptr;
-				Scope<VertexBuffer> transformBuffer = nullptr;
-				Scope<VertexBuffer> propertiesBuffer = nullptr;
-				Scope<UniformBuffer> uniformBuffer = nullptr;
+				Ref<VertexArray> VAO = nullptr;
+				Scope<VertexBuffer> TransformBuffer = nullptr;
+				Scope<VertexBuffer> PropertiesBuffer = nullptr;
+				Scope<UniformBuffer> UniformBuffer = nullptr;
 				Components::Material* material = nullptr;
+				Components::Mesh* mesh = nullptr;
 				std::vector<glm::mat4> transforms;
 				std::vector<Components::MaterialProperties> properties;
+				Vector<uint8_t> TempPropsBuffer;
 				uint32_t instanceCount = 0;
-				bool isDirty = false;
-				size_t transformBufferSize = 0;
-				std::shared_mutex mutex;
-				Atomic<bool> submittedForCreation = false;
+				Atomic<bool> isDirty = false;
 				Atomic<bool> isInitialized = false;
+				std::shared_mutex Mutex;
 			};
 
 			class RenderSystem : public System
@@ -55,16 +55,16 @@ namespace Ares {
 				void OnShutdown(const Scene& scene);
 
 				void OnUpdate(const Scene& scene, const Timestep& timestep) override;
-				void OnRender(const Scene& scene);
+				void OnRender(const Scene& scene) override;
 
 			private:
 				void UpdateInstanceBuffers(const Scene& scene);
+				void RenderDynamic(const Scene& scene);
 				void SubmitDynamic(
 					Components::Mesh* mesh,
 					Components::Material* material,
 					Components::Transform* transform
 				);
-				void RenderDynamic(const Scene& scene);
 				const size_t GenerateBatchKey(
 					Components::Mesh* mesh,
 					Components::Material* material

@@ -748,39 +748,48 @@ namespace Ares {
 
 	/**
 	 * @typedef Scope
-	 * @brief A unique pointer alias for managing heap-allocated objects.
-	 *
-	 * @details This alias simplifies the usage of `eastl::unique_ptr` within the engine.
+	 * @brief Alias for `eastl::unique_ptr` to manage exclusive ownership of an object.
 	 * 
-	 * @note It is important to use [CreateScope](#Ares::CreateScope) when instantiating a Scope
-	 * object. The [CreateScope](#Ares::CreateScope) method allocates memory for the object using
-	 * the Application's [MemoryManager](#Ares::Internal::MemoryManager). (If the Application
-	 * is instantiated)
+	 * @details This alias provides an `eastl::unique_ptr` that takes exclusive ownership of an object
+	 * of type `ObjectType`, automatically allocating and deallocating the object when the [Scope](#Ares::Scope)
+	 * goes out of scope.
 	 * 
-	 * @tparam ObjectType The type of object.
-	 * @tparam DeleterType The type of deleter to use during destruction. **Optional**
+	 * @tparam ObjectType The type of object managed by the `eastl::unique_ptr`.
+	 * 
+	 * @note Users **should not** directly construct [Scope](#Ares::Scope) objects. **Always** use the
+	 * [CreateScope](#Ares::CreateScope) function to ensure proper construction and memory management.
+	 * @see Ares::CreateScope
 	 */
 	template <typename ObjectType>
 	using Scope = eastl::unique_ptr<ObjectType, eastl::function<void(void*)>>;
 
 	/**
-	* @fn CreateScope(Args&&... args)
-	* @brief Creates a unique pointer to a new object.
-	*
-	* @details This utility function creates a new object and returns a Scope (unique pointer)
-	* to it. It forwards the provided arguments to the constructor of the object. If the
-	* [Application](#Ares::Application) is instantiated, CreateScope will use the Application's
-	* [MemoryManager[(#Ares::Internal::MemoryManager) to allocate space for the object.
-	*
-	* @tparam ObjectType The type of object to be created.
-	* @param args The arguments to be forwarded to the object's constructor.
-	* @return A Scope<ObjectType> pointing to the newly created object.
-	*
-	* **Example usage**:
-	* ```cpp
-	* Scope<uint32_t> unsignedInt = CreateScope<uint32_t>(5);
-	* ```
-	*/
+	 * @fn CreateScope(Args&&... args)
+	 * @brief Creates a [Scope](#Ares::Scope) managed object with custom allocation and deallocation logic.
+	 * 
+	 * @details This function constructs an object of type `ObjectType` using placement new and forwards
+	 * the provided arguments to its constructor. It also provides a custom deleter to ensure proper memory
+	 * deallocation., either using the engine's internal allocator or default memory management depending
+	 * on the [Application's](#Ares::Application) state.
+	 * 
+	 * The end user **does not** need to handle memory management directly; the [Scope](#Ares::Scope) object
+	 * will automatically deallocate memory when it goes out of scope.
+	 * 
+	 * @tparam ObjectType The type of the object to be created.
+	 * @tparam Args The types of the arguments to be forwarded to the constructor of `ObjectType`.
+	 * @param args The arguments to be forwarded to the constructor of `ObjectType`.
+	 * 
+	 * @return A Scope<ObjectType> managing the created object.
+	 * 
+	 * @note This function **should be used exclusively** for creating [Scope](#Ares::Scope) objects.
+	 * Direct construction of [Scope](#Ares::Scope) objects may bypass proper memory allocation and
+	 * deleter setup, potentially causing memory management issues.
+	 * @warning Objects created while the [Application](#Ares::Application) is instantiated must be destroyed
+	 * or go out of scope before the [Application](#Ares::Application) destructs. Failure to do so will
+	 * result in a runtime error, such as a crash or undefined behavior, during the [Application's](#Ares::Application)
+	 * destruction process.
+	 * @see Ares::Scope
+	 */
 	template <typename ObjectType, typename... Args>
 	Scope<ObjectType> CreateScope(Args&&... args)
 	{
@@ -813,37 +822,46 @@ namespace Ares {
 	}
 
 	/**
-	* @typedef Ref
-	* @brief A shared pointer alias for managing shared ownership of objects.
-	*
-	* @details This alias simplifies the usage of `eastl::shared_ptr` within the engine.
-	* 
-	* @note It is important to use [CreateRef](#Ares::CreateRef) when instantiating a Ref
-	* object. The [CreateRef](#Ares::CreateRef) method allocates memory for the object using
-	* the Application's [MemoryManager](#Ares::Internal::MemoryManager). (If the Application
-	* is instantiated)
-	*
-	* @tparam ObjectType The type of object.
-	*/
+	 * @typedef Ref
+	 * @brief Alias for `eastl::shared_ptr` to manage shared ownership of an object.
+	 * 
+	 * @details This alias provies an `eastl::shared_ptr` that manages the lifetime of an object of type
+	 * `ObjectType`, ensuring that the object is properly deallocated when no more references to it exist.
+	 * 
+	 * @tparam ObjectType The type of the object managed by the `shared_ptr`.
+	 * 
+	 * @note Users **should not** directly construct [Ref](#Ares::Ref) objects. **Always** use the
+	 * [CreateRef](#Ares::CreateRef) function to ensure proper construction and memory management.
+	 * @see Ares::CreateRef
+	 */
 	template<typename ObjectType>
 	using Ref = eastl::shared_ptr<ObjectType>;
 
 	/**
-	 * @brief Creates a shared pointer to a new object.
-	 *
-	 * @details This utility function creates a new object and returns a Ref (shared pointer)
-	 * to it. It forwards the provided arguments to the constructor of the object. If the
-	 * [Application](#Ares::Application) is instantiated, CreateRef will use the Application's
-	 * [MemoryManager](#Ares::Internal::MemoryManager) to allocate space for the object.
-	 *
-	 * @tparam ObjectType The type of object to be created.
-	 * @param args The arguments to be forwarded to the object's constructor.
-	 * @return A Ref<ObjectType> pointing to the newly created object.
-	 *
-	 * **Example usage**:
-	 * ```cpp
-	 * Ref<uint32_t> unsignedInt = CreateRef<uint32_t>(5);
-	 * ```
+	 * @fn CreateRef
+	 * @brief Creates a [Ref](#Ares::Ref) managed object with custom allocation and deallocation logic.
+	 * 
+	 * @details This function constructs an object of type `ObjectType` using placement new and forwards
+	 * the provided arguments to its constructor. It also provides a custom deleter to ensure proper
+	 * memory deallocation, either using the engine's internal allocator or default memory management
+	 * depending on the [Application's](#Ares::Application) state.
+	 * 
+	 * The end user **does not** need to handle memory management directly; the [Ref](#Ares::Ref) object
+	 * will automatically deallocate memory when it is no longer in use.
+	 * 
+	 * @tparam ObjectType The type of the object to be created.
+	 * @tparam Args The types of the arguments to be forwarded to the constructor of `ObjectType`.
+	 * @param args The arguments to be forwarded to the constructor of `ObjectType`.
+	 * 
+	 * @return A Ref<ObjectType> managing the created object.
+	 * 
+	 * @note This function **should be used exclusively** for creating [Ref](#Ares::Ref) objects.
+	 * Direct construction of [Ref](#Ares::Ref) objects may bypass proper memory allocation and deleter
+	 * setup, potentially causing memory management issues.
+	 * @warning Objects created while the [Application](#Ares::Application) is intantiated must be destroyed
+	 * or go out of scope before the [Application](#Ares::Application) destructs. Failure to do so may result
+	 * in a runtime error, such as a crash or undefined behavior, during the [Application's](#Ares::Application)
+	 * destruction process.
 	 */
 	template <typename ObjectType, typename... Args>
 	Ref<ObjectType> CreateRef(Args&&... args)

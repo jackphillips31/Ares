@@ -9,6 +9,7 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
 #include "Engine/Renderer/GraphicsContext.h"
+#include "Engine/Utility/String.h"
 #include "Platform/WinAPI/WinKeyCodes.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -28,6 +29,7 @@ namespace Ares {
 	void WinWindow::Init(const WindowProps& props)
 	{
 		m_Data.Title = props.Title;
+		m_Data.WTitle = Utility::CharToWChar(props.Title.data());
 		m_Data.Width = 0;
 		m_Data.Height = 0;
 		m_Data.ClientWidth = props.Width;
@@ -57,10 +59,10 @@ namespace Ares {
 
 		RegisterClass(&wc);
 
-		m_Window = CreateWindowExW(
+		m_Window = CreateWindowEx(
 			0,
 			wc.lpszClassName,
-			CharToLPCWSTR(props.Title),
+			m_Data.WTitle,
 			0,
 			m_Data.XPos, m_Data.YPos,
 			m_Data.Width, m_Data.Height,
@@ -77,6 +79,8 @@ namespace Ares {
 
 	void WinWindow::Shutdown()
 	{
+		if (m_Data.WTitle != nullptr)
+			Internal::Deallocate(const_cast<wchar_t*>(m_Data.WTitle));
 		if (m_EventCallback)
 			m_EventCallback = nullptr;
 
@@ -233,18 +237,6 @@ namespace Ares {
 	{
 		if (m_EventCallback)
 			m_EventCallback(e);
-	}
-
-	LPCWSTR WinWindow::CharToLPCWSTR(const char* narrowStr)
-	{
-		int32_t wideStrLen = MultiByteToWideChar(CP_UTF8, 0, narrowStr, -1, nullptr, 0);
-		if (wideStrLen == 0) return nullptr;
-
-		wchar_t* wideStr = new (Internal::Allocate(wideStrLen * sizeof(wchar_t))) wchar_t[wideStrLen];
-
-		MultiByteToWideChar(CP_UTF8, 0, narrowStr, -1, wideStr, wideStrLen);
-
-		return wideStr;
 	}
 
 	LRESULT WinWindow::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

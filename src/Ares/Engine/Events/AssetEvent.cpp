@@ -23,42 +23,42 @@ namespace Ares {
 	template MeshData* AssetBaseEvent::GetRawAsset<MeshData>() const;
 	template Texture* AssetBaseEvent::GetRawAsset<Texture>() const;
 
-	void AssetBaseEvent::Initialize(const Ref<Asset>& asset, const std::string& message)
+	void AssetBaseEvent::Initialize(const Ref<Asset>& asset, StringView message)
 	{
 		m_Asset = asset;
 		m_Message = message;
-		m_AssetName = asset->GetName().c_str();
-		m_AssetFilepath = asset->GetFilepath().c_str();
-		m_AssetStateString = asset->GetStateString().c_str();
+		m_AssetName = asset->GetName();
+		m_AssetFilepath = asset->GetFilepath();
+		m_AssetStateString = asset->GetStateString();
 		m_AssetState = asset->GetState();
 	}
 
-	AssetStagedEvent::AssetStagedEvent(const Ref<Asset>& asset, const std::string& message)
+	AssetStagedEvent::AssetStagedEvent(const Ref<Asset>& asset, StringView message)
 	{
 		Initialize(asset, message);
 	}
 
-	AssetLoadingEvent::AssetLoadingEvent(const Ref<Asset>& asset, const std::string& message)
+	AssetLoadingEvent::AssetLoadingEvent(const Ref<Asset>& asset, StringView message)
 	{
 		Initialize(asset, message);
 	}
 
-	AssetLoadedEvent::AssetLoadedEvent(const Ref<Asset>& asset, const std::string& message)
+	AssetLoadedEvent::AssetLoadedEvent(const Ref<Asset>& asset, StringView message)
 	{
 		Initialize(asset, message);
 	}
 
-	AssetFailedEvent::AssetFailedEvent(const Ref<Asset>& asset, const std::string& message)
+	AssetFailedEvent::AssetFailedEvent(const Ref<Asset>& asset, StringView message)
 	{
 		Initialize(asset, message);
 	}
 
-	AssetUnloadedEvent::AssetUnloadedEvent(const Ref<Asset>& asset, const std::string& message)
+	AssetUnloadedEvent::AssetUnloadedEvent(const Ref<Asset>& asset, StringView message)
 	{
 		Initialize(asset, message);
 	}
 
-	AssetUnstagedEvent::AssetUnstagedEvent(const Ref<Asset>& asset, const std::string& message)
+	AssetUnstagedEvent::AssetUnstagedEvent(const Ref<Asset>& asset, StringView message)
 	{
 		Initialize(asset, message);
 	}

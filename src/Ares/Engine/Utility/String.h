@@ -5,6 +5,8 @@ namespace Ares::Utility {
 
 	void IncrementStringSuffix(String& input);
 
+	wchar_t* CharToWChar(const char* narrowStr);
+
 	constexpr void StringConcat(char* destination, const char* source)
 	{
 		while (*destination)

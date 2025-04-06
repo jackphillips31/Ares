@@ -7,7 +7,7 @@
 
 namespace Ares {
 
-	Scope<Texture> Texture::Create(const String& name, const RawData& data)
+	Scope<Texture> Texture::Create(const StringView name, const RawData& data)
 	{
 		switch (Systems::Renderer::GetAPI())
 		{
@@ -19,7 +19,7 @@ namespace Ares {
 		return nullptr;
 	}
 
-	Scope<Texture> Texture::Create(const String& name, const glm::uvec2& dimensions, const RawData& rawData, const Format format)
+	Scope<Texture> Texture::Create(const StringView name, const glm::uvec2& dimensions, const RawData& rawData, const Format format)
 	{
 		switch (Systems::Renderer::GetAPI())
 		{

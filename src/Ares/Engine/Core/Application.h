@@ -9,6 +9,7 @@
 #pragma once
 #include <shared_mutex>
 
+#include "Engine/Containers/StringView.h"
 #include "Engine/Core/Flags.h"
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Data/MemoryManager.h"
@@ -44,7 +45,7 @@ namespace Ares {
 	 */
 	struct ApplicationSettings
 	{
-		const char* Name = "Ares Engine";						///< The name of the application.
+		StringView Name = "Ares Engine";						///< The name of the application.
 		uint32_t Width = 1280;									///< The width of the application window in pixels.
 		uint32_t Height = 720;									///< The height of the application window in pixels.
 		uint32_t UpdatesPerSecond = 120;						///< The update rate (ticks per second).
@@ -69,7 +70,7 @@ namespace Ares {
 		 * @param icon A pointer to the application icon (default: `nullptr`).
 		 */
 		ApplicationSettings(
-			const char* name = "Ares Engine",
+			StringView name = "Ares Engine",
 			uint32_t width = 1280,
 			uint32_t height = 720,
 			uint8_t threadCount = std::thread::hardware_concurrency(),
@@ -178,21 +179,21 @@ namespace Ares {
 		 * 
 		 * @return A reference to the Window object.
 		 */
-		Window& GetWindow() { return *m_Window; }
+		Window& GetWindow() { std::shared_lock lock(m_Mutex); return *m_Window; }
 
 		/**
 		 * @brief Retrieves the active Application instance.
 		 * 
 		 * @return A reference to the active Application object.
 		 */
-		static Application& Get() { return *s_Instance; }
+		static Application& Get() { std::shared_lock lock(s_StaticMutex); return *s_Instance; }
 
 		/**
 		 * @brief Checks if the Application instance is valid.
 		 * 
 		 * @return `true` if the instance is valid; otherwise, `false`.
 		 */
-		static bool IsValid() { return s_Instance != nullptr; }
+		static bool IsValid() { std::shared_lock lock(s_StaticMutex); return s_Instance != nullptr; }
 
 		/**
 		 * @brief Retrieves the [MemoryManager](#Ares::Internal::MemoryManager) instance.
@@ -202,7 +203,7 @@ namespace Ares {
 		 * 
 		 * @return A reference to the internal [MemoryManager](#Ares::Internal::MemoryManager) instance.
 		 */
-		Internal::MemoryManager& GetMemoryManager() { return m_MemoryManager; }
+		Internal::MemoryManager& GetMemoryManager() { std::shared_lock lock(m_Mutex); return m_MemoryManager; }
 
 	private:
 		/**
@@ -249,7 +250,7 @@ namespace Ares {
 		Scope<Window> m_Window;						///< The main application window.
 		Scope<ImGuiContext> m_ImGuiContext;			///< ImGui context for UI.
 		Atomic<bool> m_Running = false;				///< Flag to indicate if the application is running.
-		Atomic<bool> m_Minimized = false;					///< Flag to indicate if the application is minimized.
+		Atomic<bool> m_Minimized = false;			///< Flag to indicate if the application is minimized.
 		TimePoint m_LastUpdateTime;					///< Last update time.
 		TimePoint m_LastRenderTime;					///< Last render time.
 		std::shared_mutex m_LayerStackMutex;		///< LayerStack mutex.
@@ -260,6 +261,7 @@ namespace Ares {
 		std::shared_mutex m_SystemMutex;								///< Systems mutex
 	private:
 		static Application* s_Instance;				///< Static reference to the active Application instance.
+		static std::shared_mutex s_StaticMutex;		///< Application static mutex.
 
 		friend int ::EntryPoint(int argc, char** argv);
 	};

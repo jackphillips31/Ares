@@ -10,7 +10,7 @@
 #include <typeindex>
 
 #include "Engine/Containers/String.h"
-#include "Engine/Containers/Vector.h"
+#include "Engine/Containers/StringView.h"
 
 namespace Ares {
 
@@ -52,7 +52,7 @@ namespace Ares {
 		 * 
 		 * @return A constant reference to the asset name.
 		 */
-		virtual const String& GetName() const = 0;
+		virtual StringView GetName() const = 0;
 
 		// Delete copy constructor and operator
 		AssetBase(const AssetBase&) = delete;
@@ -84,7 +84,7 @@ namespace Ares {
 		static Ref<Asset> Create(
 			const std::type_index& type,
 			const AssetState state,
-			const String& filepath,
+			StringView filepath,
 			const Vector<uint32_t>& dependencies,
 			const MemoryDataKey dataKey,
 			Systems::AssetManager* parentManager
@@ -102,7 +102,7 @@ namespace Ares {
 		Asset(
 			const std::type_index& type,
 			const AssetState state,
-			const String& filepath,
+			StringView filepath,
 			const Vector<uint32_t>& dependencies,
 			const MemoryDataKey dataKey,
 			Systems::AssetManager* parentManager
@@ -139,21 +139,21 @@ namespace Ares {
 		 * 
 		 * @return The asset's name as a string.
 		 */
-		inline String GetName() const { std::shared_lock lock(m_Mutex); return m_Name; }
+		inline StringView GetName() const { std::shared_lock lock(m_Mutex); return m_Name; }
 		
 		/**
 		 * @brief Get the filepath of the asset.
 		 * 
 		 * @return The asset's file path as a string.
 		 */
-		inline String GetFilepath() const { std::shared_lock lock(m_Mutex); return m_Filepath; }
+		inline StringView GetFilepath() const { std::shared_lock lock(m_Mutex); return m_Filepath; }
 		
 		/**
 		 * @brief Get the type name of the asset.
 		 * 
 		 * @return The asset's type name as a string.
 		 */
-		inline String GetTypeName() const { std::shared_lock lock(m_Mutex); return m_TypeName; }
+		inline StringView GetTypeName() const { std::shared_lock lock(m_Mutex); return m_TypeName; }
 		
 		/**
 		 * @brief Get the type index of the asset.
@@ -216,7 +216,7 @@ namespace Ares {
 		 * 
 		 * @return A string describing the asset's state.
 		 */
-		String GetStateString() const;
+		StringView GetStateString() const;
 		
 		/**
 		 * @brief Get the size of the asset's data.
@@ -251,7 +251,7 @@ namespace Ares {
 
 	private:
 		// Private setters for AssetManager to use
-		void SetName(const String& name);
+		void SetName(StringView name);
 		void SetState(const AssetState state);
 		void SetAssetId(const uint32_t id);
 		void SetAsset(Scope<AssetBase>&& asset);

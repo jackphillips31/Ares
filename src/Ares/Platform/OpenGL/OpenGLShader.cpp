@@ -7,12 +7,13 @@
 
 namespace Ares {
 
-	GLuint OpenGLShader::Compile(const char* shaderSource, const size_t shaderSize)
+	GLuint OpenGLShader::Compile(StringView shaderSource, const size_t shaderSize)
 	{
+		const char* src = shaderSource.data();
 		GLint shaderLength = static_cast<GLint>(shaderSize);
 		GLuint rendererID = glCreateShader(GetShaderType());
 
-		glShaderSource(rendererID, 1, &shaderSource, &shaderLength);
+		glShaderSource(rendererID, 1, &src, &shaderLength);
 		glCompileShader(rendererID);
 
 		GLint isCompiled = 0;

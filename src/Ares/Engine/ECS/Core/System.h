@@ -20,7 +20,7 @@ namespace Ares {
 			virtual void OnShutdown(const Scene& scene) {}
 
 			// Called every OnUpdate
-			virtual void OnUpdate(const Scene& scene, const Timestep& timestep) = 0;
+			virtual void OnUpdate(const Scene& scene, const Timestep& timestep) {};
 
 			// Called every OnRender
 			virtual void OnRender(const Scene& scene) {}

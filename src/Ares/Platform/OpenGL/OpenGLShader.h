@@ -12,7 +12,7 @@ namespace Ares {
 
 	protected:
 		virtual GLenum GetShaderType() const = 0;
-		GLuint Compile(const char* shaderSource, const size_t shaderSize);
+		GLuint Compile(StringView shaderSource, const size_t shaderSize);
 	};
 
 	class OpenGLVertexShader : public OpenGLShader, public VertexShader
@@ -22,7 +22,7 @@ namespace Ares {
 		~OpenGLVertexShader() override;
 
 		// Core property
-		inline const String& GetName() const override { return m_Name; }
+		inline StringView GetName() const override { return m_Name; }
 
 		// Renderer ID access (for low-level operations)
 		inline uint32_t GetRendererID() const override { return static_cast<uint32_t>(m_RendererID); }
@@ -31,7 +31,7 @@ namespace Ares {
 		inline GLenum GetShaderType() const override { return GL_VERTEX_SHADER; }
 
 	private:
-		String m_Name;
+		StringView m_Name;
 		GLuint m_RendererID;
 	};
 
@@ -42,7 +42,7 @@ namespace Ares {
 		~OpenGLFragmentShader() override;
 
 		// Core property
-		inline const String& GetName() const override { return m_Name; }
+		inline StringView GetName() const override { return m_Name; }
 
 		// Renderer ID access (for low-level operations)
 		inline uint32_t GetRendererID() const override { return static_cast<uint32_t>(m_RendererID); }
@@ -51,7 +51,7 @@ namespace Ares {
 		inline GLenum GetShaderType() const override { return GL_FRAGMENT_SHADER; }
 
 	private:
-		String m_Name;
+		StringView m_Name;
 		GLuint m_RendererID;
 	};
 
@@ -63,7 +63,7 @@ namespace Ares {
 		~OpenGLShaderProgram() override;
 		
 		// Core property
-		inline const String& GetName() const override { return m_Name; }
+		inline StringView GetName() const override { return m_Name; }
 
 		// Binding and state
 		void Bind() const override;
@@ -95,7 +95,7 @@ namespace Ares {
 		void UploadUniformMat4(const StringView name, const GLfloat* values);
 
 	private:
-		String m_Name;
+		StringView m_Name;
 		GLuint m_RendererID;
 	};
 

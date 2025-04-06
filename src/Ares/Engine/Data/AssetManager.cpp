@@ -24,35 +24,35 @@
 
 namespace Ares::Systems {
 
-	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const String&, const String&, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<VertexShader>(const String&, const String&, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<FragmentShader>(const String&, const String&, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<MeshData>(const String&, const String&, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<Texture>(const String&, const String&, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<ShaderProgram>(StringView, StringView, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<VertexShader>(StringView, StringView, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<FragmentShader>(StringView, StringView, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<MeshData>(StringView, StringView, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<Texture>(StringView, StringView, const std::initializer_list<Ref<Asset>>&, const void*, const size_t&);
 
-	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const String&, const String&);
-	template Ref<Asset> AssetManager::Stage<VertexShader>(const String&, const String&);
-	template Ref<Asset> AssetManager::Stage<FragmentShader>(const String&, const String&);
-	template Ref<Asset> AssetManager::Stage<MeshData>(const String&, const String&);
-	template Ref<Asset> AssetManager::Stage<Texture>(const String&, const String&);
+	template Ref<Asset> AssetManager::Stage<ShaderProgram>(StringView, StringView);
+	template Ref<Asset> AssetManager::Stage<VertexShader>(StringView, StringView);
+	template Ref<Asset> AssetManager::Stage<FragmentShader>(StringView, StringView);
+	template Ref<Asset> AssetManager::Stage<MeshData>(StringView, StringView);
+	template Ref<Asset> AssetManager::Stage<Texture>(StringView, StringView);
 
-	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const String&, const std::initializer_list<Ref<Asset>>&);
-	template Ref<Asset> AssetManager::Stage<VertexShader>(const String&, const std::initializer_list<Ref<Asset>>&);
-	template Ref<Asset> AssetManager::Stage<FragmentShader>(const String&, const std::initializer_list<Ref<Asset>>&);
-	template Ref<Asset> AssetManager::Stage<MeshData>(const String&, const std::initializer_list<Ref<Asset>>&);
-	template Ref<Asset> AssetManager::Stage<Texture>(const String&, const std::initializer_list<Ref<Asset>>&);
+	template Ref<Asset> AssetManager::Stage<ShaderProgram>(StringView, const std::initializer_list<Ref<Asset>>&);
+	template Ref<Asset> AssetManager::Stage<VertexShader>(StringView, const std::initializer_list<Ref<Asset>>&);
+	template Ref<Asset> AssetManager::Stage<FragmentShader>(StringView, const std::initializer_list<Ref<Asset>>&);
+	template Ref<Asset> AssetManager::Stage<MeshData>(StringView, const std::initializer_list<Ref<Asset>>&);
+	template Ref<Asset> AssetManager::Stage<Texture>(StringView, const std::initializer_list<Ref<Asset>>&);
 
-	template Ref<Asset> AssetManager::Stage<ShaderProgram>(const String&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<VertexShader>(const String&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<FragmentShader>(const String&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<MeshData>(const String&, const void*, const size_t&);
-	template Ref<Asset> AssetManager::Stage<Texture>(const String&, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<ShaderProgram>(StringView, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<VertexShader>(StringView, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<FragmentShader>(StringView, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<MeshData>(StringView, const void*, const size_t&);
+	template Ref<Asset> AssetManager::Stage<Texture>(StringView, const void*, const size_t&);
 
-	template void AssetManager::DispatchAssetEvent<AssetStagedEvent>(const Ref<Asset>&, const char*);
-	template void AssetManager::DispatchAssetEvent<AssetLoadedEvent>(const Ref<Asset>&, const char*);
-	template void AssetManager::DispatchAssetEvent<AssetUnloadedEvent>(const Ref<Asset>&, const char*);
-	template void AssetManager::DispatchAssetEvent<AssetUnstagedEvent>(const Ref<Asset>&, const char*);
-	template void AssetManager::DispatchAssetEvent<AssetFailedEvent>(const Ref<Asset>&, const char*);
+	template void AssetManager::DispatchAssetEvent<AssetStagedEvent>(const Ref<Asset>&, StringView);
+	template void AssetManager::DispatchAssetEvent<AssetLoadedEvent>(const Ref<Asset>&, StringView);
+	template void AssetManager::DispatchAssetEvent<AssetUnloadedEvent>(const Ref<Asset>&, StringView);
+	template void AssetManager::DispatchAssetEvent<AssetUnstagedEvent>(const Ref<Asset>&, StringView);
+	template void AssetManager::DispatchAssetEvent<AssetFailedEvent>(const Ref<Asset>&, StringView);
 
 	Scope<AssetManager> AssetManager::Create(Systems::ThreadPool* threadPool, Systems::MainThreadQueue* mainThreadQueue)
 	{
@@ -106,25 +106,25 @@ namespace Ares::Systems {
 	}
 
 	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const String& name, const String& filepath)
+	Ref<Asset> AssetManager::Stage(StringView name, StringView filepath)
 	{
 		return Stage<AssetType>(name, filepath, {}, nullptr, 0);
 	}
 
 	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const String& name, const std::initializer_list<Ref<Asset>>& dependencies)
+	Ref<Asset> AssetManager::Stage(StringView name, const std::initializer_list<Ref<Asset>>& dependencies)
 	{
-		return Stage<AssetType>(name, "", dependencies, nullptr, 0);
+		return Stage<AssetType>(name, nullptr, dependencies, nullptr, 0);
 	}
 
 	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const String& name, const void* data, const size_t& size)
+	Ref<Asset> AssetManager::Stage(StringView name, const void* data, const size_t& size)
 	{
-		return Stage<AssetType>(name, "", {}, data, size);
+		return Stage<AssetType>(name, nullptr, {}, data, size);
 	}
 
 	template <typename AssetType>
-	Ref<Asset> AssetManager::Stage(const String& name, const String& filepath, const std::initializer_list<Ref<Asset>>& dependencies, const void* data, const size_t& dataSize)
+	Ref<Asset> AssetManager::Stage(StringView name, StringView filepath, const std::initializer_list<Ref<Asset>>& dependencies, const void* data, const size_t& dataSize)
 	{
 		if (filepath.empty() && dependencies.size() == 0 && (data == nullptr || dataSize == 0))
 		{
@@ -304,7 +304,7 @@ namespace Ares::Systems {
 			Unload(asset);
 	}
 
-	Ref<Asset> AssetManager::GetAsset(const String& name)
+	Ref<Asset> AssetManager::GetAsset(StringView name)
 	{
 		AssetId cacheId = 0;
 		{
@@ -345,7 +345,7 @@ namespace Ares::Systems {
 		}
 	}
 
-	const AssetListener AssetManager::AddListener(const String& name, EventCallbackFn&& callback)
+	const AssetListener AssetManager::AddListener(StringView name, EventCallbackFn&& callback)
 	{
 		std::unique_lock lock(m_ListenerMutex);
 		AssetListener currentId = m_NextListenerId++;
@@ -456,14 +456,15 @@ namespace Ares::Systems {
 				// Check if asset is valid
 				if (asset->GetDependencies().size() == 0 && !asset->HasFilepath() && !asset->GetDataKey())
 				{
-					String errorMsg("Staged [" + asset->GetName() + "] " + asset->GetTypeName() + " asset doesn't have valid metadata (no dependencies, no filepath, and no MemoryDataKey)!");
+					String errorMsg;
+					fmt::format_to(eastl::back_inserter(errorMsg), "Staged [{}] {} asset doesn't have valid metadata! (no dependencies, filepath, or MemoryDataKey!", asset->GetName(), asset->GetTypeName());
 					throw std::runtime_error(errorMsg.c_str());
 				}
 
 				// Load file (if provided) into MemoryDataProvider
 				if (asset->HasFilepath())
 				{
-					DataBuffer fileData = FileIO::LoadFile(asset->GetFilepath().c_str());
+					DataBuffer fileData = FileIO::LoadFile(asset->GetFilepath());
 					MemoryDataKey fileKey = m_MemoryDataProvider->RegisterData(eastl::move(fileData));
 					if (!fileKey)
 					{
@@ -492,12 +493,12 @@ namespace Ares::Systems {
 								{
 								case Utility::AssetType::VertexShader:
 								{
-									result = VertexShader::Create(asset->GetName().c_str(), shaderData);
+									result = VertexShader::Create(asset->GetName(), shaderData);
 									break;
 								}
 								case Utility::AssetType::FragmentShader:
 								{
-									result = FragmentShader::Create(asset->GetName().c_str(), shaderData);
+									result = FragmentShader::Create(asset->GetName(), shaderData);
 									break;
 								}
 								default: throw std::runtime_error("Asset Type not found!");
@@ -575,7 +576,7 @@ namespace Ares::Systems {
 								Scope<ShaderProgram> result = nullptr;
 								try
 								{
-									result = ShaderProgram::Create(asset->GetName().c_str(), shaders);
+									result = ShaderProgram::Create(asset->GetName(), shaders);
 
 									if (!result)
 										throw std::runtime_error("Failed to create the ShaderProgram asset!");
@@ -621,7 +622,7 @@ namespace Ares::Systems {
 								Scope<ShaderProgram> result = nullptr;
 								try
 								{
-									result = ShaderProgram::Create(asset->GetName().c_str(), shaderData);
+									result = ShaderProgram::Create(asset->GetName(), shaderData);
 									if (!result)
 										throw std::runtime_error("Failed to create the ShaderProgram asset!");
 
@@ -673,7 +674,7 @@ namespace Ares::Systems {
 							Scope<MeshData> result = nullptr;
 							try
 							{
-								result = MeshData::Create(asset->GetName().c_str(), meshData);
+								result = MeshData::Create(asset->GetName(), meshData);
 								if (!result)
 									throw std::runtime_error("Failed to create the MeshData asset!");
 
@@ -712,7 +713,7 @@ namespace Ares::Systems {
 							Scope<Texture> result = nullptr;
 							try
 							{
-								result = Texture::Create(asset->GetName().c_str(), data);
+								result = Texture::Create(asset->GetName(), data);
 								if (!result)
 									throw std::runtime_error("Failed to create the Texture asset!");
 
@@ -767,12 +768,12 @@ namespace Ares::Systems {
 		m_WriteCallbackQueue.emplace(eastl::move(callback));
 	}
 
-	const size_t AssetManager::GetHash(const std::type_index& type, const String& filepath, const Vector<AssetId>& dependencies, const MemoryDataKey& dataKey)
+	const size_t AssetManager::GetHash(const std::type_index& type, StringView filepath, const Vector<AssetId>& dependencies, const MemoryDataKey& dataKey)
 	{
 		size_t seed = type.hash_code();
 
-		if (!filepath.empty())
-			CombineHash<const char*>(seed, filepath.c_str());
+		if (filepath != nullptr)
+			CombineHash<const char*>(seed, filepath.data());
 		else if (dataKey)
 			CombineHash<uint32_t>(seed, dataKey);
 
@@ -803,7 +804,7 @@ namespace Ares::Systems {
 	}
 
 	template <typename AssetEventType>
-	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, const char* message)
+	void AssetManager::DispatchAssetEvent(const Ref<Asset>& asset, StringView message)
 	{
 		AR_CORE_ASSERT((eastl::is_base_of_v<AssetBaseEvent, AssetEventType> == true), "AssetManager: AssetEventType must derive from AssetEvent!");
 

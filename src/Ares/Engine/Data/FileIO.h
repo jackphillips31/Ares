@@ -7,9 +7,9 @@ namespace Ares {
 	class FileIO
 	{
 	public:
-		static DataBuffer LoadFile(const std::string& filepath);
+		static DataBuffer LoadFile(StringView filepath);
 
-		static bool SaveFile(const std::string& filepath, const DataBuffer& buffer);
+		static bool SaveFile(StringView filepath, const DataBuffer& buffer);
 
 	private:
 		FileIO() = default;

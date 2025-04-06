@@ -42,11 +42,11 @@ namespace Ares::ECS::Components {
 		return nullptr;
 	}
 
-	std::string Mesh::GetMeshName() const
+	StringView Mesh::GetMeshName() const
 	{
 		std::shared_lock lock(m_Mutex);
 		if (m_MeshAsset != nullptr)
-			return m_MeshAsset->GetName().c_str();
+			return m_MeshAsset->GetName().data();
 
 		return "NULL";
 	}

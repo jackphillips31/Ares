@@ -5,9 +5,9 @@
 
 namespace Ares {
 
-	DataBuffer FileIO::LoadFile(const std::string& filepath)
+	DataBuffer FileIO::LoadFile(StringView filepath)
 	{
-		std::ifstream file(filepath, std::ios::binary | std::ios::in);
+		std::ifstream file(filepath.data(), std::ios::binary | std::ios::in);
 		if (!file)
 		{
 			AR_CORE_WARN("Failed to open file for reading: '{}'", filepath);
@@ -36,9 +36,9 @@ namespace Ares {
 		}
 	}
 
-	bool FileIO::SaveFile(const std::string& filepath, const DataBuffer& buffer)
+	bool FileIO::SaveFile(StringView filepath, const DataBuffer& buffer)
 	{
-		std::ofstream file(filepath, std::ios::binary | std::ios::in);
+		std::ofstream file(filepath.data(), std::ios::binary | std::ios::in);
 		if (!file)
 		{
 			AR_CORE_WARN("Failed to open file for writing: '{}'", filepath);

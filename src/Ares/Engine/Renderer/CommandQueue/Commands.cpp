@@ -196,12 +196,12 @@ namespace Ares::RenderCommands {
 		{
 			AR_CORE_ASSERT(false, "Render Commands - CreateBatchVAO: Data not present!");
 		}
-		std::unique_lock lock(BatchData->mutex);
-		BatchData->vao = VertexArray::Create();
-		BatchData->vao->AddVertexBuffer(MeshData->GetPositionBuffer());
-		BatchData->vao->AddVertexBuffer(MeshData->GetTextureBuffer());
-		BatchData->vao->AddVertexBuffer(MeshData->GetNormalBuffer());
-		BatchData->vao->SetIndexBuffer(MeshData->GetIndexBuffer());
+		std::unique_lock lock(BatchData->Mutex);
+		BatchData->VAO = VertexArray::Create();
+		BatchData->VAO->AddVertexBuffer(MeshData->GetPositionBuffer());
+		BatchData->VAO->AddVertexBuffer(MeshData->GetTextureBuffer());
+		BatchData->VAO->AddVertexBuffer(MeshData->GetNormalBuffer());
+		BatchData->VAO->SetIndexBuffer(MeshData->GetIndexBuffer());
 	}
 
 }

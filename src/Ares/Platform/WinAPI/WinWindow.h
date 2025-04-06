@@ -44,7 +44,6 @@ namespace Ares {
 		void ConfigureFullscreen(uint16_t flags);
 		void ConfigureWindowed(uint16_t flags);
 		void EventCallback(Event& e);
-		LPCWSTR CharToLPCWSTR(const char* narrowStr);
 
 		LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -56,7 +55,8 @@ namespace Ares {
 
 		struct WindowData
 		{
-			const char* Title;
+			String Title;
+			const wchar_t* WTitle;
 			uint32_t Width, Height;
 			uint32_t ClientWidth, ClientHeight;
 			int32_t XPos, YPos, ClientXPos, ClientYPos;

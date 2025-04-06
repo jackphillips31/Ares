@@ -9,23 +9,23 @@ namespace Ares {
 	class AssetBaseEvent : public Event
 	{
 	public:
-		inline std::string GetEventMessage() const { return m_Message; }
-		inline std::string GetAssetName() const { return m_AssetName; }
-		inline std::string GetAssetFilepath() const { return m_AssetFilepath; }
-		inline std::string GetAssetStateString() const { return m_AssetStateString; }
+		inline String GetEventMessage() const { return m_Message; }
+		inline StringView GetAssetName() const { return m_AssetName; }
+		inline StringView GetAssetFilepath() const { return m_AssetFilepath; }
+		inline StringView GetAssetStateString() const { return m_AssetStateString; }
 		inline AssetState GetAssetState() const { return m_AssetState; }
 		inline const Ref<Asset>& GetAsset() const { return m_Asset; }
 		template <typename AssetType>
 		inline AssetType* GetRawAsset() const;
 
 	protected:
-		inline void Initialize(const Ref<Asset>& asset, const std::string& message);
+		inline void Initialize(const Ref<Asset>& asset, StringView message);
 
 	protected:
-		std::string m_Message;
-		std::string m_AssetName;
-		std::string m_AssetFilepath;
-		std::string m_AssetStateString;
+		String m_Message;
+		StringView m_AssetName;
+		StringView m_AssetFilepath;
+		StringView m_AssetStateString;
 		AssetState m_AssetState;
 		Ref<Asset> m_Asset;
 	};
@@ -33,7 +33,7 @@ namespace Ares {
 	class AssetStagedEvent : public AssetBaseEvent
 	{
 	public:
-		AssetStagedEvent(const Ref<Asset>& asset, const std::string& message = "");
+		AssetStagedEvent(const Ref<Asset>& asset, StringView message = "");
 
 		EVENT_CLASS_TYPE(AssetStaged)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
@@ -44,7 +44,7 @@ namespace Ares {
 	class AssetLoadingEvent : public AssetBaseEvent
 	{
 	public:
-		AssetLoadingEvent(const Ref<Asset>& asset, const std::string& message = "");
+		AssetLoadingEvent(const Ref<Asset>& asset, StringView message = "");
 
 		EVENT_CLASS_TYPE(AssetLoading)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
@@ -55,7 +55,7 @@ namespace Ares {
 	class AssetLoadedEvent : public AssetBaseEvent
 	{
 	public:
-		AssetLoadedEvent(const Ref<Asset>& asset, const std::string& message = "");
+		AssetLoadedEvent(const Ref<Asset>& asset, StringView message = "");
 
 		EVENT_CLASS_TYPE(AssetLoaded)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
@@ -66,7 +66,7 @@ namespace Ares {
 	class AssetFailedEvent : public AssetBaseEvent
 	{
 	public:
-		AssetFailedEvent(const Ref<Asset>& asset, const std::string& message = "");
+		AssetFailedEvent(const Ref<Asset>& asset, StringView message = "");
 
 		EVENT_CLASS_TYPE(AssetFailed)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
@@ -77,7 +77,7 @@ namespace Ares {
 	class AssetUnloadedEvent : public AssetBaseEvent
 	{
 	public:
-		AssetUnloadedEvent(const Ref<Asset>& asset, const std::string& message = "");
+		AssetUnloadedEvent(const Ref<Asset>& asset, StringView message = "");
 
 		EVENT_CLASS_TYPE(AssetUnloaded)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)
@@ -88,7 +88,7 @@ namespace Ares {
 	class AssetUnstagedEvent : public AssetBaseEvent
 	{
 	public:
-		AssetUnstagedEvent(const Ref<Asset>& asset, const std::string& message = "");
+		AssetUnstagedEvent(const Ref<Asset>& asset, StringView message = "");
 
 		EVENT_CLASS_TYPE(AssetUnstaged)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication | EventCategoryAsset)

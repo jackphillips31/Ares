@@ -214,7 +214,7 @@ namespace Ares {
 			 * ```
 			 */
 			template <typename AssetType>
-			Ref<Asset> Stage(const String& name, const String& filepath);
+			Ref<Asset> Stage(StringView name, StringView filepath);
 
 			/**
 			 * @brief Stages an Asset for loading using dependencies.
@@ -234,7 +234,7 @@ namespace Ares {
 			 * ```
 			 */
 			template <typename AssetType>
-			Ref<Asset> Stage(const String& name, const InitializerList<Ref<Asset>>& dependencies);
+			Ref<Asset> Stage(StringView name, const InitializerList<Ref<Asset>>& dependencies);
 
 			/**
 			 * @brief Stages an Asset for loading using raw data.
@@ -252,7 +252,7 @@ namespace Ares {
 			 * ```
 			 */
 			template <typename AssetType>
-			Ref<Asset> Stage(const String& name, const void* data, const size_t& size);
+			Ref<Asset> Stage(StringView name, const void* data, const size_t& size);
 
 			/**
 			 * @brief Removes an asset completely from the AssetManager.
@@ -339,7 +339,7 @@ namespace Ares {
 			 * @return A Ref of the Asset object.
 			 * @warning This will return `nullptr` if no Asset is found.
 			 */
-			Ref<Asset> GetAsset(const String& name);
+			Ref<Asset> GetAsset(StringView name);
 
 			/**
 			 * @brief Retrieves an Asset by its ID.
@@ -370,7 +370,7 @@ namespace Ares {
 			 * @note AssetManager Listeners cannot mark an Event as "Handled." Even if you mark the Event as
 			 * "Handled," the Event will still propagate through the EventQueue.
 			 */
-			const AssetListener AddListener(const String& name, EventCallbackFn&& callback);
+			const AssetListener AddListener(StringView name, EventCallbackFn&& callback);
 
 			/**
 			 * @brief Adds a listener to all Asset events.
@@ -470,7 +470,7 @@ namespace Ares {
 			 * exists with the same metadata.
 			 */
 			template <typename AssetType>
-			Ref<Asset> Stage(const String& name, const String& filepath, const InitializerList<Ref<Asset>>& dependencies, const void* data, const size_t& dataSize);
+			Ref<Asset> Stage(StringView name, StringView filepath, const InitializerList<Ref<Asset>>& dependencies, const void* data, const size_t& dataSize);
 
 			/**
 			 * @brief Internal method for loading and instantiating raw assets.
@@ -496,7 +496,7 @@ namespace Ares {
 			 * @param dataKey The MemoryDataKey for the Asset's data.
 			 * @return A hash based on all the provided data.
 			 */
-			const size_t GetHash(const std::type_index& type, const String& filepath, const Vector<AssetId>& dependencies, const MemoryDataKey& dataKey);
+			const size_t GetHash(const std::type_index& type, StringView filepath, const Vector<AssetId>& dependencies, const MemoryDataKey& dataKey);
 
 			/**
 			 * @brief Internal method for retrieving an already existing Asset.
@@ -513,7 +513,7 @@ namespace Ares {
 			 * @param message An optional message to attach to the event.
 			 */
 			template <typename AssetEventType>
-			void DispatchAssetEvent(const Ref<Asset>& asset, const char* message = "");
+			void DispatchAssetEvent(const Ref<Asset>& asset, StringView message = "");
 
 		private:
 			// Asset Cache
@@ -525,7 +525,7 @@ namespace Ares {
 			std::shared_mutex m_DependencyMutex;
 
 			// Secondary Lookup Maps
-			HashMap<String, AssetId, true> m_NameIdMap;
+			HashMap<StringView, AssetId, true> m_NameIdMap;
 			HashMap<size_t, AssetId> m_HashIdMap;
 			std::shared_mutex m_MapMutex;
 
@@ -538,7 +538,7 @@ namespace Ares {
 			// Asset Listeners
 			HashMap<AssetListener, EventCallbackFn> m_Listeners;
 			Vector<AssetListener> m_ListenerOrder;
-			HashMap<AssetListener, String> m_ListenerNameMap;
+			HashMap<AssetListener, StringView> m_ListenerNameMap;
 			HashSet<AssetListener> m_GlobalListeners;
 			Atomic<AssetListener> m_NextListenerId;
 			std::shared_mutex m_ListenerMutex;

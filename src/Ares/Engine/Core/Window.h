@@ -26,7 +26,7 @@ namespace Ares {
 	 */
 	struct WindowProps
 	{
-		const char* Title;		///< The window's title.
+		StringView Title;		///< The window's title.
 		uint32_t Width;			///< The window's width.
 		uint32_t Height;		///< The window's height.
 		int32_t XPos;			///< The window's X position on screen.
@@ -46,7 +46,7 @@ namespace Ares {
 		 * @param flags The window settings flags. Defaults to WindowSettings::DefaultWindow.
 		 * @param icon A pointer to the window's icon. Defaults to `nullptr`
 		 */
-		WindowProps(const char* title = "Ares Engine",
+		WindowProps(StringView title = "Ares Engine",
 			uint32_t width = 1280,
 			uint32_t height = 720,
 			int32_t xpos = 200,

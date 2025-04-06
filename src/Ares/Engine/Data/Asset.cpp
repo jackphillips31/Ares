@@ -12,7 +12,7 @@ namespace Ares {
 	Ref<Asset> Asset::Create(
 		const std::type_index& type,
 		const AssetState state,
-		const String& filepath,
+		StringView filepath,
 		const Vector<uint32_t>& dependencies,
 		const MemoryDataKey dataKey,
 		Systems::AssetManager* parentManager
@@ -28,14 +28,14 @@ namespace Ares {
 	Asset::Asset(
 		const std::type_index& type,
 		const AssetState state,
-		const String& filepath,
+		StringView filepath,
 		const Vector<uint32_t>& dependencies,
 		const MemoryDataKey dataKey,
 		Systems::AssetManager* parentManager
 	)
 		: m_Name(""),
-		m_Filepath(filepath),
-		m_TypeName(Utility::ExtractClassName(type).c_str()),
+		m_Filepath(""),
+		m_TypeName(Utility::ExtractClassName(type)),
 		m_Type(type),
 		m_Dependencies(dependencies),
 		m_AssetId(0),
@@ -49,7 +49,7 @@ namespace Ares {
 	Asset::Asset()
 		: m_Name(""),
 		m_Filepath(""),
-		m_TypeName(Utility::ExtractClassName(typeid(void)).c_str()),
+		m_TypeName(Utility::ExtractClassName(typeid(void))),
 		m_Type(typeid(void)),
 		m_Dependencies({}),
 		m_AssetId(0),
@@ -69,7 +69,7 @@ namespace Ares {
 		m_AssetManager->Load(m_AssetManager->GetAsset(m_AssetId), eastl::move(callback));
 	}
 
-	String Asset::GetStateString() const
+	StringView Asset::GetStateString() const
 	{
 		std::shared_lock lock(m_Mutex);
 		switch (m_State)
@@ -95,7 +95,7 @@ namespace Ares {
 		return 0;
 	}
 
-	void Asset::SetName(const String& name)
+	void Asset::SetName(StringView name)
 	{
 		std::unique_lock lock(m_Mutex);
 		m_Name = name;
@@ -141,7 +141,7 @@ namespace Ares {
 		m_Name = "";
 		m_Filepath = "";
 		m_Type = typeid(void);
-		m_TypeName = Utility::ExtractClassName(m_Type).c_str();
+		m_TypeName = Utility::ExtractClassName(m_Type);
 		m_Dependencies.clear();
 		m_AssetId = 0;
 		m_Asset = nullptr;
@@ -157,8 +157,8 @@ namespace eastl {
 	{
 		size_t seed = asset.m_Type.hash_code();
 
-		if (!asset.m_Filepath.empty())
-			Ares::CombineHash<const char*>(seed, asset.m_Filepath.c_str());
+		if (asset.m_Filepath != nullptr)
+			Ares::CombineHash<const char*>(seed, asset.m_Filepath.data());
 		else if (asset.m_DataKey)
 			Ares::CombineHash<uint32_t>(seed, asset.m_DataKey);
 
@@ -174,8 +174,8 @@ namespace eastl {
 	{
 		size_t seed = asset->m_Type.hash_code();
 
-		if (!asset->m_Filepath.empty())
-			Ares::CombineHash<const char*>(seed, asset->m_Filepath.c_str());
+		if (asset->m_Filepath != nullptr)
+			Ares::CombineHash<const char*>(seed, asset->m_Filepath.data());
 		else if (asset->m_DataKey)
 			Ares::CombineHash<uint32_t>(seed, asset->m_DataKey);
 

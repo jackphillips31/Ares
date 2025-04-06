@@ -48,11 +48,11 @@ namespace Ares::ECS::Components {
 		return *this;
 	}
 
-	std::string Material::GetShaderName() const
+	StringView Material::GetShaderName() const
 	{
 		std::shared_lock lock(m_Mutex);
 		if (m_ShaderAsset != nullptr)
-			return m_ShaderAsset->GetName().c_str();
+			return m_ShaderAsset->GetName();
 
 		return "NULL";
 	}

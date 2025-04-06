@@ -20,7 +20,7 @@ namespace Ares {
 			VertexBuffer* GetTextureBuffer() const;
 			VertexBuffer* GetNormalBuffer() const;
 			IndexBuffer* GetIndexBuffer() const;
-			std::string GetMeshName() const;
+			StringView GetMeshName() const;
 			size_t GetMeshSize() const;
 
 			// Asset properties

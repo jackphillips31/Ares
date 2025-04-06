@@ -261,7 +261,7 @@ void EntityListElement::Draw()
 						ImGui::TableSetColumnIndex(0);
 						ImGui::Text("Mesh Name:");
 						ImGui::TableSetColumnIndex(1);
-						ImGui::Text(mesh->GetMeshName().c_str());
+						ImGui::Text(mesh->GetMeshName().data());
 
 						// Size Row
 						ImGui::TableNextRow();
@@ -293,7 +293,7 @@ void EntityListElement::Draw()
 						ImGui::TableSetColumnIndex(0);
 						ImGui::Text("Shader Name:");
 						ImGui::TableSetColumnIndex(1);
-						ImGui::Text(material->GetShaderName().c_str());
+						ImGui::Text(material->GetShaderName().data());
 
 						// Name Row
 						ImGui::TableNextRow();
