@@ -21,7 +21,7 @@ namespace Ares {
 	namespace ECS::Systems {
 
 		class RenderSystem;
-		struct MeshBatch;
+		struct BatchData;
 
 	}
 
@@ -218,7 +218,7 @@ namespace Ares {
 		struct DrawIndexed : public Internal::RendererCommand
 		{
 		public:
-			Ref<VertexArray> VertexArray;
+			Ref<VertexArray> VAO;
 			uint32_t IndexCount;
 
 			void Execute(Internal::RendererAPI* api) override;
@@ -228,10 +228,10 @@ namespace Ares {
 		{
 		public:
 			DrawInstanced(const Ref<VertexArray>& vert, const uint32_t count)
-				: VertexArray(vert), InstanceCount(count)
+				: VAO(vert), InstanceCount(count)
 			{
 			}
-			Ref<VertexArray> VertexArray;
+			Ref<VertexArray> VAO;
 			uint32_t InstanceCount;
 
 			void Execute(Internal::RendererAPI* api) override;
@@ -255,12 +255,12 @@ namespace Ares {
 		struct CreateBatchVAO : public Internal::RendererCommand
 		{
 		public:
-			CreateBatchVAO(ECS::Systems::MeshBatch* batch, ECS::Components::Mesh* mesh)
-				: BatchData(batch), MeshData(mesh)
+			CreateBatchVAO(ECS::Systems::BatchData* batch, ECS::Components::Mesh* mesh)
+				: RenderBatchData(batch), RenderMeshData(mesh)
 			{
 			}
-			ECS::Systems::MeshBatch* BatchData = nullptr;
-			ECS::Components::Mesh* MeshData = nullptr;
+			ECS::Systems::BatchData* RenderBatchData = nullptr;
+			ECS::Components::Mesh* RenderMeshData = nullptr;
 
 			void Execute(Internal::RendererAPI* api) override;
 		};

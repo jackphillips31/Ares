@@ -29,21 +29,17 @@ namespace Ares {
 		
 		namespace Systems {
 
-			struct MeshBatch
+			struct BatchData
 			{
 				Ref<VertexArray> VAO = nullptr;
+				Components::Material* MaterialComponent = nullptr;
 				Scope<VertexBuffer> TransformBuffer = nullptr;
 				Scope<VertexBuffer> PropertiesBuffer = nullptr;
 				Scope<UniformBuffer> UniformBuffer = nullptr;
-				Components::Material* material = nullptr;
-				Components::Mesh* mesh = nullptr;
-				std::vector<glm::mat4> transforms;
-				std::vector<Components::MaterialProperties> properties;
+				Vector<glm::mat4> Transforms;
+				Vector<Components::MaterialProperties> Properties;
 				Vector<uint8_t> TempPropsBuffer;
-				uint32_t instanceCount = 0;
-				Atomic<bool> isDirty = false;
-				Atomic<bool> isInitialized = false;
-				std::shared_mutex Mutex;
+				uint32_t InstanceCount = 0;
 			};
 
 			class RenderSystem : public System
@@ -72,7 +68,11 @@ namespace Ares {
 
 			private:
 				Ares::Systems::Renderer* m_Renderer;
-				std::unordered_map<size_t, MeshBatch> m_DynamicBatches;
+				Atomic<bool> m_StagingUpdated;
+				HashMap<size_t, BatchData> m_StagingBatches;
+				HashMap<size_t, BatchData> m_RenderBatches;
+				std::shared_mutex m_StagingMutex;
+				std::shared_mutex m_RenderMutex;
 			};
 
 		}

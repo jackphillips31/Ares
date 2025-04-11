@@ -153,13 +153,15 @@ namespace Ares::RenderCommands {
 	void DrawIndexed::Execute(Internal::RendererAPI* api)
 	{
 		PRINTCOMMAND(DrawIndexed);
-		api->DrawIndexed(VertexArray, IndexCount);
+		if (VAO != nullptr)
+			api->DrawIndexed(VAO, IndexCount);
 	}
 
 	void DrawInstanced::Execute(Internal::RendererAPI* api)
 	{
 		PRINTCOMMAND(DrawInstanced);
-		api->DrawInstanced(VertexArray, InstanceCount);
+		if (VAO != nullptr && InstanceCount > 0)
+			api->DrawInstanced(VAO, InstanceCount);
 	}
 
 	template <typename PropertyType>
@@ -192,16 +194,15 @@ namespace Ares::RenderCommands {
 	void CreateBatchVAO::Execute(Internal::RendererAPI* api)
 	{
 		PRINTCOMMAND(CreateBatchVAO);
-		if (BatchData == nullptr || MeshData == nullptr)
+		if (RenderBatchData == nullptr || RenderMeshData == nullptr)
 		{
 			AR_CORE_ASSERT(false, "Render Commands - CreateBatchVAO: Data not present!");
 		}
-		std::unique_lock lock(BatchData->Mutex);
-		BatchData->VAO = VertexArray::Create();
-		BatchData->VAO->AddVertexBuffer(MeshData->GetPositionBuffer());
-		BatchData->VAO->AddVertexBuffer(MeshData->GetTextureBuffer());
-		BatchData->VAO->AddVertexBuffer(MeshData->GetNormalBuffer());
-		BatchData->VAO->SetIndexBuffer(MeshData->GetIndexBuffer());
+		RenderBatchData->VAO = VertexArray::Create();
+		RenderBatchData->VAO->AddVertexBuffer(RenderMeshData->GetPositionBuffer());
+		RenderBatchData->VAO->AddVertexBuffer(RenderMeshData->GetTextureBuffer());
+		RenderBatchData->VAO->AddVertexBuffer(RenderMeshData->GetNormalBuffer());
+		RenderBatchData->VAO->SetIndexBuffer(RenderMeshData->GetIndexBuffer());
 	}
 
 }

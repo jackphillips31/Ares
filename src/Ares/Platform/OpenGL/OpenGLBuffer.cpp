@@ -28,7 +28,10 @@ namespace Ares {
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
-		glDeleteBuffers(1, &m_RendererID);
+		if (m_RendererID)
+		{
+			glDeleteBuffers(1, &m_RendererID);
+		}
 	}
 
 	void OpenGLVertexBuffer::Bind() const
@@ -74,7 +77,10 @@ namespace Ares {
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
-		glDeleteBuffers(1, &m_RendererID);
+		if (m_RendererID)
+		{
+			glDeleteBuffers(1, &m_RendererID);
+		}
 	}
 
 	void OpenGLIndexBuffer::Bind() const

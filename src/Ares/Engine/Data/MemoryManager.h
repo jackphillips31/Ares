@@ -1,8 +1,4 @@
 #pragma once
-#include <EASTL/vector.h>
-
-#include "Engine/Data/MemoryManager/AppAllocator.h"
-#include "Engine/Data/MemoryManager/Deleter.h"
 #include "Engine/Data/MemoryManager/MemoryPool.h"
 
 namespace Ares::Internal {
@@ -43,8 +39,8 @@ namespace Ares::Internal {
 		MemoryPool m_SelfPool;
 		SelfAllocator m_SelfAllocator;
 		AppAllocator* m_DefaultAllocator;
-		eastl::hash_map<uintptr_t, size_t, eastl::hash<uintptr_t>, eastl::equal_to<uintptr_t>, MemoryManager::SelfAllocator> m_PtrPoolMap;
-		eastl::vector<MemoryPool, MemoryManager::SelfAllocator> m_Pools;
+		HashMap<uintptr_t, size_t, false, SelfAllocator> m_PtrPoolMap;
+		Vector<MemoryPool, SelfAllocator> m_Pools;
 	};
 
 	//bool operator==(const Allocator& a, const Allocator& b) { return a.GetManager() == b.GetManager(); }

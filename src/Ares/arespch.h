@@ -12,8 +12,9 @@
 #include <EASTL/string_view.h>	// String View
 #include <EASTL/variant.h>		// Variant
 #include <EASTL/vector.h>		// Vector
-#include <EASTL/utility.h>		// Utility
 */
+#include <EASTL/Internal/config.h> //Config
+#include <EASTL/utility.h>		// Utility
 
 // Standard Library
 #include <iostream>				// I/O streams

@@ -10,7 +10,7 @@ namespace Ares::Internal {
 		: m_Manager(nullptr)
 	{
 	#if AR_BUILD_DEBUG
-		m_pName = nullptr;
+		m_Name = nullptr;
 	#endif
 		m_Manager = &Ares::Application::Get().GetMemoryManager();
 		if (!m_Manager)
@@ -20,11 +20,11 @@ namespace Ares::Internal {
 		}
 	}
 
-	EASTL_ALLOCATOR_EXPLICIT AppAllocator::AppAllocator(const char* pName)
+	EASTL_ALLOCATOR_EXPLICIT AppAllocator::AppAllocator(const char* name)
 		: m_Manager(nullptr)
 	{
 	#if AR_BUILD_DEBUG
-		m_pName = pName;
+		m_Name = name;
 	#endif
 		m_Manager = &Ares::Application::Get().GetMemoryManager();
 		if (!m_Manager)
@@ -38,14 +38,7 @@ namespace Ares::Internal {
 		: m_Manager(manager)
 	{
 	#if AR_BUILD_DEBUG
-		m_pName = nullptr;
-	#endif
-	}
-	EASTL_ALLOCATOR_EXPLICIT AppAllocator::AppAllocator(MemoryManager& manager)
-		: m_Manager(&manager)
-	{
-	#if AR_BUILD_DEBUG
-		m_pName = nullptr;
+		m_Name = nullptr;
 	#endif
 	}
 
@@ -53,15 +46,15 @@ namespace Ares::Internal {
 		: m_Manager(other.m_Manager)
 	{
 	#if AR_BUILD_DEBUG
-		m_pName = other.m_pName;
+		m_Name = other.m_Name;
 	#endif
 	}
 
-	AppAllocator::AppAllocator(const AppAllocator& other, const char* pName)
+	AppAllocator::AppAllocator(const AppAllocator& other, const char* name)
 		: m_Manager(other.m_Manager)
 	{
 	#if AR_BUILD_DEBUG
-		m_pName = pName;
+		m_Name = name;
 	#endif
 	}
 
@@ -70,7 +63,7 @@ namespace Ares::Internal {
 		m_Manager = other.m_Manager;
 
 	#if AR_BUILD_DEBUG
-		m_pName = other.m_pName;
+		m_Name = other.m_Name;
 	#endif
 
 		return *this;
@@ -105,31 +98,25 @@ namespace Ares::Internal {
 	const char* AppAllocator::get_name() const
 	{
 	#if AR_BUILD_DEBUG
-		return m_pName;
+		return m_Name;
 	#endif
 		return nullptr;
 	}
 
-	void AppAllocator::set_name(const char* pName)
+	void AppAllocator::set_name(const char* name)
 	{
 	#if AR_BUILD_DEBUG
-		m_pName = pName;
+		m_Name = name;
 	#endif
 	}
 
-	AppAllocator* get_default_allocator(const AppAllocator*)
-	{
-		return Application::Get().GetMemoryManager().GetDefaultAllocator();
-	}
+}
 
-	bool operator==(const AppAllocator& a, const AppAllocator& b)
-	{
-		return a.m_Manager == b.m_Manager;
-	}
+namespace eastl {
 
-	bool operator!=(const AppAllocator& a, const AppAllocator& b)
+	Ares::Internal::AppAllocator* get_default_allocator(const Ares::Internal::AppAllocator*)
 	{
-		return a.m_Manager != b.m_Manager;
+		return Ares::Internal::GetDefaultAllocator();
 	}
 
 }

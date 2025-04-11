@@ -26,7 +26,7 @@ const uint32_t g_defaultWhiteTexture = 0xffffffff;
 namespace Ares::ECS::Systems {
 
 	RenderSystem::RenderSystem(Ares::Systems::Renderer* renderSys)
-		: m_Renderer(renderSys)
+		: m_Renderer(renderSys), m_StagingUpdated(false)
 	{
 
 	}
@@ -43,42 +43,72 @@ namespace Ares::ECS::Systems {
 
 	void RenderSystem::OnUpdate(const Scene& scene, const Timestep& timestep)
 	{
-		EntityManager* entityManager = scene.GetEntityManager();
+		if (!m_StagingUpdated.load())
+		{
+			EntityManager* entityManager = scene.GetEntityManager();
 
-		for (auto& [key, batch] : m_DynamicBatches)
-		{
-			batch.transforms.clear();
-			batch.properties.clear();
-		}
-		for (const auto& entity : entityManager->GetEntityComponents())
-		{
-			const uint32_t entityId = entity.first;
-			Components::Mesh* mesh = entityManager->GetComponent<Components::Mesh>(entityId);
-			Components::Material* material = entityManager->GetComponent<Components::Material>(entityId);
-			Components::Transform* transform = entityManager->GetComponent<Components::Transform>(entityId);
-			if (mesh != nullptr && material != nullptr && transform != nullptr)
+			for (auto& [key, batch] : m_StagingBatches)
 			{
-				SubmitDynamic(mesh, material, transform);
+				batch.Transforms.clear();
+				batch.Properties.clear();
+				batch.InstanceCount = 0;
 			}
+
+			for (const auto& entity : entityManager->GetEntityComponents())
+			{
+				const uint32_t entityId = entity.first;
+				Components::Mesh* mesh = entityManager->GetComponent<Components::Mesh>(entityId);
+				Components::Material* material = entityManager->GetComponent<Components::Material>(entityId);
+				Components::Transform* transform = entityManager->GetComponent<Components::Transform>(entityId);
+				if (mesh != nullptr && material != nullptr && transform != nullptr)
+				{
+					SubmitDynamic(mesh, material, transform);
+				}
+			}
+
+			m_StagingUpdated = true;
 		}
 	}
 
 	void RenderSystem::OnRender(const Scene& scene)
 	{
-		UpdateInstanceBuffers(scene);
+		if (m_StagingUpdated.load())
+		{
+			{
+				std::unique_lock lock1(m_StagingMutex, std::defer_lock);
+				std::unique_lock lock2(m_RenderMutex, std::defer_lock);
+				std::lock(lock1, lock2);
+				eastl::swap(m_StagingBatches, m_RenderBatches);
+			}
+			m_StagingUpdated = false;
+			UpdateInstanceBuffers(scene);
+		}
 		RenderDynamic(scene);
 	}
 
 	void RenderSystem::UpdateInstanceBuffers(const Scene& scene)
 	{
-		for (auto& [key, batch] : m_DynamicBatches)
+		for (auto& [key, batch] : m_RenderBatches)
 		{
-			if (batch.isDirty.load() && batch.VAO != nullptr)
+			if (batch.VAO)
 			{
-				if (batch.TransformBuffer == nullptr)
+				Systems::LightSystem* lights = scene.GetSystem<Systems::LightSystem>();
+				RawData lightBuffer = lights->GetLightBuffer();
+
+				Vector<uint8_t>& propsBuffer = batch.TempPropsBuffer;
+				propsBuffer.resize(batch.Properties.size() * 44);
+
+				size_t offset = 0;
+				for (Components::MaterialProperties& props : batch.Properties)
+				{
+					std::memcpy(propsBuffer.data() + offset, props.GetBuffer(), props.GetSize());
+					offset += props.GetSize();
+				}
+
+				if (!batch.TransformBuffer)
 				{
 					batch.TransformBuffer = VertexBuffer::Create(
-						{ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) },
+						{ batch.Transforms.data(), batch.Transforms.size() * sizeof(glm::mat4) },
 						BufferUsage::Dynamic
 					);
 
@@ -86,29 +116,17 @@ namespace Ares::ECS::Systems {
 					batch.TransformBuffer->SetBufferLayout(transformLayout);
 					batch.VAO->AddVertexBuffer(batch.TransformBuffer.get());
 				}
+				else if (batch.Transforms.size() * sizeof(glm::mat4) > batch.TransformBuffer->GetSize())
+				{
+					batch.TransformBuffer->SetData({ batch.Transforms.data(), batch.Transforms.size() * sizeof(glm::mat4) });
+				}
 				else
 				{
-					if (batch.transforms.size() * sizeof(glm::mat4) > batch.TransformBuffer->GetSize())
-					{
-						batch.TransformBuffer->SetData({ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) });
-					}
-					else
-					{
-						batch.TransformBuffer->SetSubData({ batch.transforms.data(), batch.transforms.size() * sizeof(glm::mat4) });
-					}
+					batch.TransformBuffer->SetSubData({ batch.Transforms.data(), batch.Transforms.size() * sizeof(glm::mat4) });
 				}
 
-				if (batch.PropertiesBuffer == nullptr)
+				if (!batch.PropertiesBuffer)
 				{
-					Vector<uint8_t>& propsBuffer = batch.TempPropsBuffer;
-					propsBuffer.resize(batch.properties.size() * 44);
-					size_t offset = 0;
-					for (Components::MaterialProperties& props : batch.properties)
-					{
-						std::memcpy(propsBuffer.data() + offset, props.GetBuffer(), props.GetSize());
-						offset += props.GetSize();
-					}
-
 					batch.PropertiesBuffer = VertexBuffer::Create({ propsBuffer.data(), propsBuffer.size() }, BufferUsage::Dynamic);
 					BufferLayout propsLayout({
 						{ VertexDataType::ColorRGB, true },
@@ -122,46 +140,27 @@ namespace Ares::ECS::Systems {
 					batch.PropertiesBuffer->SetBufferLayout(propsLayout);
 					batch.VAO->AddVertexBuffer(batch.PropertiesBuffer.get());
 				}
+				else if (propsBuffer.size() > batch.PropertiesBuffer->GetSize())
+				{
+					batch.PropertiesBuffer->SetData({ propsBuffer.data(), propsBuffer.size() });
+				}
 				else
 				{
-					Vector<uint8_t>& propsBuffer = batch.TempPropsBuffer;
-					propsBuffer.resize(batch.properties.size() * 44);
-					size_t offset = 0;
-					for (Components::MaterialProperties& props : batch.properties)
-					{
-						std::memcpy(propsBuffer.data() + offset, props.GetBuffer(), props.GetSize());
-						offset += props.GetSize();
-					}
-					if (propsBuffer.size() > batch.PropertiesBuffer->GetSize())
-					{
-						batch.PropertiesBuffer->SetData({ propsBuffer.data(), propsBuffer.size() });
-					}
-					else
-					{
-						batch.PropertiesBuffer->SetSubData({ propsBuffer.data(), propsBuffer.size() });
-					}
+					batch.PropertiesBuffer->SetSubData({ propsBuffer.data(), propsBuffer.size() });
 				}
 
-				if (batch.UniformBuffer == nullptr)
+				if (!batch.UniformBuffer)
 				{
-					Systems::LightSystem* lights = scene.GetSystem<Systems::LightSystem>();
 					batch.UniformBuffer = UniformBuffer::Create(lights->GetLightBuffer(), 0, BufferUsage::Dynamic);
 				}
+				else if (lightBuffer.Size > batch.UniformBuffer->GetSize())
+				{
+					batch.UniformBuffer->SetData(lightBuffer);
+				}
 				else
 				{
-					Systems::LightSystem* lights = scene.GetSystem<Systems::LightSystem>();
-					RawData lightBuffer = lights->GetLightBuffer();
-					if (lightBuffer.Size > batch.UniformBuffer->GetSize())
-					{
-						batch.UniformBuffer->SetData(lightBuffer);
-					}
-					else
-					{
-						batch.UniformBuffer->SetSubData(lightBuffer);
-					}
+					batch.UniformBuffer->SetSubData(lightBuffer);
 				}
-
-				batch.isDirty = false;
 			}
 		}
 	}
@@ -183,23 +182,16 @@ namespace Ares::ECS::Systems {
 			);
 		}
 
-		for (auto& [key, batch] : m_DynamicBatches)
+		for (auto& [key, batch] : m_RenderBatches)
 		{
-			if (batch.VAO == nullptr || batch.material == nullptr)
+			if (batch.VAO == nullptr || batch.MaterialComponent == nullptr || activeCamera == nullptr || m_Renderer == nullptr)
 				continue;
 
-			if (activeCamera != nullptr)
-			{
-				batch.material->SetUniformProperty("u_ViewProjection", activeCamera->GetViewProjectionMatrix());
-				batch.material->SetUniformProperty("u_CameraPosition", activeCamera->GetPosition());
-			}
+			batch.MaterialComponent->SetUniformProperty("u_ViewProjection", activeCamera->GetViewProjectionMatrix());
+			batch.MaterialComponent->SetUniformProperty("u_CameraPosition", activeCamera->GetPosition());
+			batch.MaterialComponent->Bind();
 
-			batch.material->Bind();
-
-			if (m_Renderer)
-			{
-				commandQueue->SubmitCommand<RenderCommands::DrawInstanced>(batch.VAO, batch.instanceCount);
-			}
+			commandQueue->SubmitCommand<RenderCommands::DrawInstanced>(batch.VAO, batch.InstanceCount);
 		}
 	}
 
@@ -212,35 +204,40 @@ namespace Ares::ECS::Systems {
 		Internal::RenderCommandQueue* commandQueue = m_Renderer->RenderCommandQueue();
 		if (mesh->IsLoaded() && material->IsLoaded())
 		{
-			MeshBatch& batch = m_DynamicBatches[GenerateBatchKey(mesh, material)];
+			const size_t batchKey = GenerateBatchKey(mesh, material);
+			BatchData* batch = nullptr;
 
-			if (batch.isInitialized.load() == false)
+			auto batchIt = m_StagingBatches.find(batchKey);
+			if (batchIt != m_StagingBatches.end())
 			{
-				// New batch
-				commandQueue->SubmitCommand<RenderCommands::CreateBatchVAO>(&batch, mesh);
-				batch.isInitialized = true;
-				return;
+				batch = &batchIt->second;
 			}
-			else if (batch.VAO != nullptr)
+			else
 			{
-				if (batch.isDirty.load() == false)
-					batch.instanceCount = 0;
+				batch = &m_StagingBatches[batchKey];
+				batch->Transforms.reserve(100);
+				batch->Properties.reserve(100);
+			}
 
-				if (batch.material == nullptr)
+			if (!batch->VAO)
+			{
+				commandQueue->SubmitCommand<RenderCommands::CreateBatchVAO>(batch, mesh);
+			}
+			else
+			{
+				if (!batch->MaterialComponent)
 				{
-					batch.material = material;
+					batch->MaterialComponent = material;
 				}
-				batch.transforms.push_back(transform->GetTransformationMatrix());
-				batch.properties.push_back(material->GetProperties());
-
-				batch.instanceCount++;
-				batch.isDirty = true;
+				batch->Transforms.push_back(transform->GetTransformationMatrix());
+				batch->Properties.push_back(material->GetProperties());
+				batch->InstanceCount++;
 			}
 		}
 		else if (mesh != nullptr && material != nullptr && mesh->IsValid() && material->IsValid())
 		{
 			const size_t batchKey = GenerateBatchKey(mesh, material);
-			m_DynamicBatches.erase(batchKey);
+			m_StagingBatches.erase(batchKey);
 		}
 	}
 
